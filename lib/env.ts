@@ -13,4 +13,7 @@ export const env = {
   HOSPITAL_NAME: process.env.NEXT_PUBLIC_HOSPITAL_NAME || "Hospital José Agurto Tello de Chosica",
   HOSPITAL_ADDRESS: process.env.NEXT_PUBLIC_HOSPITAL_ADDRESS || "Jr. Cuzco 274 - Chosica",
   HOSPITAL_LOCATION: process.env.NEXT_PUBLIC_HOSPITAL_LOCATION || "Consultorios Externos HJATCH",
+  
+  // Security Settings
+  ALLOW_CONSOLE_ACCESS: process.env.NEXT_PUBLIC_ALLOW_CONSOLE_ACCESS === "true",
 };

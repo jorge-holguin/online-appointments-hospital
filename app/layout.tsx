@@ -1,14 +1,15 @@
 import type { Metadata } from 'next'
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
-import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 import { DateProvider } from '@/context/date-context'
+import { env } from '@/lib/env'
+import ConsoleBlocker from '@/components/security/console-blocker'
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.app',
+  title: 'Reserva de Citas',
+  description: 'Pagina para reserva de citas en linea',
+  generator: 'Jorge Holguin',
 }
 
 export default function RootLayout({
@@ -18,10 +19,18 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <script src="/js/passive-events.js" async></script>
+        {/* Cargar el bloqueador de consola solo si ALLOW_CONSOLE_ACCESS es false */}
+        {!env.ALLOW_CONSOLE_ACCESS && (
+          <script src="/js/console-blocker.js"></script>
+        )}
+      </head>
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
+        {/* Componente para bloquear la consola si está configurado */}
+        {!env.ALLOW_CONSOLE_ACCESS && <ConsoleBlocker />}
         <DateProvider>
           {children}
-          <Analytics />
         </DateProvider>
       </body>
     </html>

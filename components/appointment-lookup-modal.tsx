@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -90,6 +90,9 @@ export default function AppointmentLookupModal({ open, onOpenChange }: Appointme
       <DialogContent className="sm:max-w-md" redirectToHome={true}>
         <DialogHeader>
           <DialogTitle className="text-center text-xl font-semibold">Consulta de cita</DialogTitle>
+          <DialogDescription className="text-center">
+            Ingresa tu código de reserva para ver los detalles de tu cita
+          </DialogDescription>
         </DialogHeader>
 
         {!appointmentData ? (

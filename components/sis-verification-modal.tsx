@@ -1,11 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { ChevronLeft, Upload, FileImage, X, AlertCircle } from "lucide-react"
 import SpecialtySelectionModal from "./specialty-selection-modal"
+import { mapPatientTypeToApiFormat } from "@/lib/appointment-utils"
 
 interface SISVerificationModalProps {
   open: boolean
@@ -64,7 +65,14 @@ export default function SISVerificationModal({
   }
 
   const handleContinue = () => {
+    // Asegurarse de que el tipo de paciente sea un valor válido
+    const validatedPatientType = patientType === 'SIS' ? 'SIS' : 'PAGANTE'
+    
+    // Mostrar el modal de selección de especialidad
     setShowSpecialtySelection(true)
+    
+    // Registrar el tipo de atención seleccionado
+    console.log('Tipo de atención seleccionado:', validatedPatientType)
   }
   
   const handleClose = () => {
@@ -88,6 +96,9 @@ export default function SISVerificationModal({
                 <DialogTitle className="text-xl font-semibold">Tipo de Atención</DialogTitle>
               </div>
             </div>
+            <DialogDescription>
+              Selecciona tu tipo de atención y adjunta tu referencia si eres paciente SIS
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
@@ -254,8 +265,9 @@ export default function SISVerificationModal({
         onBack={() => setShowSpecialtySelection(false)}
         patientData={{
           ...patientData,
-          patientType: patientType,
-          referenceImage: patientType === 'SIS' ? referenceImage : null
+          patientType: patientType === 'SIS' ? 'SIS' : 'PAGANTE', // Asegurar valor válido
+          referenceImage: patientType === 'SIS' ? referenceImage : null,
+          tipoAtencion: patientType === 'SIS' ? 'SIS' : 'PAGANTE' // Campo para la API
         }}
       />
     </>

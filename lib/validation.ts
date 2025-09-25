@@ -8,6 +8,14 @@ export const sanitizeInput = (input: string): string => {
     .replace(/\s+/g, ' ') // Reemplazar múltiples espacios por uno solo
 }
 
+// Función para sanitizar nombres permitiendo espacios naturales
+export const sanitizeName = (input: string): string => {
+  // Solo eliminar caracteres realmente peligrosos, preservar espacios naturales
+  return input
+    .replace(/[<>"'&]/g, '') // Eliminar solo caracteres peligrosos para XSS
+    // NO eliminar espacios ni hacer trim para permitir escritura natural
+}
+
 // Función para normalizar teléfono (solo números)
 export const normalizePhone = (phone: string): string => {
   return phone.replace(/\D/g, '') // Eliminar todo lo que no sea dígito
@@ -25,7 +33,7 @@ export const patientValidationSchema = z.object({
     .min(2, 'El nombre debe tener al menos 2 caracteres')
     .max(100, 'El nombre no puede exceder 100 caracteres')
     .regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, 'El nombre solo puede contener letras y espacios')
-    .transform(sanitizeInput),
+    .transform((val) => val.trim().replace(/\s+/g, ' ')), // Solo limpiar al final para la validación
   
   phone: z
     .string()

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { X, ChevronLeft, ChevronRight, Calendar, ArrowLeft, ArrowRight, Sun, Moon } from "lucide-react"
 import ConfirmationModal from "./confirmation-modal"
@@ -84,12 +84,10 @@ export default function DateTimeSelectionModal({
         // Construir la URL de la API con los parámetros necesarios
         const url = `${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/citas?fechaInicio=${startDate}&fechaFin=${endDate}&medicoId=${selectedDoctor.nombre}&turnoConsulta=${selectedShift}`
         
-        console.log('Fetching appointments from:', url)
         const response = await fetch(url)
         if (!response.ok) throw new Error(`Error al obtener horarios: ${response.status}`)
         
         const data = await response.json()
-        console.log('API response:', data)
         setAvailableSlots(data)
         
         // Procesar los datos para crear el mapa de horarios por día
@@ -105,7 +103,6 @@ export default function DateTimeSelectionModal({
           slotsMap.get(dateKey)?.push(hora)
         })
         
-        console.log('Processed slots map:', Object.fromEntries([...slotsMap.entries()]))
         setDayTimeSlots(slotsMap)
       } catch (err) {
         console.error('Error fetching available slots:', err)
@@ -229,6 +226,9 @@ export default function DateTimeSelectionModal({
                 <DialogTitle className="text-lg sm:text-xl font-semibold" style={{ color: "#0a2463" }}>
                   Fecha y hora
                 </DialogTitle>
+                <DialogDescription className="sr-only">
+                  Selecciona la fecha y hora para tu cita médica
+                </DialogDescription>
                 <div className="flex items-center gap-2 sm:gap-3 mt-2">
                   <img
                     src="/male-doctor.jpg"

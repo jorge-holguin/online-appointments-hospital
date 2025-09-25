@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useRef, useEffect } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -12,7 +12,7 @@ import { User, Phone, CreditCard, Mail, ChevronDown, AlertCircle } from "lucide-
 import SISVerificationModal from "./sis-verification-modal"
 import HCaptcha from "@hcaptcha/react-hcaptcha"
 import { env } from "@/lib/env"
-import { validatePatientData, getSecureErrorMessage, sanitizeInput, normalizePhone, normalizeEmail } from "@/lib/validation"
+import { validatePatientData, getSecureErrorMessage, sanitizeInput, sanitizeName, normalizePhone, normalizeEmail } from "@/lib/validation"
 
 interface PatientRegistrationModalProps {
   open: boolean
@@ -72,11 +72,9 @@ export default function PatientRegistrationModal({ open, onOpenChange }: Patient
         }
         
         const data: DocumentType[] = await response.json();
-        console.log('Document types from API:', data);
         
         // La API no devuelve campo 'activo', así que solo filtramos por nombre
         const filteredTypes = data.filter(type => type.nombre && type.nombre !== "*Ninguno");
-        console.log('Filtered document types:', filteredTypes);
         setDocumentTypes(filteredTypes);
         hasLoadedDocumentTypes.current = true;
         
@@ -155,7 +153,8 @@ export default function PatientRegistrationModal({ open, onOpenChange }: Patient
     
     switch (field) {
       case 'fullName':
-        sanitizedValue = sanitizeInput(value)
+        // Usar sanitizeName muy suave para preservar espacios naturales
+        sanitizedValue = sanitizeName(value)
         break
       case 'phone':
         sanitizedValue = normalizePhone(value)
@@ -192,6 +191,9 @@ export default function PatientRegistrationModal({ open, onOpenChange }: Patient
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-center text-xl font-semibold">Registro de paciente</DialogTitle>
+            <DialogDescription className="text-center">
+              Ingresa tus datos personales para agendar una cita
+            </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -244,7 +246,6 @@ export default function PatientRegistrationModal({ open, onOpenChange }: Patient
               <Select 
                 value={formData.tipoDocumento} 
                 onValueChange={(value) => {
-                  console.log('Select onValueChange:', value, 'longitud:', value.length)
                   handleInputChange("tipoDocumento", value)
                 }}
               >
@@ -253,7 +254,6 @@ export default function PatientRegistrationModal({ open, onOpenChange }: Patient
                 </SelectTrigger>
                 <SelectContent>
                   {documentTypes.map((docType) => {
-                    console.log('Renderizando tipo documento:', docType.tipoDocumento, 'longitud:', docType.tipoDocumento.length)
                     return (
                       <SelectItem key={docType.tipoDocumento} value={docType.tipoDocumento}>
                         {docType.nombre}
@@ -344,10 +344,12 @@ export default function PatientRegistrationModal({ open, onOpenChange }: Patient
             )}
             
             <div className="flex justify-center my-4">
+              <div id="captcha-description" className="sr-only">Verificación de seguridad para confirmar que no eres un robot</div>
               <HCaptcha
                 ref={captchaRef}
                 sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ""}
                 onVerify={handleCaptchaChange}
+                aria-describedby="captcha-description"
               />
             </div>
 

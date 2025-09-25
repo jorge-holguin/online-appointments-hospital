@@ -1,6 +1,6 @@
 "use client"
 
-import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { CheckCircle, Calendar, User, MapPin, Mail } from "lucide-react"
 import { goToHomePage } from "@/lib/navigation"
@@ -22,15 +22,13 @@ interface FinalConfirmationModalProps {
     specialty?: string
     patient?: {
       email?: string
+      patientType?: 'SIS' | 'PAGANTE'
     }
+    tipoAtencion?: string
   }
 }
 
 export default function FinalConfirmationModal({ open, onOpenChange, reservationCode, appointmentStatus, appointmentData }: FinalConfirmationModalProps) {
-  // Debug the appointmentData to see what's happening with the email
-  console.log('FinalConfirmationModal - appointmentData:', appointmentData)
-  console.log('Email value:', appointmentData?.patient?.email)
-  
   const handleBackToHome = () => {
     onOpenChange(false)
     // Redirigir a la página principal
@@ -40,6 +38,9 @@ export default function FinalConfirmationModal({ open, onOpenChange, reservation
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md" redirectToHome={true}>
+        <DialogDescription className="sr-only">
+          Confirmación de reserva de cita exitosa
+        </DialogDescription>
         <div className="text-center space-y-6 py-4">
           {/* Success Icon */}
           <div className="flex justify-center">
@@ -103,6 +104,29 @@ export default function FinalConfirmationModal({ open, onOpenChange, reservation
                 <p className="text-sm text-gray-500">Ubicación</p>
                 <p className="font-medium text-gray-900">Consultorios Externos</p>
                 <p className="text-sm text-gray-600">{process.env.NEXT_PUBLIC_HOSPITAL_ADDRESS || "Jr. Cuzco 274 - Chosica"}</p>
+              </div>
+            </div>
+
+            {/* Tipo de Atención */}
+            <div className="flex items-center gap-3">
+              <div className="w-4 h-4 text-gray-500 flex items-center justify-center">
+                {appointmentData?.patient?.patientType === 'SIS' ? (
+                  <span className="text-blue-500 font-bold">S</span>
+                ) : (
+                  <span className="text-green-500 font-bold">P</span>
+                )}
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Tipo de Atención</p>
+                <div className="flex items-center gap-2">
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${
+                    appointmentData?.patient?.patientType === 'SIS' 
+                      ? 'bg-blue-100 text-blue-700' 
+                      : 'bg-green-100 text-green-700'
+                  }`}>
+                    {appointmentData?.patient?.patientType === 'SIS' ? 'Paciente SIS' : 'Paciente Pagante'}
+                  </span>
+                </div>
               </div>
             </div>
           </div>

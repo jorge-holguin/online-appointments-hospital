@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { X, ChevronLeft, Calendar, User, MapPin, ChevronRight, Loader2 } from "lucide-react"
 import FinalConfirmationModal from "./final-confirmation-modal"
@@ -9,6 +9,7 @@ import { env } from "@/lib/env"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { goToHomePage } from "@/lib/navigation"
+import { mapPatientTypeToApiFormat, getShiftFromTime, formatDateForApi } from "@/lib/appointment-utils"
 
 interface ConfirmationModalProps {
   open: boolean
@@ -20,6 +21,7 @@ interface ConfirmationModalProps {
     specialtyName?: string // Nombre de la especialidad
     doctor: any
     dateTime: any
+    tipoAtencion?: string  // Tipo de atención: SIS o PAGANTE
   }
 }
 
@@ -37,6 +39,7 @@ interface AppointmentResponse {
   correo: string;
   codigo: string;
   estado: string;
+  tipoAtencion: string;
 }
 
 // Función para subir el archivo de referencia SIS
@@ -76,13 +79,14 @@ export default function ConfirmationModal({ open, onOpenChange, onBack, appointm
   
   // Update the finalAppointmentData when the API response is received
   useEffect(() => {
-    if (appointmentResponse?.correo) {
+    if (appointmentResponse) {
       setFinalAppointmentData({
         ...appointmentData,
         patient: {
           ...appointmentData.patient,
-          email: appointmentResponse.correo
-        }
+          email: appointmentResponse.correo || appointmentData.patient.email
+        },
+        tipoAtencion: appointmentResponse.tipoAtencion || appointmentData.patient.patientType
       })
     }
   }, [appointmentResponse, appointmentData])
@@ -103,21 +107,14 @@ export default function ConfirmationModal({ open, onOpenChange, onBack, appointm
         especialidadNombre: appointmentData.specialtyName || "", // Nombre de la especialidad
         medico: appointmentData.doctor?.nombre || "",
         medicoNombre: appointmentData.doctor?.medicoId || "",
-        fecha: appointmentData.dateTime?.date ? 
-          (typeof appointmentData.dateTime.date === 'string' ? 
-            (appointmentData.dateTime.date.includes('/') ? 
-              // Convert DD/MM/YYYY to YYYY-MM-DD
-              appointmentData.dateTime.date.split('/').reverse().join('-') : 
-              appointmentData.dateTime.date
-            ) : 
-            format(new Date(appointmentData.dateTime.date), 'yyyy-MM-dd')
-          ) : new Date().toISOString().split('T')[0],
+        fecha: formatDateForApi(appointmentData.dateTime?.date || new Date()),
         hora: appointmentData.dateTime?.time || "",
-        turno: appointmentData.dateTime?.time ? 
-          (parseInt(appointmentData.dateTime.time.split(':')[0]) < 14 ? 'M' : 'T') : 'M'
+        turno: getShiftFromTime(appointmentData.dateTime?.time || ""),
+        tipoAtencion: mapPatientTypeToApiFormat(appointmentData.patient.patientType) // Tipo de atención: SIS o PAGANTE
       }
 
       console.log('Enviando datos de cita:', appointmentPayload)
+      console.log('Tipo de atención:', appointmentPayload.tipoAtencion)
 
       // Realizar la llamada a la API
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_SOLICITUDES_URL}`, {
@@ -176,6 +173,9 @@ export default function ConfirmationModal({ open, onOpenChange, onBack, appointm
               </Button>
               <DialogTitle className="text-lg sm:text-xl font-semibold">¡Ya casi terminas!</DialogTitle>
             </div>
+            <DialogDescription>
+              Revisa los detalles de tu cita y confirma para reservar
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 sm:space-y-6">
