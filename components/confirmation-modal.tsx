@@ -22,13 +22,17 @@ interface ConfirmationModalProps {
     doctor: any
     dateTime: any
     tipoAtencion?: string  // Tipo de atención: SIS o PAGANTE
+    idCita?: string        // ID de la cita
+    consultorio?: string   // Número de consultorio
   }
-}
+};
 
 interface AppointmentResponse {
   tipoDocumento: string;
   numeroDocumento: string;
   nombres: string;
+  idCita: string;
+  consultorio: string;
   especialidad: string;
   especialidadNombre: string;
   medico: string;
@@ -86,7 +90,10 @@ export default function ConfirmationModal({ open, onOpenChange, onBack, appointm
           ...appointmentData.patient,
           email: appointmentResponse.correo || appointmentData.patient.email
         },
-        tipoAtencion: appointmentResponse.tipoAtencion || appointmentData.patient.patientType
+        tipoAtencion: appointmentResponse.tipoAtencion || appointmentData.patient.patientType,
+        // Mantener los valores de idCita y consultorio (del slot seleccionado)
+        idCita: appointmentData.idCita,
+        consultorio: appointmentData.consultorio
       })
     }
   }, [appointmentResponse, appointmentData])
@@ -100,6 +107,8 @@ export default function ConfirmationModal({ open, onOpenChange, onBack, appointm
       const appointmentPayload = {
         tipoDocumento: appointmentData.patient.tipoDocumento || "D  ",
         numeroDocumento: appointmentData.patient.documento || appointmentData.patient.dni || "",
+        citaId: appointmentData.idCita || "",
+        consultorio: appointmentData.consultorio || "", 
         nombres: appointmentData.patient.fullName || "",
         celular: appointmentData.patient.phone || "",
         correo: appointmentData.patient.email || "",
@@ -112,9 +121,8 @@ export default function ConfirmationModal({ open, onOpenChange, onBack, appointm
         turno: getShiftFromTime(appointmentData.dateTime?.time || ""),
         tipoAtencion: mapPatientTypeToApiFormat(appointmentData.patient.patientType) // Tipo de atención: SIS o PAGANTE
       }
-
-      console.log('Enviando datos de cita:', appointmentPayload)
-      console.log('Tipo de atención:', appointmentPayload.tipoAtencion)
+      
+      // Datos preparados para enviar a la API
 
       // Realizar la llamada a la API
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_SOLICITUDES_URL}`, {
@@ -130,14 +138,9 @@ export default function ConfirmationModal({ open, onOpenChange, onBack, appointm
       }
 
       const responseData = await response.json()
-      console.log('Respuesta de la API:', responseData)
 
       // Guardar la respuesta para usarla en el modal de confirmación final
       setAppointmentResponse(responseData)
-      
-      // Debug the email value
-      console.log('Email en appointmentPayload:', appointmentPayload.correo)
-      console.log('Email en responseData:', responseData.correo)
 
       // Si el paciente es SIS y tiene archivo de referencia, subirlo
       if (appointmentData.patient.patientType === 'SIS' && appointmentData.patient.referenceImage && responseData.codigo) {

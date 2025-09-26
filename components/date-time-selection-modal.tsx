@@ -3,12 +3,14 @@
 import { useState, useRef, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { X, ChevronLeft, ChevronRight, Calendar, ArrowLeft, ArrowRight, Sun, Moon } from "lucide-react"
+import { X, ChevronLeft, ChevronRight, Calendar as CalendarIcon, ArrowLeft, ArrowRight, Sun, Moon, Clock } from "lucide-react"
 import ConfirmationModal from "./confirmation-modal"
-import { format, addDays, addMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth } from "date-fns"
+import { format, addDays, addMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, isSameDay, isWithinInterval, getDay, getDate, parseISO } from "date-fns"
 import { es } from "date-fns/locale"
 import { useDateContext } from "@/context/date-context"
 import { env } from "@/lib/env"
+import { AvailabilityCalendar } from "@/components/ui/availability-calendar"
+import { cn } from "@/lib/utils"
 
 interface DateTimeSelectionModalProps {
   open: boolean
@@ -25,10 +27,16 @@ interface TimeSlot {
   displayDate?: string
   time: string
   fullDate: Date
+  idCita?: string
+  consultorio?: string
 }
 
 interface ApiTimeSlot {
-  citaId: number
+  // Posibles nombres para el ID de cita
+  idCita?: number
+  citaId?: number
+  id?: number
+  
   fecha: string
   hora: string
   turnoConsulta: string
@@ -59,11 +67,10 @@ export default function DateTimeSelectionModal({
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<TimeSlot | null>(null)
   const [showConfirmation, setShowConfirmation] = useState(false)
   const [currentMonth, setCurrentMonth] = useState(new Date())
-  const [currentSlide, setCurrentSlide] = useState(0)
   const [selectedShift, setSelectedShift] = useState<ShiftType>('M') // Por defecto turno mañana
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const sliderRef = useRef<HTMLDivElement>(null)
+  const [selectedDay, setSelectedDay] = useState<Date | null>(null) // Día seleccionado en el calendario
   
   // Datos de disponibilidad desde la API
   const [availableSlots, setAvailableSlots] = useState<ApiTimeSlot[]>([])
@@ -116,50 +123,25 @@ export default function DateTimeSelectionModal({
     fetchAvailableSlots()
   }, [selectedDoctor, selectedShift, startDate, endDate, open])
   
-  const getItemsPerSlide = () => {
-    if (typeof window !== "undefined") {
-      if (window.innerWidth < 640) return 1 // Mobile
-      if (window.innerWidth < 1024) return 3 // Tablet
-      return 4 // Desktop
-    }
-    return 4
-  }
-
-  const [itemsPerSlide, setItemsPerSlide] = useState(getItemsPerSlide())
+  // No necesitamos slides para la nueva interfaz
   
-  // Generar días del mes actual para mostrar
-  const generateDaysForMonth = (month: Date) => {
-    const startOfMonthDate = startOfMonth(month)
-    const endOfMonthDate = endOfMonth(month)
-    return eachDayOfInterval({ start: startOfMonthDate, end: endOfMonthDate })
+  // Obtener las fechas disponibles para el calendario
+  const availableDates = Array.from(dayTimeSlots.keys())
+  
+  // Manejar la selección de fecha en el calendario
+  const handleDateSelect = (date: Date | undefined) => {
+    setSelectedDay(date || null)
+    setSelectedTimeSlot(null) // Resetear la hora seleccionada cuando se cambia de día
   }
   
-  const filteredDays = generateDaysForMonth(currentMonth).filter(day => {
-    const dateKey = formatDateForAPI(day)
-    return dayTimeSlots.has(dateKey) && (dayTimeSlots.get(dateKey)?.length || 0) > 0
-  })
-  
-  const maxSlides = Math.ceil(filteredDays.length / itemsPerSlide)
+  // Obtener las horas disponibles para el día seleccionado
+  const getAvailableTimesForSelectedDay = () => {
+    if (!selectedDay) return []
+    const dateKey = formatDateForAPI(selectedDay)
+    return dayTimeSlots.get(dateKey) || []
+  }
 
-  useEffect(() => {
-    const handleResize = () => {
-      const newItemsPerSlide = getItemsPerSlide()
-      if (newItemsPerSlide !== itemsPerSlide) {
-        setItemsPerSlide(newItemsPerSlide)
-        setCurrentSlide(0) // Reset to first slide when changing layout
-      }
-    }
-
-    if (typeof window !== "undefined") {
-      window.addEventListener("resize", handleResize)
-      return () => window.removeEventListener("resize", handleResize)
-    }
-  }, [itemsPerSlide])
-  
-  // Resetear el slide cuando cambia el mes
-  useEffect(() => {
-    setCurrentSlide(0);
-  }, [currentMonth]);
+  // Ya no necesitamos efectos para manejar slides y resize
 
   const handleTimeSelect = (day: Date, time: string) => {
     const dayName = format(day, 'EEEE', { locale: es });
@@ -167,13 +149,31 @@ export default function DateTimeSelectionModal({
     const formattedDate = format(day, 'yyyy-MM-dd'); // API expects YYYY-MM-DD format
     const displayDate = format(day, 'dd/MM/yyyy'); // For display purposes
     
+    // Buscar la información completa del slot seleccionado en los datos de la API
+    const selectedApiSlot = availableSlots.find(slot => 
+      slot.fecha === formattedDate && slot.hora.trim() === time
+    );
+    
+    // Determinar el ID de la cita, considerando diferentes posibles nombres de campo
+    let citaIdValue: string | undefined = undefined;
+    if (selectedApiSlot) {
+      // Intentar obtener el ID de la cita de cualquiera de los posibles campos
+      const idValue = selectedApiSlot.idCita || selectedApiSlot.citaId || selectedApiSlot.id;
+      citaIdValue = idValue !== undefined ? String(idValue) : undefined;
+    }
+    
     setSelectedTimeSlot({ 
       day: dayNameCapitalized, 
       date: formattedDate, // API format
       displayDate: displayDate, // Display format
       time,
-      fullDate: day
-    })
+      fullDate: day,
+      // Incluir idCita y consultorio si están disponibles
+      idCita: citaIdValue,
+      consultorio: selectedApiSlot?.consultorio ? selectedApiSlot.consultorio.trim() : undefined
+    });
+    
+    // El slot se ha seleccionado correctamente
   }
 
   const handleNext = () => {
@@ -182,17 +182,7 @@ export default function DateTimeSelectionModal({
     }
   }
 
-  const nextSlide = () => {
-    if (currentSlide < maxSlides - 1) {
-      setCurrentSlide(currentSlide + 1)
-    }
-  }
-
-  const prevSlide = () => {
-    if (currentSlide > 0) {
-      setCurrentSlide(currentSlide - 1)
-    }
-  }
+  // Ya no necesitamos funciones de navegación para slides
   
   // Verificar si el mes actual es el mes actual del sistema
   const isCurrentMonthToday = () => {
@@ -205,12 +195,12 @@ export default function DateTimeSelectionModal({
   
   const goToPrevMonth = () => {
     setCurrentMonth(prevMonth => addMonths(prevMonth, -1))
-    setCurrentSlide(0)
+    // Ya no necesitamos resetear slides
   }
   
   const goToNextMonth = () => {
     setCurrentMonth(prevMonth => addMonths(prevMonth, 1))
-    setCurrentSlide(0)
+    // Ya no necesitamos resetear slides
   }
 
   return (
@@ -279,56 +269,7 @@ export default function DateTimeSelectionModal({
                 </div>
               </div>
               
-              {/* Navegación de mes - Solo visible en pantallas medianas y grandes */}
-              <div className="hidden sm:flex justify-between items-center">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={goToPrevMonth}
-                  disabled={isCurrentMonthToday()}
-                  className={`text-xs sm:text-sm px-2 py-1 sm:px-3 sm:py-2 border-2 ${isCurrentMonthToday() ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-50'}`}
-                  style={{ borderColor: "#3e92cc" }}
-                >
-                  <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4 mr-1" style={{ color: "#0a2463" }} />
-                  Mes anterior
-                </Button>
-                
-                <h3 className="text-sm sm:text-lg font-bold text-center" style={{ color: "#0a2463" }}>
-                  {format(currentMonth, 'MMMM yyyy', { locale: es }).toUpperCase()}
-                </h3>
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={goToNextMonth}
-                  className="text-xs sm:text-sm px-2 py-1 sm:px-3 sm:py-2 border-2 hover:bg-blue-50"
-                  style={{ borderColor: "#3e92cc" }}
-                >
-                  Mes siguiente
-                  <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 ml-1" style={{ color: "#0a2463" }} />
-                </Button>
-              </div>
-              
-              {/* Navegación de mes para móvil - Deslizador con título */}
-              <div className="sm:hidden">
-                <div className="flex justify-center items-center mb-2">
-                  <button 
-                    onClick={goToPrevMonth} 
-                    disabled={isCurrentMonthToday()}
-                    className={`p-2 ${isCurrentMonthToday() ? 'opacity-50' : ''}`}
-                  >
-                    <ChevronLeft className="h-5 w-5" style={{ color: isCurrentMonthToday() ? "#ccc" : "#0a2463" }} />
-                  </button>
-                  
-                  <h3 className="text-base font-bold text-center mx-2" style={{ color: "#0a2463" }}>
-                    {format(currentMonth, 'MMMM yyyy', { locale: es }).toUpperCase()}
-                  </h3>
-                  
-                  <button onClick={goToNextMonth} className="p-2">
-                    <ChevronRight className="h-5 w-5" style={{ color: "#0a2463" }} />
-                  </button>
-                </div>
-              </div>
+              {/* Navegación de mes unificada para todos los dispositivos */}
             </div>
 
             {loading ? (
@@ -338,128 +279,116 @@ export default function DateTimeSelectionModal({
               </div>
             ) : error ? (
               <div className="text-center text-red-500 py-4">{error}</div>
-            ) : filteredDays.length === 0 ? (
+            ) : availableDates.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
-                <Calendar className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                <p>No hay horarios disponibles para el turno {selectedShift === 'M' ? 'de mañana' : 'de tarde'} en este mes</p>
+                <CalendarIcon className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                <p>No hay horarios disponibles para el turno {selectedShift === 'M' ? 'de mañana' : 'de tarde'}</p>
                 <p className="text-sm mt-2">Intenta cambiar el turno o seleccionar otro mes</p>
               </div>
             ) : (
-              <div className="relative">
-                <div className="overflow-hidden" ref={sliderRef}>
-                  <div
-                    className="flex transition-transform duration-300 ease-in-out"
-                    style={{ transform: `translateX(-${currentSlide * 100}%)` }}
-                  >
-                    {Array.from({ length: maxSlides }).map((_, slideIndex) => (
-                      <div key={slideIndex} className="min-w-full flex gap-2 sm:gap-3 px-1 sm:px-2">
-                        {filteredDays
-                          .slice(slideIndex * itemsPerSlide, (slideIndex + 1) * itemsPerSlide)
-                          .map((day) => {
-                            const dateKey = formatDateForAPI(day);
-                            const availableTimes = dayTimeSlots.get(dateKey) || [];
-                            const dayName = format(day, 'EEEE', { locale: es });
-                            const dayNameCapitalized = dayName.charAt(0).toUpperCase() + dayName.slice(1);
-                            const formattedDate = format(day, 'dd/MM/yyyy');
-                            
-                            return (
-                              <div key={dateKey} className="flex-1 min-w-0">
-                                <div
-                                  className="bg-white rounded-lg border-2 p-2 sm:p-3 h-full"
-                                  style={{ borderColor: "#fffaff" }}
-                                >
-                                  <div className="text-center mb-4 sm:mb-5">
-                                    <h3 className="font-bold text-base sm:text-lg" style={{ color: "#0a2463" }}>
-                                      {dayNameCapitalized}
-                                    </h3>
-                                    <div className="flex justify-center mt-1">
-                                      <div className="inline-flex items-center justify-center border border-blue-300 rounded-md px-2 py-1">
-                                        <Calendar className="w-4 h-4 mr-1" style={{ color: "#3e92cc" }} />
-                                        <span className="text-sm text-blue-600">{format(day, 'dd/MM/yyyy')}</span>
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  <div className="space-y-1 sm:space-y-2 max-h-[300px] sm:max-h-none overflow-y-auto pr-1">
-                                    {availableTimes.length > 0 ? (
-                                      availableTimes.map((time) => (
-                                        <button
-                                          key={`${dateKey}-${time}`}
-                                          onClick={() => handleTimeSelect(day, time)}
-                                          className={`w-full p-2.5 sm:p-3 rounded-full border text-sm font-medium transition-all duration-200 mb-2 ${
-                                            selectedTimeSlot?.fullDate.toDateString() === day.toDateString() && 
-                                            selectedTimeSlot?.time === time
-                                              ? "shadow-md"
-                                              : "hover:shadow-sm"
-                                          }`}
-                                          style={
-                                            selectedTimeSlot?.fullDate.toDateString() === day.toDateString() && 
-                                            selectedTimeSlot?.time === time
-                                              ? { borderColor: "#d8315b", backgroundColor: "#d8315b", color: "white" }
-                                              : { borderColor: "#3e92cc", backgroundColor: "white", color: "#3e92cc" }
-                                          }
-                                        >
-                                          <div className="flex items-center justify-center">
-                                            <span className="inline-block mr-1">•</span>
-                                            {time}
-                                          </div>
-                                        </button>
-                                      ))
-                                    ) : (
-                                      <div className="text-center text-xs sm:text-sm py-2 text-gray-500">
-                                        No hay horarios disponibles
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
+              <div className="flex flex-col md:flex-row gap-4 md:gap-6">
+                {/* Calendario de disponibilidad */}
+                <div className="w-full md:w-1/2">
+                  <div className="bg-white rounded-lg border shadow-sm p-3 md:p-4">
+                    <h3 className="font-semibold text-base md:text-lg mb-2 md:mb-3 text-center" style={{ color: "#0a2463" }}>
+                      Selecciona una fecha disponible
+                    </h3>
+                    <div className="flex justify-center">
+                      <AvailabilityCalendar
+                        availableDates={availableDates}
+                        onSelectDate={handleDateSelect}
+                        selectedDate={selectedDay || undefined}
+                        fromDate={new Date()}
+                        className="max-w-[320px] mx-auto"
+                      />
+                    </div>
+                    <div className="mt-3 flex items-center justify-center gap-4">
+                      <div className="flex items-center">
+                        <div className="w-3 h-3 rounded-full bg-gray-300 mr-1"></div>
+                        <span className="text-xs text-gray-500">No disponible</span>
                       </div>
-                    ))}
+                      <div className="flex items-center">
+                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "#3e92cc" }}></div>
+                        <span className="text-xs text-gray-500">Disponible</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-
-                {maxSlides > 1 && (
-                  <>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="absolute left-0 sm:left-2 top-1/2 -translate-y-1/2 bg-white hover:bg-blue-50 z-10 border-2 h-8 w-8 sm:h-10 sm:w-10"
-                      style={{ borderColor: "#3e92cc" }}
-                      onClick={prevSlide}
-                      disabled={currentSlide === 0}
-                    >
-                      <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" style={{ color: "#0a2463" }} />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="absolute right-0 sm:right-2 top-1/2 -translate-y-1/2 bg-white hover:bg-blue-50 z-10 border-2 h-8 w-8 sm:h-10 sm:w-10"
-                      style={{ borderColor: "#3e92cc" }}
-                      onClick={nextSlide}
-                      disabled={currentSlide === maxSlides - 1}
-                    >
-                      <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" style={{ color: "#0a2463" }} />
-                    </Button>
-                  </>
-                )}
+                
+                {/* Horas disponibles */}
+                <div className="w-full md:w-1/2">
+                  <div className="bg-white rounded-lg border shadow-sm p-3 md:p-4 h-full">
+                    <h3 className="font-semibold text-lg mb-4 text-center" style={{ color: "#0a2463" }}>
+                      {selectedDay ? (
+                        <>
+                          Horarios para {format(selectedDay, 'EEEE dd/MM/yyyy', { locale: es })}
+                        </>
+                      ) : (
+                        <>Selecciona una fecha para ver horarios</>  
+                      )}
+                    </h3>
+                    
+                    {selectedDay ? (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {getAvailableTimesForSelectedDay().length > 0 ? (
+                          getAvailableTimesForSelectedDay().map((time) => {
+                            const isSelected = selectedTimeSlot?.date === formatDateForAPI(selectedDay) && selectedTimeSlot?.time === time;
+                            return (
+                              <button
+                                key={`${formatDateForAPI(selectedDay)}-${time}`}
+                                onClick={() => handleTimeSelect(selectedDay, time)}
+                                className={cn(
+                                  "p-3 rounded-md border text-sm font-medium transition-all duration-200",
+                                  isSelected ? "shadow-md" : "hover:shadow-sm"
+                                )}
+                                style={isSelected ? 
+                                  { borderColor: "#d8315b", backgroundColor: "#d8315b", color: "white" } : 
+                                  { borderColor: "#3e92cc", backgroundColor: "white", color: "#3e92cc" }
+                                }
+                              >
+                                <div className="flex items-center justify-center">
+                                  <Clock className="w-4 h-4 mr-2" />
+                                  {time}
+                                </div>
+                              </button>
+                            );
+                          })
+                        ) : (
+                          <div className="col-span-full text-center py-8 text-gray-500">
+                            <p>No hay horarios disponibles para esta fecha</p>
+                            <p className="text-sm mt-2">Intenta seleccionar otra fecha</p>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+                        <CalendarIcon className="h-12 w-12 mb-4 text-gray-300" />
+                        <p>Selecciona una fecha en el calendario</p>
+                        <p className="text-sm mt-2">Para ver los horarios disponibles</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
 
-            {/* Botón flotante para móviles */}
-            <div className="fixed bottom-4 right-4 left-4 sm:hidden z-10">
-              <Button
-                onClick={handleNext}
-                disabled={!selectedTimeSlot}
-                className="w-full text-white py-3 text-sm font-semibold hover:opacity-90 disabled:opacity-50 shadow-lg rounded-full"
-                style={{ backgroundColor: "#d8315b" }}
-                size="lg"
-              >
-                Siguiente paso
-                <ChevronRight className="w-4 h-4 ml-1" />
-              </Button>
-            </div>
+          {/* Botón para móviles con sticky */}
+<div className="sticky bottom-0 left-0 right-0 sm:hidden z-20 bg-white p-3 border-t">
+  <Button
+    onClick={handleNext}
+    disabled={!selectedTimeSlot}
+    className="w-full text-white py-3 text-sm font-semibold hover:opacity-90 disabled:opacity-50 shadow-lg rounded-full flex items-center justify-center"
+    style={{ backgroundColor: "#d8315b" }}
+    size="lg"
+  >
+    <span>Siguiente paso</span>
+    <ChevronRight className="w-4 h-4 ml-2" />
+  </Button>
+</div>
+
+            
+            {/* Espacio adicional en móvil para evitar que el contenido quede oculto detrás del botón flotante */}
+            <div className="h-16 sm:hidden"></div>
             
             {/* Botón para pantallas medianas y grandes */}
             <div className="hidden sm:flex justify-end pt-2">
@@ -488,6 +417,8 @@ export default function DateTimeSelectionModal({
           specialtyName: selectedSpecialty, // Nombre de la especialidad
           doctor: selectedDoctor,
           dateTime: selectedTimeSlot,
+          idCita: selectedTimeSlot?.idCita || "", // ID de la cita
+          consultorio: selectedTimeSlot?.consultorio || "", // Número de consultorio
         }}
       />
     </>

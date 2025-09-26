@@ -141,7 +141,7 @@ export default function AppointmentLookupModal({ open, onOpenChange }: Appointme
               <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 bg-blue-100">
                 <Calendar className="w-8 h-8 text-blue-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">Cita encontrada</h3>
+              <h3 className="text-lg font-semibold text-gray-900">Reserva encontrada</h3>
               <div className="inline-block bg-green-100 text-green-700 px-3 py-1 rounded-md text-sm font-medium">
                 Estado: {appointmentData.status}
               </div>

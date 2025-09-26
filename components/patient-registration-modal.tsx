@@ -10,8 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { User, Phone, CreditCard, Mail, ChevronDown, AlertCircle } from "lucide-react"
 import SISVerificationModal from "./sis-verification-modal"
-import HCaptcha from "@hcaptcha/react-hcaptcha"
-import { env } from "@/lib/env"
+import { loadCaptchaEnginge, LoadCanvasTemplate, validateCaptcha } from 'react-simple-captcha'
 import { validatePatientData, getSecureErrorMessage, sanitizeInput, sanitizeName, normalizePhone, normalizeEmail } from "@/lib/validation"
 
 interface PatientRegistrationModalProps {
@@ -19,7 +18,7 @@ interface PatientRegistrationModalProps {
   onOpenChange: (open: boolean) => void
 }
 
-// Using HCaptcha site key from environment variables (manteniendo el nombre RECAPTCHA_SITE_KEY)
+// Using react-simple-captcha for visual captcha verification
 
 interface DocumentType {
   tipoDocumento: string
@@ -42,12 +41,13 @@ export default function PatientRegistrationModal({ open, onOpenChange }: Patient
   })
   const [showSISVerification, setShowSISVerification] = useState(false)
   const [captchaVerified, setCaptchaVerified] = useState(false)
+  const [captchaInput, setCaptchaInput] = useState("")
   const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([])
   const [loadingDocumentTypes, setLoadingDocumentTypes] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
   const [generalError, setGeneralError] = useState<string>("")
-  const captchaRef = useRef<HCaptcha>(null)
+  // No necesitamos ref para react-simple-captcha
   const hasLoadedDocumentTypes = useRef(false)
 
   // Fetch document types from API
@@ -95,6 +95,36 @@ export default function PatientRegistrationModal({ open, onOpenChange }: Patient
     fetchDocumentTypes();
   }, [open]);
 
+  // Referencia para saber si el componente está montado
+  const isMounted = useRef(false)
+
+  // Cargar el captcha cuando se abre el modal y el componente está montado
+  useEffect(() => {
+    // Marcar el componente como montado
+    isMounted.current = true
+    
+    // Función para cargar el captcha con un pequeño retraso
+    const loadCaptcha = () => {
+      if (open && isMounted.current) {
+        // Pequeño timeout para asegurar que el DOM esté listo
+        setTimeout(() => {
+          try {
+            loadCaptchaEnginge(6) // 6 caracteres
+          } catch (error) {
+            console.error('Error al cargar el captcha:', error)
+          }
+        }, 100)
+      }
+    }
+    
+    loadCaptcha()
+    
+    return () => {
+      // Limpiar la referencia cuando el componente se desmonte
+      isMounted.current = false
+    }
+  }, [open])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -109,14 +139,24 @@ export default function PatientRegistrationModal({ open, onOpenChange }: Patient
       setIsSubmitting(true)
       
       // Verificar CAPTCHA primero
-      if (!captchaVerified) {
-        setGeneralError("Por favor, verifica que no eres un robot")
+      try {
+        if (!validateCaptcha(captchaInput)) {
+          setGeneralError("Código de verificación incorrecto. Por favor, inténtalo de nuevo.")
+          setCaptchaInput("") // Limpiar el input
+          setTimeout(() => {
+            loadCaptchaEnginge(6) // Regenerar captcha
+          }, 100)
+          setIsSubmitting(false)
+          return
+        }
+        
+        setCaptchaVerified(true)
+      } catch (error) {
+        console.error('Error al validar captcha:', error)
+        setGeneralError("Error en la verificación de seguridad. Por favor, recarga la página.")
+        setIsSubmitting(false)
         return
       }
-      
-      // Depurar datos del formulario antes de validar
-      console.log('Datos del formulario antes de validar:', formData)
-      console.log('Tipo de documento en submit:', formData.tipoDocumento, 'longitud:', formData.tipoDocumento.length)
       
       // Validar y sanitizar datos con Zod
       const validation = validatePatientData(formData)
@@ -181,9 +221,7 @@ export default function PatientRegistrationModal({ open, onOpenChange }: Patient
     })
   }
   
-  const handleCaptchaChange = (token: string) => {
-    setCaptchaVerified(!!token)
-  }
+  // Ya no necesitamos handleCaptchaChange para react-simple-captcha
 
   return (
     <>
@@ -307,9 +345,6 @@ export default function PatientRegistrationModal({ open, onOpenChange }: Patient
                     maxLength={1}
                   />
                 </div>
-                <p className="text-xs text-gray-500">
-                  Este campo es opcional y solo para fines visuales
-                </p>
               </div>
             )}
 
@@ -343,14 +378,43 @@ export default function PatientRegistrationModal({ open, onOpenChange }: Patient
               </div>
             )}
             
-            <div className="flex justify-center my-4">
-              <div id="captcha-description" className="sr-only">Verificación de seguridad para confirmar que no eres un robot</div>
-              <HCaptcha
-                ref={captchaRef}
-                sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ""}
-                onVerify={handleCaptchaChange}
-                aria-describedby="captcha-description"
-              />
+            {/* Captcha Visual */}
+            <div className="space-y-3">
+              <Label htmlFor="captcha-input" className="text-sm font-medium text-gray-700">
+                Verificación de seguridad
+              </Label>
+              <div className="flex flex-col items-center space-y-3">
+                <div className="border rounded-lg p-3 bg-gray-50 relative">
+                  {open && <LoadCanvasTemplate />}
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      setCaptchaInput("") // Limpiar el input
+                      setTimeout(() => loadCaptchaEnginge(6), 100) // Regenerar captcha
+                    }}
+                    className="absolute top-1 right-1 p-1 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600"
+                    aria-label="Refrescar captcha"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+                    </svg>
+                  </button>
+                </div>
+                <div className="w-full">
+                  <Input
+                    id="captcha-input"
+                    type="text"
+                    value={captchaInput}
+                    onChange={(e) => setCaptchaInput(e.target.value)}
+                    placeholder="Ingrese el código mostrado arriba"
+                    className="text-center"
+                    maxLength={6}
+                  />
+                  <p className="text-xs text-gray-500 mt-1 text-center">
+                    Ingrese los caracteres que ve en la imagen
+                  </p>
+                </div>
+              </div>
             </div>
 
             <Button
@@ -358,7 +422,7 @@ export default function PatientRegistrationModal({ open, onOpenChange }: Patient
               className="w-full text-white py-3 mt-6 hover:opacity-90"
               style={{ backgroundColor: "#0a2463" }}
               size="lg"
-              disabled={!captchaVerified || isSubmitting}
+              disabled={isSubmitting || !captchaInput.trim()}
             >
               {isSubmitting ? "Procesando..." : "Siguiente paso"}
             </Button>
