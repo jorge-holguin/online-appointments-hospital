@@ -29,6 +29,7 @@ interface TimeSlot {
   fullDate: Date
   idCita?: string
   consultorio?: string
+  available: boolean
 }
 
 interface ApiTimeSlot {
@@ -41,6 +42,7 @@ interface ApiTimeSlot {
   hora: string
   turnoConsulta: string
   consultorio: string
+  conSolicitud: boolean
 }
 
 type ShiftType = 'M' | 'T' // M = Mañana, T = Tarde
@@ -99,8 +101,8 @@ export default function DateTimeSelectionModal({
         
         // Procesar los datos para crear el mapa de horarios por día
         const slotsMap = new Map<string, string[]>()
-        data.forEach(slot => {
-          // No verificamos disponible ya que la API devuelve solo citas disponibles
+        data.forEach((slot: ApiTimeSlot) => {
+          // Procesamos todas las citas, independientemente de su disponibilidad
           const dateKey = slot.fecha
           if (!slotsMap.has(dateKey)) {
             slotsMap.set(dateKey, [])
@@ -154,6 +156,12 @@ export default function DateTimeSelectionModal({
       slot.fecha === formattedDate && slot.hora.trim() === time
     );
     
+    // Si no encontramos el slot en la API o si conSolicitud es true (no disponible), no permitir la selección
+    if (!selectedApiSlot || selectedApiSlot.conSolicitud === true) {
+      // No hacemos nada si la cita no está disponible
+      return;
+    }
+    
     // Determinar el ID de la cita, considerando diferentes posibles nombres de campo
     let citaIdValue: string | undefined = undefined;
     if (selectedApiSlot) {
@@ -170,7 +178,8 @@ export default function DateTimeSelectionModal({
       fullDate: day,
       // Incluir idCita y consultorio si están disponibles
       idCita: citaIdValue,
-      consultorio: selectedApiSlot?.consultorio ? selectedApiSlot.consultorio.trim() : undefined
+      consultorio: selectedApiSlot?.consultorio ? selectedApiSlot.consultorio.trim() : undefined,
+      available: !selectedApiSlot.conSolicitud // La cita está disponible si conSolicitud es false
     });
     
     // El slot se ha seleccionado correctamente
@@ -305,11 +314,11 @@ export default function DateTimeSelectionModal({
                     <div className="mt-3 flex items-center justify-center gap-4">
                       <div className="flex items-center">
                         <div className="w-3 h-3 rounded-full bg-gray-300 mr-1"></div>
-                        <span className="text-xs text-gray-500">No disponible</span>
+                        <span className="text-xs text-gray-500">Sin horarios</span>
                       </div>
                       <div className="flex items-center">
                         <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "#3e92cc" }}></div>
-                        <span className="text-xs text-gray-500">Disponible</span>
+                        <span className="text-xs text-gray-500">Con horarios</span>
                       </div>
                     </div>
                   </div>
@@ -333,18 +342,31 @@ export default function DateTimeSelectionModal({
                         {getAvailableTimesForSelectedDay().length > 0 ? (
                           getAvailableTimesForSelectedDay().map((time) => {
                             const isSelected = selectedTimeSlot?.date === formatDateForAPI(selectedDay) && selectedTimeSlot?.time === time;
+                            
+                            // Buscar el slot en los datos de la API para determinar disponibilidad
+                            const apiSlot = availableSlots.find(slot => 
+                              slot.fecha === formatDateForAPI(selectedDay) && slot.hora.trim() === time
+                            );
+                            
+                            // Determinar si está disponible (conSolicitud === false)
+                            const isAvailable = apiSlot && !apiSlot.conSolicitud;
+                            
                             return (
                               <button
                                 key={`${formatDateForAPI(selectedDay)}-${time}`}
                                 onClick={() => handleTimeSelect(selectedDay, time)}
                                 className={cn(
                                   "p-3 rounded-md border text-sm font-medium transition-all duration-200",
-                                  isSelected ? "shadow-md" : "hover:shadow-sm"
+                                  isSelected ? "shadow-md" : "hover:shadow-sm",
+                                  !isAvailable ? "opacity-60 cursor-not-allowed" : ""
                                 )}
                                 style={isSelected ? 
                                   { borderColor: "#d8315b", backgroundColor: "#d8315b", color: "white" } : 
-                                  { borderColor: "#3e92cc", backgroundColor: "white", color: "#3e92cc" }
+                                  isAvailable ?
+                                    { borderColor: "#3e92cc", backgroundColor: "white", color: "#3e92cc" } :
+                                    { borderColor: "#cccccc", backgroundColor: "#f5f5f5", color: "#666666" }
                                 }
+                                disabled={!isAvailable}
                               >
                                 <div className="flex items-center justify-center">
                                   <Clock className="w-4 h-4 mr-2" />
