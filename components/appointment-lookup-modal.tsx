@@ -45,7 +45,7 @@ export default function AppointmentLookupModal({ open, onOpenChange }: Appointme
     setError("")
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_SOLICITUDES_URL}/codigo/${reservationCode}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/v1/solicitudes/codigo/${reservationCode}`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',

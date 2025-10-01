@@ -5,7 +5,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button"
 import { X, ChevronLeft, Calendar, User, MapPin, ChevronRight, Loader2 } from "lucide-react"
 import FinalConfirmationModal from "./final-confirmation-modal"
-import { env } from "@/lib/env"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { goToHomePage } from "@/lib/navigation"
@@ -54,7 +53,7 @@ const uploadReferenceFile = async (reservationCode: string, file: File) => {
     const formData = new FormData()
     formData.append('file', file)
     
-    const uploadResponse = await fetch(`${process.env.NEXT_PUBLIC_API_SOLICITUDES_URL}/${reservationCode}/archivo`, {
+    const uploadResponse = await fetch(`${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/v1/solicitudes/${reservationCode}/archivo`, {
       method: 'POST',
       body: formData
     })
@@ -125,7 +124,7 @@ export default function ConfirmationModal({ open, onOpenChange, onBack, appointm
       // Datos preparados para enviar a la API
 
       // Realizar la llamada a la API
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_SOLICITUDES_URL}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/v1/solicitudes`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

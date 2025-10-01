@@ -59,7 +59,7 @@ export default function PatientRegistrationModal({ open, onOpenChange }: Patient
       setLoadingDocumentTypes(true);
       
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/tipo-documento`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/v1/app-citas/tipo-documento`, {
           method: 'GET',
           headers: {
             'Accept': 'application/json',

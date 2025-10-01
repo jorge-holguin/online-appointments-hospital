@@ -8,7 +8,6 @@ import ConfirmationModal from "./confirmation-modal"
 import { format, addDays, addMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, isSameDay, isWithinInterval, getDay, getDate, parseISO } from "date-fns"
 import { es } from "date-fns/locale"
 import { useDateContext } from "@/context/date-context"
-import { env } from "@/lib/env"
 import { AvailabilityCalendar } from "@/components/ui/availability-calendar"
 import { cn } from "@/lib/utils"
 
@@ -96,7 +95,7 @@ export default function DateTimeSelectionModal({
       
       try {
         // Construir la URL de la API con los parámetros necesarios
-        const url = `${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/citas?fechaInicio=${startDate}&fechaFin=${endDate}&medicoId=${selectedDoctor.nombre}&turnoConsulta=${selectedShift}`
+        const url = `${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/v1/app-citas/citas?fechaInicio=${startDate}&fechaFin=${endDate}&medicoId=${selectedDoctor.nombre}&turnoConsulta=${selectedShift}`
         
         const response = await fetch(url)
         if (!response.ok) throw new Error(`Error al obtener horarios: ${response.status}`)

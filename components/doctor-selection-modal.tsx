@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label"
 import { X, ChevronLeft, Search, ChevronRight, Loader2 } from "lucide-react"
 import DateTimeSelectionModal from "./date-time-selection-modal"
 import { useDateContext } from "@/context/date-context"
-import { env } from "@/lib/env"
 
 interface DoctorSelectionModalProps {
   open: boolean
@@ -57,7 +56,7 @@ export default function DoctorSelectionModal({
       
       try {
         // Llamada a la API real usando el ID de especialidad
-        const url = `${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/medicos?fechaInicio=${startDate}&fechaFin=${endDate}&idEspecialidad=${selectedSpecialtyId}`
+        const url = `${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/v1/app-citas/medicos?fechaInicio=${startDate}&fechaFin=${endDate}&idEspecialidad=${selectedSpecialtyId}`
         
         const response = await fetch(url)
         if (!response.ok) throw new Error(`Error al obtener doctores: ${response.status}`)

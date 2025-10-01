@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect } from 'react'
-import { env } from '@/lib/env'
 
 /**
  * Componente que bloquea el acceso a la consola del navegador
@@ -10,7 +9,7 @@ import { env } from '@/lib/env'
 export default function ConsoleBlocker() {
   useEffect(() => {
     // Solo aplicar si la variable de entorno está configurada para bloquear
-    if (env.ALLOW_CONSOLE_ACCESS) {
+    if (process.env.NEXT_PUBLIC_ALLOW_CONSOLE_ACCESS === 'true') {
       return
     }
 

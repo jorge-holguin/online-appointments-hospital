@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { X, ChevronLeft, Search, Loader2 } from "lucide-react"
-import DoctorSelectionModal from "./doctor-selection-modal"
+import SearchTypeSelectionModal from "./search-type-selection-modal"
 import { useDateContext } from "@/context/date-context"
 
 interface SpecialtySelectionModalProps {
@@ -21,9 +21,6 @@ interface Specialty {
   nombre: string
 }
 
-// Import environment variables
-import { env } from "@/lib/env"
-
 export default function SpecialtySelectionModal({
   open,
   onOpenChange,
@@ -33,7 +30,7 @@ export default function SpecialtySelectionModal({
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedSpecialty, setSelectedSpecialty] = useState<string>("") // Nombre de la especialidad
   const [selectedSpecialtyId, setSelectedSpecialtyId] = useState<string>("") // ID de la especialidad
-  const [showDoctorSelection, setShowDoctorSelection] = useState(false)
+  const [showSearchTypeSelection, setShowSearchTypeSelection] = useState(false)
   const [specialties, setSpecialties] = useState<Specialty[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -58,7 +55,7 @@ export default function SpecialtySelectionModal({
       setError(null)
       
       try {
-        const url = `${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/especialidades?fechaInicio=${startDate}&fechaFin=${endDate}`
+        const url = `${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/v1/app-citas/especialidades?fechaInicio=${startDate}&fechaFin=${endDate}`
         
         const response = await fetch(url)
         
@@ -100,13 +97,13 @@ export default function SpecialtySelectionModal({
 
   const handleNext = () => {
     if (selectedSpecialty) {
-      setShowDoctorSelection(true)
+      setShowSearchTypeSelection(true)
     }
   }
 
   return (
     <>
-      <Dialog open={open && !showDoctorSelection} onOpenChange={onOpenChange}>
+      <Dialog open={open && !showSearchTypeSelection} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <div className="flex items-center gap-2">
@@ -187,10 +184,10 @@ export default function SpecialtySelectionModal({
         </DialogContent>
       </Dialog>
 
-      <DoctorSelectionModal
-        open={showDoctorSelection}
-        onOpenChange={setShowDoctorSelection}
-        onBack={() => setShowDoctorSelection(false)}
+      <SearchTypeSelectionModal
+        open={showSearchTypeSelection}
+        onOpenChange={setShowSearchTypeSelection}
+        onBack={() => setShowSearchTypeSelection(false)}
         patientData={patientData}
         selectedSpecialty={selectedSpecialty}
         selectedSpecialtyId={selectedSpecialtyId}
