@@ -68,7 +68,6 @@ export default function DateTimeSelectionModal({
 }: DateTimeSelectionModalProps) {
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<TimeSlot | null>(null)
   const [showConfirmation, setShowConfirmation] = useState(false)
-  const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectedShift, setSelectedShift] = useState<ShiftType>('M') // Por defecto turno mañana
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -79,7 +78,13 @@ export default function DateTimeSelectionModal({
   const [dayTimeSlots, setDayTimeSlots] = useState<Map<string, string[]>>(new Map())
 
   // Usar el contexto de fechas compartido
-  const { startDate, endDate } = useDateContext()
+  //const { startDate, endDate } = useDateContext()
+  
+  const startDate = "2025-08-01"
+  const endDate = "2025-08-31"
+  
+  // Inicializar el mes del calendario con la fecha de inicio
+  const [currentMonth, setCurrentMonth] = useState(parseISO(startDate))
   
   // Cargar horarios disponibles desde la API
   useEffect(() => {
@@ -113,6 +118,13 @@ export default function DateTimeSelectionModal({
         })
         
         setDayTimeSlots(slotsMap)
+        
+        // Debug: mostrar los datos cargados
+        console.log('Datos de citas cargados:', {
+          totalSlots: data.length,
+          availableDates: Array.from(slotsMap.keys()),
+          slotsMap: Object.fromEntries(slotsMap)
+        })
       } catch (err) {
         console.error('Error fetching available slots:', err)
         setError('No se pudieron cargar los horarios disponibles. Por favor, inténtelo de nuevo.')
@@ -193,23 +205,36 @@ export default function DateTimeSelectionModal({
 
   // Ya no necesitamos funciones de navegación para slides
   
-  // Verificar si el mes actual es el mes actual del sistema
-  const isCurrentMonthToday = () => {
-    const today = new Date()
-    return (
-      currentMonth.getMonth() === today.getMonth() && 
-      currentMonth.getFullYear() === today.getFullYear()
-    )
+  // Calcular el rango de fechas permitido
+  const minDate = parseISO(startDate)
+  const maxDate = parseISO(endDate)
+  
+  // Permitir navegar 6 meses antes y después del rango de fechas
+  const minNavigationDate = addMonths(startOfMonth(minDate), -6)
+  const maxNavigationDate = addMonths(startOfMonth(maxDate), 6)
+  
+  // Verificar si podemos navegar al mes anterior
+  const canGoPrevMonth = () => {
+    const prevMonth = addMonths(currentMonth, -1)
+    return prevMonth >= minNavigationDate
+  }
+  
+  // Verificar si podemos navegar al mes siguiente
+  const canGoNextMonth = () => {
+    const nextMonth = addMonths(currentMonth, 1)
+    return nextMonth <= maxNavigationDate
   }
   
   const goToPrevMonth = () => {
-    setCurrentMonth(prevMonth => addMonths(prevMonth, -1))
-    // Ya no necesitamos resetear slides
+    if (canGoPrevMonth()) {
+      setCurrentMonth(prevMonth => addMonths(prevMonth, -1))
+    }
   }
   
   const goToNextMonth = () => {
-    setCurrentMonth(prevMonth => addMonths(prevMonth, 1))
-    // Ya no necesitamos resetear slides
+    if (canGoNextMonth()) {
+      setCurrentMonth(prevMonth => addMonths(prevMonth, 1))
+    }
   }
 
   return (
@@ -299,15 +324,38 @@ export default function DateTimeSelectionModal({
                 {/* Calendario de disponibilidad */}
                 <div className="w-full md:w-1/2">
                   <div className="bg-white rounded-lg border shadow-sm p-3 md:p-4">
-                    <h3 className="font-semibold text-base md:text-lg mb-2 md:mb-3 text-center" style={{ color: "#0a2463" }}>
-                      Selecciona una fecha disponible
-                    </h3>
+                    <div className="flex items-center justify-between mb-2 md:mb-3">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={goToPrevMonth}
+                        disabled={!canGoPrevMonth()}
+                        className="h-8 w-8"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      <h3 className="font-semibold text-base md:text-lg text-center capitalize" style={{ color: "#0a2463" }}>
+                        {format(currentMonth, 'MMMM yyyy', { locale: es })}
+                      </h3>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={goToNextMonth}
+                        disabled={!canGoNextMonth()}
+                        className="h-8 w-8"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
                     <div className="flex justify-center">
                       <AvailabilityCalendar
                         availableDates={availableDates}
                         onSelectDate={handleDateSelect}
                         selectedDate={selectedDay || undefined}
-                        fromDate={new Date()}
+                        fromDate={minDate}
+                        toDate={maxDate}
+                        month={currentMonth}
+                        onMonthChange={setCurrentMonth}
                         className="max-w-[320px] mx-auto"
                       />
                     </div>

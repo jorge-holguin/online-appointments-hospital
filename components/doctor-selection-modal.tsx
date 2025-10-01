@@ -42,7 +42,10 @@ export default function DoctorSelectionModal({
   const [error, setError] = useState<string | null>(null)
   
   // Usar el contexto de fechas compartido
-  const { startDate, endDate } = useDateContext()
+  //const { startDate, endDate } = useDateContext()
+
+  const startDate = "2025-08-01"
+  const endDate = "2025-08-31"
 
   // Cargar doctores desde la API
   useEffect(() => {

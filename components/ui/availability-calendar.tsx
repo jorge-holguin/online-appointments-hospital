@@ -13,6 +13,8 @@ interface AvailabilityCalendarProps {
   className?: string
   fromDate?: Date
   toDate?: Date
+  month?: Date // Mes a mostrar en el calendario
+  onMonthChange?: (month: Date) => void // Callback cuando cambia el mes
 }
 
 export function AvailabilityCalendar({
@@ -22,20 +24,37 @@ export function AvailabilityCalendar({
   className,
   fromDate = new Date(),
   toDate,
+  month,
+  onMonthChange,
 }: AvailabilityCalendarProps) {
   // Convertir las fechas disponibles de string a objetos Date
   const availableDateObjects = availableDates.map(dateStr => parseISO(dateStr))
   
+  // Debug: mostrar las fechas disponibles
+  React.useEffect(() => {
+    console.log('AvailabilityCalendar - Fechas disponibles:', availableDates)
+    console.log('AvailabilityCalendar - Mes actual:', month)
+  }, [availableDates, month])
+  
   // Deshabilitar días que no están en las fechas disponibles
   const disabledDays = (date: Date) => {
-    // Si la fecha es anterior a hoy, deshabilitar
-    if (date < new Date(new Date().setHours(0, 0, 0, 0))) {
-      return true
+    // Normalizar la fecha a medianoche para comparación
+    const dateNormalized = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+    
+    // Si se proporciona fromDate y la fecha es anterior, deshabilitar
+    if (fromDate) {
+      const fromNormalized = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate())
+      if (dateNormalized < fromNormalized) {
+        return true
+      }
     }
     
     // Si se proporciona toDate y la fecha es posterior, deshabilitar
-    if (toDate && date > toDate) {
-      return true
+    if (toDate) {
+      const toNormalized = new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate())
+      if (dateNormalized > toNormalized) {
+        return true
+      }
     }
     
     // Si la fecha no está en la lista de fechas disponibles, deshabilitar
@@ -78,11 +97,13 @@ export function AvailabilityCalendar({
         className="rounded-md border-0"
         fromDate={fromDate}
         toDate={toDate}
+        month={month}
+        onMonthChange={onMonthChange}
         captionLayout="label"
         classNames={{
           month: "space-y-2",
-          caption: "flex justify-center pt-1 relative items-center",
-          caption_label: "text-sm font-medium",
+          caption: "hidden", // Ocultamos el caption completo ya que tenemos nuestro propio encabezado
+          caption_label: "hidden",
           nav: "hidden", // Ocultamos la navegación del calendario ya que tenemos nuestra propia navegación
           table: "w-full border-collapse space-y-1",
           head_row: "flex",

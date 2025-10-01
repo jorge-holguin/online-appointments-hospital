@@ -109,7 +109,7 @@ export default function PatientRegistrationModal({ open, onOpenChange }: Patient
         // Pequeño timeout para asegurar que el DOM esté listo
         setTimeout(() => {
           try {
-            loadCaptchaEnginge(6) // 6 caracteres
+            loadCaptchaEnginge(4) // 6 caracteres
           } catch (error) {
             console.error('Error al cargar el captcha:', error)
           }
@@ -144,7 +144,7 @@ export default function PatientRegistrationModal({ open, onOpenChange }: Patient
           setGeneralError("Código de verificación incorrecto. Por favor, inténtalo de nuevo.")
           setCaptchaInput("") // Limpiar el input
           setTimeout(() => {
-            loadCaptchaEnginge(6) // Regenerar captcha
+            loadCaptchaEnginge(4) // Regenerar captcha
           }, 100)
           setIsSubmitting(false)
           return
@@ -390,7 +390,7 @@ export default function PatientRegistrationModal({ open, onOpenChange }: Patient
                     type="button"
                     onClick={() => {
                       setCaptchaInput("") // Limpiar el input
-                      setTimeout(() => loadCaptchaEnginge(6), 100) // Regenerar captcha
+                      setTimeout(() => loadCaptchaEnginge(4), 100) // Regenerar captcha
                     }}
                     className="absolute top-1 right-1 p-1 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600"
                     aria-label="Refrescar captcha"

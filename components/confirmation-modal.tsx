@@ -160,9 +160,10 @@ export default function ConfirmationModal({ open, onOpenChange, onBack, appointm
   }
 
   const handleCancel = () => {
+    // Close the modal first
     onOpenChange(false)
-    // Redirigir a la página principal
-    goToHomePage()
+    // Redirigir a la página principal con un delay
+    goToHomePage(100) // 100ms delay should be enough for the modal to close
   }
 
   return (

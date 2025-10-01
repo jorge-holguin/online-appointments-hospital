@@ -60,8 +60,8 @@ const DialogContent = React.forwardRef<
   // Función para manejar el cierre del diálogo
   const handleClose = () => {
     if (redirectToHome) {
-      // Redirigir a la página principal
-      goToHomePage()
+      // Redirigir a la página principal con un delay para asegurar que el modal se cierre primero
+      goToHomePage(100) // 100ms delay should be enough for the modal to close
     }
     // Si no se redirige, el comportamiento predeterminado de Close se encarga de cerrar el diálogo
   }

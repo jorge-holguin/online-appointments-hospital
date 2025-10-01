@@ -39,7 +39,17 @@ export default function SpecialtySelectionModal({
   const [error, setError] = useState<string | null>(null)
   
   // Usar el contexto de fechas compartido
-  const { startDate, endDate } = useDateContext()
+  //const { startDate, endDate } = useDateContext()
+  
+  const startDate = "2025-08-01"
+  const endDate = "2025-08-31"
+  
+  // Resetear el filtro cuando se cierra el modal
+  useEffect(() => {
+    if (!open) {
+      setSearchTerm("")
+    }
+  }, [open])
   
   // Cargar especialidades desde la API
   useEffect(() => {
@@ -135,19 +145,19 @@ export default function SpecialtySelectionModal({
             ) : (
               <div className="max-h-60 overflow-y-auto space-y-2">
                 {filteredSpecialties.length > 0 ? (
-                  filteredSpecialties.map((specialty) => (
+                  filteredSpecialties.map((specialty, index) => (
                     <button
-                      key={specialty.idEspecialidad}
+                      key={`${specialty.idEspecialidad}-${specialty.nombre}-${index}`}
                       onClick={() => {
                         setSelectedSpecialty(specialty.nombre)
                         setSelectedSpecialtyId(specialty.idEspecialidad)
                       }}
                       className={`w-full text-left p-3 rounded-lg border transition-colors ${
-                        selectedSpecialty === specialty.nombre
+                        selectedSpecialty === specialty.nombre && selectedSpecialtyId === specialty.idEspecialidad
                           ? "border-blue-500 text-white"
                           : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                       }`}
-                      style={selectedSpecialty === specialty.nombre ? { backgroundColor: "#3e92cc" } : {}}
+                      style={selectedSpecialty === specialty.nombre && selectedSpecialtyId === specialty.idEspecialidad ? { backgroundColor: "#3e92cc" } : {}}
                     >
                       {specialty.nombre}
                     </button>

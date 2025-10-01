@@ -1,8 +1,9 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { CheckCircle, Calendar, User, MapPin, Mail, AlertCircle } from "lucide-react"
+import { CheckCircle, Calendar, User, MapPin, Mail, AlertCircle, Copy, Check } from "lucide-react"
 import { goToHomePage } from "@/lib/navigation"
 
 interface FinalConfirmationModalProps {
@@ -30,78 +31,172 @@ interface FinalConfirmationModalProps {
   }
 }
 
-export default function FinalConfirmationModal({ open, onOpenChange, reservationCode, appointmentStatus, appointmentData }: FinalConfirmationModalProps) {
+export default function FinalConfirmationModal({
+  open,
+  onOpenChange,
+  reservationCode,
+  appointmentStatus,
+  appointmentData,
+}: FinalConfirmationModalProps) {
+  const [copied, setCopied] = useState(false)
+  const [copyAnimating, setCopyAnimating] = useState(false)
+
+  // Effect to handle copy animation timing
+  useEffect(() => {
+    let timer: NodeJS.Timeout
+    if (copied) {
+      setCopyAnimating(true)
+      timer = setTimeout(() => {
+        setCopied(false)
+        setTimeout(() => setCopyAnimating(false), 300) // Allow time for animation to complete
+      }, 2000)
+    }
+    return () => clearTimeout(timer)
+  }, [copied])
+
   const handleBackToHome = () => {
+    // Close the modal first
     onOpenChange(false)
-    // Redirigir a la página principal
-    goToHomePage()
+    // Then navigate with a delay to ensure the modal is fully closed
+    goToHomePage(100) // 100ms delay should be enough for the modal to close
+  }
+
+  const handleCopy = async () => {
+    try {
+      // Intentar primero con la API moderna
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(reservationCode)
+        setCopied(true)
+        return
+      }
+      
+      // Fallback para dispositivos móviles
+      const textArea = document.createElement("textarea")
+      textArea.value = reservationCode
+      textArea.setAttribute('readonly', '')
+      textArea.style.position = 'absolute'
+      textArea.style.left = '-9999px'
+      
+      document.body.appendChild(textArea)
+      
+      // Para iOS Safari
+      const range = document.createRange()
+      range.selectNodeContents(textArea)
+      
+      const selection = window.getSelection()
+      selection?.removeAllRanges()
+      selection?.addRange(range)
+      
+      textArea.setSelectionRange(0, 999999)
+      
+      const successful = document.execCommand('copy')
+      document.body.removeChild(textArea)
+      
+      if (successful) {
+        setCopied(true)
+      } else {
+        // Si todo falla, mostrar el código para copia manual
+        prompt("Copia este código:", reservationCode)
+      }
+    } catch (err) {
+      console.error("Error al copiar:", err)
+      // Mostrar el código para copia manual
+      prompt("Copia este código:", reservationCode)
+    }
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="w-[95vw] max-w-lg max-h-[90vh] flex flex-col"
-        redirectToHome={true}
-      >
-        {/* Header fijo (invisible para accesibilidad) */}
-        <div className="flex-shrink-0">
-          <DialogTitle className="sr-only">
-            Confirmación de reserva de cita
-          </DialogTitle>
-          <DialogDescription className="sr-only">
-            Confirmación de reserva de cita exitosa
-          </DialogDescription>
-        </div>
-  
-        {/* Contenido con scroll */}
-        <div className="flex-1 overflow-y-auto space-y-6 p-4 text-center">
-          {/* Success Icon */}
-          <div className="flex justify-center">
-            <div
-              className="w-20 h-20 rounded-full flex items-center justify-center"
-              style={{ backgroundColor: "#3e92cc20" }}
-            >
-              <CheckCircle className="w-12 h-12" style={{ color: "#3e92cc" }} />
-            </div>
-          </div>
-  
-          {/* Success Message */}
-          <div className="space-y-2">
-            <h2 className="text-2xl font-bold text-gray-900">
-              Tu cita ha sido reservada
-            </h2>
-            <p className="text-gray-600">
-              Se ha enviado un correo con los detalles de tu cita
-            </p>
-          </div>
-  
-          {/* Reservation Code */}
+    <DialogContent
+      className="w-[95vw] max-w-lg max-h-[90vh] flex flex-col"
+      redirectToHome={true}
+    >
+      {/* Header fijo */}
+      <div className="flex-shrink-0">
+        <DialogTitle className="sr-only">
+          Confirmación de reserva de cita
+        </DialogTitle>
+        <DialogDescription className="sr-only">
+          Confirmación de reserva de cita exitosa
+        </DialogDescription>
+      </div>
+
+      {/* Contenido con scroll */}
+      <div className="flex-1 overflow-y-auto space-y-6 p-4 text-center">
+        {/* Icono de éxito */}
+        <div className="flex justify-center">
           <div
-            className="border rounded-lg p-4"
-            style={{
-              backgroundColor: "#3e92cc10",
-              borderColor: "#3e92cc40",
-            }}
+            className="w-20 h-20 rounded-full flex items-center justify-center"
+            style={{ backgroundColor: "#3e92cc20" }}
           >
-            <p className="text-sm mb-1" style={{ color: "#0a2463" }}>
-              Código único de reserva
-            </p>
+            <CheckCircle className="w-12 h-12" style={{ color: "#3e92cc" }} />
+          </div>
+        </div>
+
+        {/* Mensaje de éxito */}
+        <div className="space-y-2">
+          <h2 className="text-2xl font-bold text-gray-900">
+            Tu cita ha sido reservada
+          </h2>
+          <p className="text-gray-600">
+            Se ha enviado un correo con los detalles de tu cita
+          </p>
+        </div>
+
+        {/* Código de reserva con botón copiar */}
+        <div
+          className="border rounded-lg p-4"
+          style={{
+            backgroundColor: "#3e92cc10",
+            borderColor: "#3e92cc40",
+          }}
+        >
+          <p className="text-sm mb-1" style={{ color: "#0a2463" }}>
+            Código único de reserva
+          </p>
+          <div className="flex items-center justify-center gap-2">
             <p
               className="text-2xl font-bold font-mono"
               style={{ color: "#0a2463" }}
             >
               {reservationCode}
             </p>
-            <p className="text-xs mt-1" style={{ color: "#3e92cc" }}>
+            <button
+              onClick={handleCopy}
+              className="p-2 rounded-full hover:bg-gray-100 transition-all duration-200"
+              aria-label="Copiar código"
+              style={{
+                backgroundColor: copied ? "#3e92cc20" : "transparent",
+              }}
+            >
+              {copied ? (
+                <Check className="w-5 h-5 text-green-600" />
+              ) : (
+                <Copy className="w-5 h-5 text-gray-600" />
+              )}
+            </button>
+          </div>
+          <div className="relative h-5 mt-1">
+            <p 
+              className={`text-xs absolute w-full transition-all duration-300 ${copied ? "opacity-100" : "opacity-0"}`} 
+              style={{ color: "#22c55e" }}
+            >
+              Código copiado al portapapeles
+            </p>
+            <p 
+              className={`text-xs absolute w-full transition-all duration-300 ${copied ? "opacity-0" : "opacity-100"}`} 
+              style={{ color: "#3e92cc" }}
+            >
               Guarda este código para consultar tu cita
             </p>
-            {appointmentData?.idCita && (
-              <p className="text-xs mt-1 text-gray-500">
-                ID de cita: {appointmentData.idCita}
-              </p>
-            )}
           </div>
-  
+          {appointmentData?.idCita && (
+            <p className="text-xs mt-1 text-gray-500">
+              ID de cita: {appointmentData.idCita}
+            </p>
+          )}
+        </div>
+
           {/* Disclaimer */}
           <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-left space-y-2">
             <div className="flex items-start gap-2">

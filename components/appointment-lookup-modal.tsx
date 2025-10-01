@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { X, Search, Calendar, User, MapPin, Loader2 } from "lucide-react"
+import { X, Search, Calendar, User, MapPin, Loader2, AlertCircle, CheckCircle, Clock, XCircle, RefreshCw } from "lucide-react"
 
 interface AppointmentLookupModalProps {
   open: boolean
@@ -27,6 +27,8 @@ interface AppointmentResponse {
   correo: string;
   codigo: string;
   estado: string;
+  observacion?: string;
+  tipoAtencion?: string;
 }
 
 export default function AppointmentLookupModal({ open, onOpenChange }: AppointmentLookupModalProps) {
@@ -67,7 +69,9 @@ export default function AppointmentLookupModal({ open, onOpenChange }: Appointme
         patient: data.nombres,
         status: data.estado,
         especialidad: data.especialidad,
-        turno: data.turno
+        turno: data.turno,
+        observacion: data.observacion,
+        tipoAtencion: data.tipoAtencion
       })
     } catch (err) {
       console.error('Error fetching appointment:', err)
@@ -83,6 +87,66 @@ export default function AppointmentLookupModal({ open, onOpenChange }: Appointme
     setAppointmentData(null)
     setError("")
     onOpenChange(false)
+  }
+
+  const handleSearchAnother = () => {
+    setReservationCode("")
+    setAppointmentData(null)
+    setError("")
+  }
+
+  const getStatusConfig = (status: string, observacion?: string) => {
+    switch (status) {
+      case "PENDIENTE":
+        return {
+          icon: <Clock className="w-8 h-8 text-yellow-600" />,
+          bgColor: "bg-yellow-100",
+          textColor: "text-yellow-700",
+          borderColor: "border-yellow-200",
+          message: "Tu solicitud de cita está siendo procesada. Te notificaremos cuando tengamos una respuesta."
+        }
+      case "EN_REVISION":
+        return {
+          icon: <AlertCircle className="w-8 h-8 text-blue-600" />,
+          bgColor: "bg-blue-100",
+          textColor: "text-blue-700",
+          borderColor: "border-blue-200",
+          message: "Tu solicitud está en revisión por nuestro equipo. Pronto tendrás una respuesta."
+        }
+      case "CITADO":
+        return {
+          icon: <CheckCircle className="w-8 h-8 text-green-600" />,
+          bgColor: "bg-green-100",
+          textColor: "text-green-700",
+          borderColor: "border-green-200",
+          message: "¡Felicidades! Tu cita ha sido otorgada. Debes llegar 30 minutos antes de la hora programada con tu DNI" + 
+                   (appointmentData?.tipoAtencion === "SIS" ? " y una copia impresa de tu referencia." : ".")
+        }
+      case "DENEGADO":
+        return {
+          icon: <XCircle className="w-8 h-8 text-red-600" />,
+          bgColor: "bg-red-100",
+          textColor: "text-red-700",
+          borderColor: "border-red-200",
+          message: `Su solicitud de reserva fue denegada por: "${observacion || 'No se especificó el motivo'}"`
+        }
+      case "ELIMINADO":
+        return {
+          icon: <XCircle className="w-8 h-8 text-gray-600" />,
+          bgColor: "bg-gray-100",
+          textColor: "text-gray-700",
+          borderColor: "border-gray-200",
+          message: "Esta cita ha sido eliminada del sistema."
+        }
+      default:
+        return {
+          icon: <AlertCircle className="w-8 h-8 text-gray-600" />,
+          bgColor: "bg-gray-100",
+          textColor: "text-gray-700",
+          borderColor: "border-gray-200",
+          message: "Estado de cita no reconocido."
+        }
+    }
   }
 
   return (
@@ -137,15 +201,27 @@ export default function AppointmentLookupModal({ open, onOpenChange }: Appointme
           </form>
         ) : (
           <div className="space-y-4">
-            <div className="text-center mb-4">
-              <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 bg-blue-100">
-                <Calendar className="w-8 h-8 text-blue-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900">Reserva encontrada</h3>
-              <div className="inline-block bg-green-100 text-green-700 px-3 py-1 rounded-md text-sm font-medium">
-                Estado: {appointmentData.status}
-              </div>
-            </div>
+            {(() => {
+              const statusConfig = getStatusConfig(appointmentData.status, appointmentData.observacion)
+              return (
+                <div className="text-center mb-4">
+                  <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 ${statusConfig.bgColor}`}>
+                    {statusConfig.icon}
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900">Reserva encontrada</h3>
+                  <div className={`inline-block ${statusConfig.bgColor} ${statusConfig.textColor} px-3 py-1 rounded-md text-sm font-medium mb-3`}>
+                    Estado: {appointmentData.status}
+                  </div>
+                  
+                  {/* Mensaje personalizado según el estado */}
+                  <div className={`p-4 rounded-lg ${statusConfig.bgColor} ${statusConfig.borderColor} border`}>
+                    <p className={`text-sm ${statusConfig.textColor}`}>
+                      {statusConfig.message}
+                    </p>
+                  </div>
+                </div>
+              )
+            })()}
 
             <div className="border rounded-lg p-4 bg-white space-y-3 shadow-sm">
               <div className="flex items-center gap-3">
@@ -172,6 +248,9 @@ export default function AppointmentLookupModal({ open, onOpenChange }: Appointme
                 <div>
                   <p className="text-xs text-gray-500">Ubicación</p>
                   <p className="font-medium">{appointmentData.location}</p>
+                  <p className="text-xs text-gray-600">
+                    {process.env.NEXT_PUBLIC_HOSPITAL_ADDRESS || "Jr. Cuzco 274 - Chosica"}
+                  </p>
                 </div>
               </div>
 
@@ -190,14 +269,25 @@ export default function AppointmentLookupModal({ open, onOpenChange }: Appointme
               </p>
             </div>
 
-            <Button
-              onClick={handleClose}
-              className="w-full text-white py-3 hover:opacity-90"
-              style={{ backgroundColor: "#0a2463" }}
-              size="lg"
-            >
-              Volver al inicio
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button
+                onClick={handleSearchAnother}
+                variant="outline"
+                className="flex-1 py-3 border-gray-300 text-gray-700 hover:bg-gray-50"
+                size="lg"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Buscar otro código
+              </Button>
+              <Button
+                onClick={handleClose}
+                className="flex-1 text-white py-3 hover:opacity-90"
+                style={{ backgroundColor: "#0a2463" }}
+                size="lg"
+              >
+                Volver al inicio
+              </Button>
+            </div>
           </div>
         )}
       </DialogContent>
