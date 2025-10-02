@@ -199,7 +199,7 @@ export default function ConfirmationModal({ open, onOpenChange, onBack, appointm
         <DialogContent className="sm:max-w-md max-w-[95vw] max-h-[90vh] overflow-y-auto" redirectToHome={true}>
           <DialogHeader>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={onBack} className="p-1 sm:p-2">
+              <Button variant="ghost" size="icon" onClick={onBack} className="p-1 sm:p-2 hover:bg-blue-50">
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               <DialogTitle className="text-lg sm:text-xl font-semibold">¡Ya casi terminas!</DialogTitle>
@@ -290,8 +290,7 @@ export default function ConfirmationModal({ open, onOpenChange, onBack, appointm
               </Button>
               <Button
                 onClick={handleConfirm}
-                className="flex-1 text-white px-4 sm:px-8 py-2 sm:py-3 text-sm sm:text-base font-semibold hover:opacity-90 disabled:opacity-50"
-                style={{ backgroundColor: "#d8315b" }}
+                className="flex-1 bg-[#3e92cc] hover:bg-[#3e92cc]/90 text-white px-4 sm:px-8 py-2 sm:py-3 text-sm sm:text-base font-semibold disabled:opacity-50 transition-all"
                 size="lg"
                 disabled={isSubmitting || isUploadingFile}
               >

@@ -90,7 +90,7 @@ export default function DoctorSelectionModal({
         <DialogContent className="sm:max-w-lg" redirectToHome={true}>
           <DialogHeader>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={onBack}>
+              <Button variant="ghost" size="icon" onClick={onBack} className="hover:bg-blue-50">
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               <DialogTitle className="text-xl font-semibold">¿Con quién deseas atenderte?</DialogTitle>
@@ -189,11 +189,10 @@ export default function DoctorSelectionModal({
             <Button
               onClick={handleNext}
               disabled={!selectedDoctor}
-              className="w-full text-white py-3 mt-6 hover:opacity-90"
-              style={{ backgroundColor: "#0a2463" }}
+              className="w-full bg-[#3e92cc] hover:bg-[#3e92cc]/90 text-white py-3 mt-6 font-semibold disabled:opacity-50 transition-all"
               size="lg"
             >
-              Siguiente paso
+              Continuar
             </Button>
           </div>
         </DialogContent>

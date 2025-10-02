@@ -418,12 +418,11 @@ export default function PatientRegistrationModal({ open, onOpenChange }: Patient
 
             <Button
               type="submit"
-              className="w-full text-white py-3 mt-6 hover:opacity-90"
-              style={{ backgroundColor: "#0a2463" }}
+              className="w-full bg-[#3e92cc] hover:bg-[#3e92cc]/90 text-white py-3 mt-6 font-semibold disabled:opacity-50 transition-all"
               size="lg"
               disabled={isSubmitting || !captchaInput.trim()}
             >
-              {isSubmitting ? "Procesando..." : "Siguiente paso"}
+              {isSubmitting ? "Procesando..." : "Continuar"}
             </Button>
           </form>
         </DialogContent>
