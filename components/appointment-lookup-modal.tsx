@@ -151,7 +151,7 @@ export default function AppointmentLookupModal({ open, onOpenChange }: Appointme
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md" redirectToHome={true}>
+      <DialogContent className="sm:max-w-md max-h-[85dvh] overflow-y-auto overscroll-contain scroll-smooth" redirectToHome={true}>
         <DialogHeader>
           <DialogTitle className="text-center text-xl font-semibold">Consulta de cita</DialogTitle>
           <DialogDescription className="text-center">
