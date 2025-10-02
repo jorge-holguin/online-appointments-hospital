@@ -5,9 +5,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { X, ChevronLeft, Search, ChevronRight, Loader2 } from "lucide-react"
+import { ChevronLeft, Search, ChevronRight, Loader2 } from "lucide-react"
 import DateTimeSelectionModal from "./date-time-selection-modal"
-import { useDateContext } from "@/context/date-context"
+import { useAppConfig } from "@/hooks/use-app-config"
 
 interface DoctorSelectionModalProps {
   open: boolean
@@ -40,16 +40,15 @@ export default function DoctorSelectionModal({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   
-  // Usar el contexto de fechas compartido
-  //const { startDate, endDate } = useDateContext()
-
-  const startDate = "2025-08-01"
-  const endDate = "2025-08-31"
+  // Usar configuración centralizada
+  const { config } = useAppConfig()
+  const startDate = config?.dateRange.startDate || "2025-08-01"
+  const endDate = config?.dateRange.endDate || "2025-08-31"
 
   // Cargar doctores desde la API
   useEffect(() => {
     const fetchDoctors = async () => {
-      if (!selectedSpecialtyId || !open) return
+      if (!selectedSpecialtyId || !open || !config) return
       
       setLoading(true)
       setError(null)
@@ -73,7 +72,7 @@ export default function DoctorSelectionModal({
     }
     
     fetchDoctors()
-  }, [selectedSpecialtyId, startDate, endDate, open])
+  }, [selectedSpecialtyId, startDate, endDate, open, config])
   
   const filteredDoctors = doctors.filter((doctor) => 
     doctor.medicoId.toLowerCase().includes(searchTerm.toLowerCase())

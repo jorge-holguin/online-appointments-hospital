@@ -1,15 +1,15 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { X, ChevronLeft, ChevronRight, Calendar as CalendarIcon, ArrowLeft, ArrowRight, Sun, Moon, Clock } from "lucide-react"
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Sun, Moon, Clock } from "lucide-react"
 import ConfirmationModal from "./confirmation-modal"
-import { format, addDays, addMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, isSameDay, isWithinInterval, getDay, getDate, parseISO } from "date-fns"
+import { format, addMonths, startOfMonth, parseISO } from "date-fns"
 import { es } from "date-fns/locale"
-import { useDateContext } from "@/context/date-context"
 import { AvailabilityCalendar } from "@/components/ui/availability-calendar"
 import { cn } from "@/lib/utils"
+import { useAppConfig } from "@/hooks/use-app-config"
 
 interface DateTimeSelectionModalProps {
   open: boolean
@@ -76,11 +76,10 @@ export default function DateTimeSelectionModal({
   const [availableSlots, setAvailableSlots] = useState<ApiTimeSlot[]>([])
   const [dayTimeSlots, setDayTimeSlots] = useState<Map<string, string[]>>(new Map())
 
-  // Usar el contexto de fechas compartido
-  //const { startDate, endDate } = useDateContext()
-  
-  const startDate = "2025-08-01"
-  const endDate = "2025-08-31"
+  // Usar configuración centralizada
+  const { config } = useAppConfig()
+  const startDate = config?.dateRange.startDate || "2025-08-01"
+  const endDate = config?.dateRange.endDate || "2025-08-31"
   
   // Inicializar el mes del calendario con la fecha de inicio
   const [currentMonth, setCurrentMonth] = useState(parseISO(startDate))
@@ -88,7 +87,7 @@ export default function DateTimeSelectionModal({
   // Cargar horarios disponibles desde la API
   useEffect(() => {
     const fetchAvailableSlots = async () => {
-      if (!selectedDoctor?.nombre || !open) return
+      if (!selectedDoctor?.nombre || !open || !config) return
       
       setLoading(true)
       setError(null)
@@ -118,12 +117,6 @@ export default function DateTimeSelectionModal({
         
         setDayTimeSlots(slotsMap)
         
-        // Debug: mostrar los datos cargados
-        console.log('Datos de citas cargados:', {
-          totalSlots: data.length,
-          availableDates: Array.from(slotsMap.keys()),
-          slotsMap: Object.fromEntries(slotsMap)
-        })
       } catch (err) {
         console.error('Error fetching available slots:', err)
         setError('No se pudieron cargar los horarios disponibles. Por favor, inténtelo de nuevo.')
@@ -134,7 +127,7 @@ export default function DateTimeSelectionModal({
     }
     
     fetchAvailableSlots()
-  }, [selectedDoctor, selectedShift, startDate, endDate, open])
+  }, [selectedDoctor, selectedShift, startDate, endDate, open, config])
   
   // No necesitamos slides para la nueva interfaz
   

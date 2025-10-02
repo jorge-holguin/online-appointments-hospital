@@ -209,7 +209,6 @@ export default function PatientRegistrationModal({ open, onOpenChange }: Patient
       case 'tipoDocumento':
         // No sanitizar el tipo de documento para preservar espacios
         sanitizedValue = value
-        console.log('Tipo de documento seleccionado:', value, 'longitud:', value.length)
         break
       default:
         sanitizedValue = sanitizeInput(value)

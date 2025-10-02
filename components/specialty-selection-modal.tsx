@@ -5,9 +5,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { X, ChevronLeft, Search, Loader2 } from "lucide-react"
+import { ChevronLeft, Search, Loader2, Stethoscope } from "lucide-react"
 import SearchTypeSelectionModal from "./search-type-selection-modal"
-import { useDateContext } from "@/context/date-context"
+import { useAppConfig } from "@/hooks/use-app-config"
 
 interface SpecialtySelectionModalProps {
   open: boolean
@@ -35,11 +35,10 @@ export default function SpecialtySelectionModal({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   
-  // Usar el contexto de fechas compartido
-  //const { startDate, endDate } = useDateContext()
-  
-  const startDate = "2025-08-01"
-  const endDate = "2025-08-31"
+  // Usar configuración centralizada
+  const { config, loading: configLoading } = useAppConfig()
+  const startDate = config?.dateRange.startDate || "2025-08-01"
+  const endDate = config?.dateRange.endDate || "2025-08-31"
   
   // Resetear el filtro cuando se cierra el modal
   useEffect(() => {
@@ -51,6 +50,8 @@ export default function SpecialtySelectionModal({
   // Cargar especialidades desde la API
   useEffect(() => {
     const fetchSpecialties = async () => {
+      if (!config) return
+      
       setLoading(true)
       setError(null)
       
@@ -86,10 +87,10 @@ export default function SpecialtySelectionModal({
       }
     }
     
-    if (open) {
+    if (open && config) {
       fetchSpecialties()
     }
-  }, [open])
+  }, [open, config, startDate, endDate])
 
   const filteredSpecialties = specialties.filter((specialty) =>
     specialty.nombre.toLowerCase().includes(searchTerm.toLowerCase()),
@@ -104,82 +105,152 @@ export default function SpecialtySelectionModal({
   return (
     <>
       <Dialog open={open && !showSearchTypeSelection} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={onBack}>
-                <ChevronLeft className="h-4 w-4" />
+            <div className="flex items-center gap-3">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={onBack}
+                className="hover:bg-blue-50 transition-colors"
+              >
+                <ChevronLeft className="h-5 w-5" style={{ color: "#0a2463" }} />
               </Button>
-              <DialogTitle className="text-xl font-semibold">¿Qué especialidad necesitas?</DialogTitle>
+              <div className="flex-1">
+                <DialogTitle className="text-2xl font-bold" style={{ color: "#0a2463" }}>
+                  ¿Qué especialidad necesitas?
+                </DialogTitle>
+                <DialogDescription className="text-sm mt-1">
+                  Selecciona la especialidad médica para tu cita
+                </DialogDescription>
+              </div>
             </div>
-            <DialogDescription>
-              Selecciona la especialidad médica para tu cita
-            </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
+          <div className="space-y-6">
+            {/* Search Bar with improved styling */}
             <div className="space-y-2">
-              <Label htmlFor="specialty">Buscar especialidad</Label>
+              <Label htmlFor="specialty" className="text-sm font-semibold" style={{ color: "#0a2463" }}>
+                Buscar especialidad
+              </Label>
               <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <Input
                   id="specialty"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Ingresa la especialidad"
-                  className="pl-10"
+                  placeholder="Ej: Cardiología, Pediatría, Dermatología..."
+                  className="pl-12 pr-4 py-6 text-base border-2 focus:border-blue-400 rounded-xl transition-all"
                 />
               </div>
             </div>
 
-            {loading ? (
-              <div className="flex justify-center items-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-                <span className="ml-2">Cargando especialidades...</span>
+            {/* Loading, Error, or Specialties Grid */}
+            {configLoading || loading ? (
+              <div className="flex flex-col justify-center items-center py-12">
+                <Loader2 className="h-12 w-12 animate-spin mb-4" style={{ color: "#3e92cc" }} />
+                <span className="text-gray-600 font-medium">Cargando especialidades...</span>
               </div>
             ) : error ? (
-              <div className="text-center text-red-500 py-4">{error}</div>
+              <div className="text-center py-8">
+                <div className="bg-red-50 border border-red-200 rounded-xl p-6">
+                  <p className="text-red-600 font-medium">{error}</p>
+                </div>
+              </div>
             ) : (
-              <div className="max-h-60 overflow-y-auto space-y-2">
+              <div className="max-h-96 overflow-y-auto pr-2 space-y-3">
                 {filteredSpecialties.length > 0 ? (
-                  filteredSpecialties.map((specialty, index) => (
-                    <button
-                      key={`${specialty.idEspecialidad}-${specialty.nombre}-${index}`}
-                      onClick={() => {
-                        setSelectedSpecialty(specialty.nombre)
-                        setSelectedSpecialtyId(specialty.idEspecialidad)
-                      }}
-                      className={`w-full text-left p-3 rounded-lg border transition-colors ${
-                        selectedSpecialty === specialty.nombre && selectedSpecialtyId === specialty.idEspecialidad
-                          ? "border-blue-500 text-white"
-                          : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                      }`}
-                      style={selectedSpecialty === specialty.nombre && selectedSpecialtyId === specialty.idEspecialidad ? { backgroundColor: "#3e92cc" } : {}}
-                    >
-                      {specialty.nombre}
-                    </button>
-                  ))
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {filteredSpecialties.map((specialty, index) => {
+                      const isSelected = selectedSpecialty === specialty.nombre && selectedSpecialtyId === specialty.idEspecialidad
+                      return (
+                        <button
+                          key={`${specialty.idEspecialidad}-${specialty.nombre}-${index}`}
+                          onClick={() => {
+                            setSelectedSpecialty(specialty.nombre)
+                            setSelectedSpecialtyId(specialty.idEspecialidad)
+                          }}
+                          className={`group relative p-4 rounded-xl border-2 transition-all duration-200 text-left ${
+                            isSelected
+                              ? "border-transparent shadow-lg scale-[1.02]"
+                              : "border-gray-200 hover:border-blue-300 hover:shadow-md hover:scale-[1.01]"
+                          }`}
+                          style={isSelected ? { 
+                            backgroundColor: "#3e92cc",
+                            color: "white"
+                          } : {
+                            backgroundColor: "white"
+                          }}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div 
+                              className={`p-3 rounded-lg transition-colors ${
+                                isSelected ? "bg-white/20" : "bg-blue-50"
+                              }`}
+                            >
+                              <Stethoscope 
+                                className="h-6 w-6" 
+                                style={{ color: isSelected ? "white" : "#3e92cc" }}
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className={`font-semibold text-base truncate ${
+                                isSelected ? "text-white" : "text-gray-900"
+                              }`}>
+                                {specialty.nombre}
+                              </p>
+                              <p className={`text-xs mt-1 ${
+                                isSelected ? "text-white/80" : "text-gray-500"
+                              }`}>
+                                Código: {specialty.idEspecialidad}
+                              </p>
+                            </div>
+                            {isSelected && (
+                              <div className="flex-shrink-0">
+                                <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
+                                  <svg className="w-4 h-4" style={{ color: "#3e92cc" }} fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                  </svg>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </button>
+                      )
+                    })}
+                  </div>
                 ) : searchTerm ? (
-                  <div className="text-center py-4 text-gray-500">
-                    No se encontraron especialidades que coincidan con "{searchTerm}"
+                  <div className="text-center py-12">
+                    <div className="bg-gray-50 rounded-xl p-8">
+                      <Search className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                      <p className="text-gray-600 font-medium">No se encontraron especialidades</p>
+                      <p className="text-gray-500 text-sm mt-2">que coincidan con "{searchTerm}"</p>
+                    </div>
                   </div>
                 ) : (
-                  <div className="text-center py-4 text-gray-500">
-                    No hay especialidades disponibles en este momento
+                  <div className="text-center py-12">
+                    <div className="bg-gray-50 rounded-xl p-8">
+                      <Stethoscope className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                      <p className="text-gray-600 font-medium">No hay especialidades disponibles</p>
+                      <p className="text-gray-500 text-sm mt-2">en este momento</p>
+                    </div>
                   </div>
                 )}
               </div>
             )}
 
-            <Button
-              onClick={handleNext}
-              disabled={!selectedSpecialty}
-              className="w-full text-white py-3 mt-6 hover:opacity-90"
-              style={{ backgroundColor: "#0a2463" }}
-              size="lg"
-            >
-              Siguiente paso
-            </Button>
+            {/* Action Button */}
+            <div className="pt-4 border-t">
+              <Button
+                onClick={handleNext}
+                disabled={!selectedSpecialty || configLoading}
+                className="w-full text-white py-6 text-base font-semibold hover:opacity-90 disabled:opacity-50 transition-all rounded-xl shadow-md hover:shadow-lg"
+                style={{ backgroundColor: "#0a2463" }}
+                size="lg"
+              >
+                Continuar con la selección
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
