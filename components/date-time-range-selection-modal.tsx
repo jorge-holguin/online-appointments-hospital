@@ -86,6 +86,13 @@ export default function DateTimeRangeSelectionModal({
   const maxDate = parseISO(endDate)
   const minNavigationDate = addMonths(startOfMonth(minDate), -6)
   const maxNavigationDate = addMonths(startOfMonth(maxDate), 6)
+  
+  // Actualizar el mes del calendario cuando cambie la configuración
+  useEffect(() => {
+    if (config?.dateRange.startDate) {
+      setCurrentMonth(parseISO(config.dateRange.startDate))
+    }
+  }, [config?.dateRange.startDate])
 
   // Cargar fechas disponibles usando la nueva API
   useEffect(() => {

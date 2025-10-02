@@ -84,6 +84,13 @@ export default function DateTimeSelectionModal({
   // Inicializar el mes del calendario con la fecha de inicio
   const [currentMonth, setCurrentMonth] = useState(parseISO(startDate))
   
+  // Actualizar el mes del calendario cuando cambie la configuración
+  useEffect(() => {
+    if (config?.dateRange.startDate) {
+      setCurrentMonth(parseISO(config.dateRange.startDate))
+    }
+  }, [config?.dateRange.startDate])
+  
   // Cargar horarios disponibles desde la API
   useEffect(() => {
     const fetchAvailableSlots = async () => {
