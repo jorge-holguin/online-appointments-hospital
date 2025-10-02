@@ -8,6 +8,7 @@ import { format, addMonths, startOfMonth, parseISO } from "date-fns"
 import { es } from "date-fns/locale"
 import { AvailabilityCalendar } from "@/components/ui/availability-calendar"
 import AppointmentSelectionModal from "./appointment-selection-modal"
+import { useAppConfig } from "@/hooks/use-app-config"
 
 interface DateTimeRangeSelectionModalProps {
   open: boolean
@@ -68,17 +69,19 @@ export default function DateTimeRangeSelectionModal({
   selectedSpecialty,
   selectedSpecialtyId,
 }: DateTimeRangeSelectionModalProps) {
+  // Usar configuración centralizada
+  const { config } = useAppConfig()
+  const startDate = config?.dateRange.startDate || "2025-08-01"
+  const endDate = config?.dateRange.endDate || "2025-08-31"
+  
   const [selectedDay, setSelectedDay] = useState<Date | null>(null)
   const [selectedShift, setSelectedShift] = useState<ShiftType>('M')
   const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange | null>(null)
-  const [currentMonth, setCurrentMonth] = useState(parseISO("2025-08-01"))
+  const [currentMonth, setCurrentMonth] = useState(() => parseISO(startDate))
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [availableDates, setAvailableDates] = useState<string[]>([])
   const [showAppointmentSelection, setShowAppointmentSelection] = useState(false)
-
-  const startDate = "2025-08-01"
-  const endDate = "2025-08-31"
   const minDate = parseISO(startDate)
   const maxDate = parseISO(endDate)
   const minNavigationDate = addMonths(startOfMonth(minDate), -6)
@@ -87,7 +90,7 @@ export default function DateTimeRangeSelectionModal({
   // Cargar fechas disponibles usando la nueva API
   useEffect(() => {
     const fetchAvailableDates = async () => {
-      if (!open) return
+      if (!open || !config) return
       
       setLoading(true)
       setError(null)
@@ -116,7 +119,7 @@ export default function DateTimeRangeSelectionModal({
     }
     
     fetchAvailableDates()
-  }, [open, selectedShift, selectedSpecialtyId])
+  }, [open, selectedShift, selectedSpecialtyId, config, startDate, endDate])
 
 
   const handleDateSelect = (date: Date | undefined) => {

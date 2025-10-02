@@ -3,12 +3,13 @@
 import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { X, ChevronLeft, Calendar, User, MapPin, ChevronRight, Loader2 } from "lucide-react"
+import { ChevronLeft, Calendar, User, MapPin, ChevronRight, Loader2 } from "lucide-react"
 import FinalConfirmationModal from "./final-confirmation-modal"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { goToHomePage } from "@/lib/navigation"
 import { mapPatientTypeToApiFormat, getShiftFromTime, formatDateForApi } from "@/lib/appointment-utils"
+import { logSuccessfulBooking, logBookingError, logApiError, logEvent } from "@/lib/logger"
 
 interface ConfirmationModalProps {
   open: boolean
@@ -48,7 +49,7 @@ interface AppointmentResponse {
 // Función para subir el archivo de referencia SIS
 const uploadReferenceFile = async (reservationCode: string, file: File) => {
   try {
-    console.log('Subiendo archivo de referencia SIS para código:', reservationCode)
+    logEvent('FILE_UPLOAD_START', { reservationCode, fileName: file.name, fileSize: file.size })
     
     const formData = new FormData()
     formData.append('file', file)
@@ -63,12 +64,11 @@ const uploadReferenceFile = async (reservationCode: string, file: File) => {
     }
     
     const uploadResult = await uploadResponse.json()
-    console.log('Archivo subido exitosamente:', uploadResult)
+    logEvent('FILE_UPLOAD_SUCCESS', { reservationCode, result: uploadResult })
     
   } catch (error) {
-    console.error('Error al subir archivo de referencia:', error)
+    logApiError(`/v1/solicitudes/${reservationCode}/archivo`, error, { fileName: file.name })
     // No lanzamos el error para no interrumpir el flujo principal
-    // Solo lo registramos para debugging
   }
 }
 
@@ -121,7 +121,14 @@ export default function ConfirmationModal({ open, onOpenChange, onBack, appointm
         tipoAtencion: mapPatientTypeToApiFormat(appointmentData.patient.patientType) // Tipo de atención: SIS o PAGANTE
       }
       
-      // Datos preparados para enviar a la API
+      logEvent('BOOKING_ATTEMPT', {
+        patientId: appointmentPayload.numeroDocumento,
+        specialty: appointmentPayload.especialidadNombre,
+        doctor: appointmentPayload.medicoNombre,
+        date: appointmentPayload.fecha,
+        time: appointmentPayload.hora,
+        tipoAtencion: appointmentPayload.tipoAtencion
+      })
 
       // Realizar la llamada a la API
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/v1/solicitudes`, {
@@ -133,10 +140,22 @@ export default function ConfirmationModal({ open, onOpenChange, onBack, appointm
       })
 
       if (!response.ok) {
-        throw new Error(`Error al enviar la solicitud: ${response.status}`)
+        const errorText = await response.text()
+        throw new Error(`Error al enviar la solicitud: ${response.status} - ${errorText}`)
       }
 
       const responseData = await response.json()
+
+      // Log de reserva exitosa
+      logSuccessfulBooking({
+        patientId: appointmentPayload.numeroDocumento,
+        patientName: appointmentPayload.nombres,
+        specialty: appointmentPayload.especialidadNombre,
+        doctor: appointmentPayload.medicoNombre,
+        appointmentId: responseData.codigo,
+        date: appointmentPayload.fecha,
+        time: appointmentPayload.hora
+      })
 
       // Guardar la respuesta para usarla en el modal de confirmación final
       setAppointmentResponse(responseData)
@@ -151,7 +170,16 @@ export default function ConfirmationModal({ open, onOpenChange, onBack, appointm
       // Mostrar el modal de confirmación final
       setShowFinalConfirmation(true)
     } catch (error) {
-      console.error('Error al enviar la solicitud:', error)
+      logBookingError(error, {
+        step: 'CONFIRMATION',
+        patientId: appointmentData.patient.documento,
+        specialty: appointmentData.specialtyName,
+        doctor: appointmentData.doctor?.medicoId,
+        additionalInfo: {
+          idCita: appointmentData.idCita,
+          consultorio: appointmentData.consultorio
+        }
+      })
       setApiError(error instanceof Error ? error.message : 'Error al procesar la solicitud')
     } finally {
       setIsSubmitting(false)

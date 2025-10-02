@@ -32,8 +32,6 @@ export function AvailabilityCalendar({
   
   // Debug: mostrar las fechas disponibles
   React.useEffect(() => {
-    console.log('AvailabilityCalendar - Fechas disponibles:', availableDates)
-    console.log('AvailabilityCalendar - Mes actual:', month)
   }, [availableDates, month])
   
   // Deshabilitar días que no están en las fechas disponibles
