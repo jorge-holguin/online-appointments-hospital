@@ -114,10 +114,10 @@ export default function SpecialtySelectionModal({
                 onClick={onBack}
                 className="hover:bg-blue-50 transition-colors"
               >
-                <ChevronLeft className="h-5 w-5" style={{ color: "#0a2463" }} />
+                <ChevronLeft className="h-5 w-5" />
               </Button>
               <div className="flex-1">
-                <DialogTitle className="text-2xl font-bold" style={{ color: "#0a2463" }}>
+                <DialogTitle className="text-xl font-semibold ">
                   ¿Qué especialidad necesitas?
                 </DialogTitle>
                 <DialogDescription className="text-sm mt-1">
@@ -130,7 +130,7 @@ export default function SpecialtySelectionModal({
           <div className="space-y-6">
             {/* Search Bar with improved styling */}
             <div className="space-y-2">
-              <Label htmlFor="specialty" className="text-sm font-semibold" style={{ color: "#0a2463" }}>
+              <Label htmlFor="specialty" className="text-sm font-semibold text-gray-700">
                 Buscar especialidad
               </Label>
               <div className="relative">
@@ -244,11 +244,10 @@ export default function SpecialtySelectionModal({
               <Button
                 onClick={handleNext}
                 disabled={!selectedSpecialty || configLoading}
-                className="w-full text-white py-6 text-base font-semibold hover:opacity-90 disabled:opacity-50 transition-all rounded-xl shadow-md hover:shadow-lg"
-                style={{ backgroundColor: "#0a2463" }}
+                className="w-full bg-[#3e92cc] hover:bg-[#3e92cc]/90 text-white py-6 text-base font-semibold disabled:opacity-50 transition-all rounded-xl shadow-md hover:shadow-lg"
                 size="lg"
               >
-                Continuar con la selección
+                Continuar
               </Button>
             </div>
           </div>

@@ -169,10 +169,10 @@ export default function DateTimeRangeSelectionModal({
           <DialogHeader>
             <div className="flex items-center gap-2 sm:gap-3">
               <Button variant="ghost" size="icon" onClick={onBack} className="hover:bg-blue-50 h-8 w-8 sm:h-10 sm:w-10">
-                <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" style={{ color: "#0a2463" }} />
+                <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
               <div className="flex-1 min-w-0">
-                <DialogTitle className="text-lg sm:text-xl font-semibold" style={{ color: "#0a2463" }}>
+                <DialogTitle className="text-lg sm:text-xl font-semibold">
                   Selecciona fecha y horario
                 </DialogTitle>
                 <DialogDescription className="sr-only">
@@ -343,12 +343,11 @@ export default function DateTimeRangeSelectionModal({
               <Button
                 onClick={handleNext}
                 disabled={!selectedDay || !selectedTimeRange}
-                className="text-white px-8 py-3 text-base font-semibold hover:opacity-90 disabled:opacity-50"
-                style={{ backgroundColor: "#d8315b" }}
+                className="bg-[#3e92cc] hover:bg-[#3e92cc]/90 text-white px-8 py-3 text-base font-semibold disabled:opacity-50 transition-all"
                 size="lg"
               >
-                <ChevronRight className="w-4 h-4 mr-2" />
-                Ver citas disponibles
+                Continuar
+                <ChevronRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
           </div>

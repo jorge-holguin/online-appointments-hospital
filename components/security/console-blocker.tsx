@@ -5,13 +5,17 @@ import { useEffect } from 'react'
 /**
  * Componente que bloquea el acceso a la consola del navegador
  * Se carga solo cuando NEXT_PUBLIC_ALLOW_CONSOLE_ACCESS=false
+ * TEMPORALMENTE DESHABILITADO
  */
 export default function ConsoleBlocker() {
   useEffect(() => {
+    // TEMPORALMENTE DESHABILITADO - Descomentar para activar el bloqueo de consola
+    return
+    
     // Solo aplicar si la variable de entorno está configurada para bloquear
-    if (process.env.NEXT_PUBLIC_ALLOW_CONSOLE_ACCESS === 'true') {
-      return
-    }
+    // if (process.env.NEXT_PUBLIC_ALLOW_CONSOLE_ACCESS === 'true') {
+    //   return
+    // }
 
     // Métodos para bloquear
     const blockedMethods = ['log', 'debug', 'info', 'warn', 'error', 'table', 'trace', 'dir', 'dirxml', 'group', 'groupCollapsed', 'groupEnd', 'clear', 'count', 'countReset', 'assert', 'profile', 'profileEnd', 'time', 'timeLog', 'timeEnd', 'timeStamp']

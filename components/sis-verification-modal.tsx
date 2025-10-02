@@ -89,7 +89,7 @@ export default function SISVerificationModal({
             <DialogHeader className="flex-shrink-0">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon" onClick={onBack}>
+                  <Button variant="ghost" size="icon" onClick={onBack} className="hover:bg-blue-50">
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
                   <DialogTitle className="text-xl font-semibold">
@@ -280,11 +280,10 @@ export default function SISVerificationModal({
               <Button
                 onClick={handleContinue}
                 disabled={!canContinue}
-                className="w-full text-white py-3 hover:opacity-90 flex items-center justify-center"
-                style={{ backgroundColor: "#d8315b" }}
+                className="w-full bg-[#3e92cc] hover:bg-[#3e92cc]/90 text-white py-3 font-semibold disabled:opacity-50 flex items-center justify-center transition-all"
                 size="lg"
               >
-                <span>Siguiente paso</span>
+                <span>Continuar</span>
                 <ChevronRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
