@@ -8,6 +8,7 @@ import { format, addMonths, startOfMonth, parseISO } from "date-fns"
 import { es } from "date-fns/locale"
 import { AvailabilityCalendar } from "@/components/ui/availability-calendar"
 import AppointmentSelectionModal from "./appointment-selection-modal"
+import SessionTimer from "./session-timer"
 import { useAppConfig } from "@/hooks/use-app-config"
 
 interface DateTimeRangeSelectionModalProps {
@@ -189,6 +190,10 @@ export default function DateTimeRangeSelectionModal({
                   Especialidad: <span className="font-semibold text-blue-600">{selectedSpecialty}</span>
                 </p>
               </div>
+            </div>
+            {/* Timer de sesión */}
+            <div className="mt-3">
+              <SessionTimer />
             </div>
           </DialogHeader>
 

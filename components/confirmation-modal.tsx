@@ -5,11 +5,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, Calendar, User, MapPin, ChevronRight, Loader2 } from "lucide-react"
 import FinalConfirmationModal from "./final-confirmation-modal"
+import SessionTimer from "./session-timer"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { goToHomePage } from "@/lib/navigation"
 import { mapPatientTypeToApiFormat, getShiftFromTime, formatDateForApi } from "@/lib/appointment-utils"
 import { logSuccessfulBooking, logBookingError, logApiError, logEvent } from "@/lib/logger"
+import { useSession } from "@/context/session-context"
 
 interface ConfirmationModalProps {
   open: boolean
@@ -73,6 +75,7 @@ const uploadReferenceFile = async (reservationCode: string, file: File) => {
 }
 
 export default function ConfirmationModal({ open, onOpenChange, onBack, appointmentData }: ConfirmationModalProps) {
+  const { token } = useSession()
   const [showFinalConfirmation, setShowFinalConfirmation] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isUploadingFile, setIsUploadingFile] = useState(false)
@@ -130,8 +133,13 @@ export default function ConfirmationModal({ open, onOpenChange, onBack, appointm
         tipoAtencion: appointmentPayload.tipoAtencion
       })
 
-      // Realizar la llamada a la API
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/v1/solicitudes`, {
+      // Verificar que tengamos el token de sesión
+      if (!token) {
+        throw new Error('Sesión expirada. Por favor, vuelve a iniciar el proceso.')
+      }
+
+      // Realizar la llamada a la API con el token
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/v1/solicitudes?token=${encodeURIComponent(token)}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -207,6 +215,10 @@ export default function ConfirmationModal({ open, onOpenChange, onBack, appointm
             <DialogDescription>
               Revisa los detalles de tu cita y confirma para reservar
             </DialogDescription>
+            {/* Timer de sesión */}
+            <div className="mt-3">
+              <SessionTimer />
+            </div>
           </DialogHeader>
 
           <div className="space-y-4 sm:space-y-6">

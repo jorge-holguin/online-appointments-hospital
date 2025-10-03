@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ChevronLeft, Search, Loader2, Stethoscope } from "lucide-react"
 import SearchTypeSelectionModal from "./search-type-selection-modal"
+import SessionTimer from "./session-timer"
 import { useAppConfig } from "@/hooks/use-app-config"
 
 interface SpecialtySelectionModalProps {
@@ -124,6 +125,10 @@ export default function SpecialtySelectionModal({
                   Selecciona la especialidad médica para tu cita
                 </DialogDescription>
               </div>
+            </div>
+            {/* Timer de sesión */}
+            <div className="mt-3">
+              <SessionTimer />
             </div>
           </DialogHeader>
 

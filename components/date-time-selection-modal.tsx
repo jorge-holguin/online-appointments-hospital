@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Sun, Moon, Clock } from "lucide-react"
 import ConfirmationModal from "./confirmation-modal"
+import SessionTimer from "./session-timer"
 import { format, addMonths, startOfMonth, parseISO } from "date-fns"
 import { es } from "date-fns/locale"
 import { AvailabilityCalendar } from "@/components/ui/availability-calendar"
@@ -269,6 +270,10 @@ export default function DateTimeSelectionModal({
                   </div>
                 </div>
               </div>
+            </div>
+            {/* Timer de sesión */}
+            <div className="mt-3">
+              <SessionTimer />
             </div>
           </DialogHeader>
 

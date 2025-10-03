@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight, Upload, FileImage, X, AlertCircle } from "lucide-react"
 import SpecialtySelectionModal from "./specialty-selection-modal"
+import SessionTimer from "./session-timer"
 import { mapPatientTypeToApiFormat } from "@/lib/appointment-utils"
 
 interface SISVerificationModalProps {
@@ -100,6 +101,10 @@ export default function SISVerificationModal({
               <DialogDescription className="sr-only">
                 Selecciona el tipo de atención para tu cita médica
               </DialogDescription>
+              {/* Timer de sesión */}
+              <div className="mt-3">
+                <SessionTimer />
+              </div>
             </DialogHeader>
     
             {/* Contenido con scroll */}

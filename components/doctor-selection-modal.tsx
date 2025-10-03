@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ChevronLeft, Search, ChevronRight, Loader2 } from "lucide-react"
 import DateTimeSelectionModal from "./date-time-selection-modal"
+import SessionTimer from "./session-timer"
 import { useAppConfig } from "@/hooks/use-app-config"
 
 interface DoctorSelectionModalProps {
@@ -98,6 +99,10 @@ export default function DoctorSelectionModal({
             <DialogDescription>
               Selecciona el médico con el que deseas agendar tu cita
             </DialogDescription>
+            {/* Timer de sesión */}
+            <div className="mt-3">
+              <SessionTimer />
+            </div>
           </DialogHeader>
 
           <div className="space-y-4">

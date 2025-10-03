@@ -7,6 +7,7 @@ import { ChevronLeft, User, Clock, MapPin, Loader2, Calendar } from "lucide-reac
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import ConfirmationModal from "./confirmation-modal"
+import SessionTimer from "./session-timer"
 
 interface AppointmentSelectionModalProps {
   open: boolean
@@ -136,6 +137,10 @@ export default function AppointmentSelectionModal({
                   Selecciona la cita que mejor se ajuste a tu horario
                 </DialogDescription>
               </div>
+            </div>
+            {/* Timer de sesión */}
+            <div className="mt-3">
+              <SessionTimer />
             </div>
           </DialogHeader>
 

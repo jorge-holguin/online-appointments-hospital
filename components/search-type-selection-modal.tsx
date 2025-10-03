@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { ChevronLeft, UserSearch, CalendarClock } from "lucide-react"
 import DoctorSelectionModal from "./doctor-selection-modal"
 import DateTimeRangeSelectionModal from "./date-time-range-selection-modal"
+import SessionTimer from "./session-timer"
 
 interface SearchTypeSelectionModalProps {
   open: boolean
@@ -51,6 +52,10 @@ export default function SearchTypeSelectionModal({
             <DialogDescription>
               Selecciona el método de búsqueda que prefieras
             </DialogDescription>
+            {/* Timer de sesión */}
+            <div className="mt-3">
+              <SessionTimer />
+            </div>
           </DialogHeader>
 
           <div className="space-y-4 py-4">

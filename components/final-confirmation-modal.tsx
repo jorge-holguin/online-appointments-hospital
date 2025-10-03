@@ -99,17 +99,37 @@ export default function FinalConfirmationModal({
         prompt("Copia este código:", reservationCode)
       }
     } catch (err) {
-      console.error("Error al copiar:", err)
       // Mostrar el código para copia manual
       prompt("Copia este código:", reservationCode)
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog 
+      open={open} 
+      onOpenChange={(isOpen) => {
+        // Bloquear el cierre del modal - solo permitir cerrar con el botón "Volver al inicio"
+        if (!isOpen) {
+          return // No hacer nada si intentan cerrar
+        }
+        onOpenChange(isOpen)
+      }}
+    >
     <DialogContent
       className="w-[95vw] max-w-lg max-h-[90vh] flex flex-col"
-      redirectToHome={true}
+      onEscapeKeyDown={(e) => {
+        // Bloquear ESC - no permitir cerrar con ESC
+        e.preventDefault()
+      }}
+      onPointerDownOutside={(e) => {
+        // Bloquear clic fuera del modal
+        e.preventDefault()
+      }}
+      onInteractOutside={(e) => {
+        // Bloquear cualquier interacción fuera del modal
+        e.preventDefault()
+      }}
+      // NO usar redirectToHome aquí porque queremos control total
     >
       {/* Header fijo */}
       <div className="flex-shrink-0">

@@ -12,6 +12,7 @@ import { User, Phone, CreditCard, Mail, ChevronDown, AlertCircle } from "lucide-
 import SISVerificationModal from "./sis-verification-modal"
 import { loadCaptchaEnginge, LoadCanvasTemplate, validateCaptcha } from 'react-simple-captcha'
 import { validatePatientData, getSecureErrorMessage, sanitizeInput, sanitizeName, normalizePhone, normalizeEmail } from "@/lib/validation"
+import { useSession } from "@/context/session-context"
 
 interface PatientRegistrationModalProps {
   open: boolean
@@ -31,6 +32,7 @@ interface DocumentType {
 }
 
 export default function PatientRegistrationModal({ open, onOpenChange }: PatientRegistrationModalProps) {
+  const { refreshSession } = useSession()
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",
@@ -167,7 +169,16 @@ export default function PatientRegistrationModal({ open, onOpenChange }: Patient
         return
       }
       
-      // Si la validación es exitosa, continuar con el siguiente paso
+      // Iniciar sesión efímera antes de continuar
+      try {
+        await refreshSession()
+      } catch (sessionError) {
+        console.error('Error al iniciar sesión:', sessionError)
+        setGeneralError("Error al iniciar la sesión. Por favor, intenta nuevamente.")
+        return
+      }
+      
+      // Si la validación es exitosa y la sesión está iniciada, continuar con el siguiente paso
       setShowSISVerification(true)
       
     } catch (error) {
