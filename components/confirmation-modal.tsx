@@ -5,6 +5,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, Calendar, User, MapPin, ChevronRight, Loader2 } from "lucide-react"
 import FinalConfirmationModal from "./final-confirmation-modal"
+import DuplicateAppointmentErrorModal from "./duplicate-appointment-error-modal"
+import AppointmentUnavailableModal from "./appointment-unavailable-modal"
 import SessionTimer from "./session-timer"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
@@ -17,6 +19,8 @@ interface ConfirmationModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onBack: () => void
+  onBackToSpecialties?: () => void  // Callback para volver a especialidades
+  onRefreshAppointments?: () => void  // Callback para refrescar citas
   appointmentData: {
     patient: any
     specialty: string      // ID de la especialidad
@@ -74,12 +78,16 @@ const uploadReferenceFile = async (reservationCode: string, file: File) => {
   }
 }
 
-export default function ConfirmationModal({ open, onOpenChange, onBack, appointmentData }: ConfirmationModalProps) {
+export default function ConfirmationModal({ open, onOpenChange, onBack, onBackToSpecialties, onRefreshAppointments, appointmentData }: ConfirmationModalProps) {
   const { token, setOnSessionExpired } = useSession()
   const [showFinalConfirmation, setShowFinalConfirmation] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isUploadingFile, setIsUploadingFile] = useState(false)
   const [apiError, setApiError] = useState<string | null>(null)
+  const [showDuplicateErrorModal, setShowDuplicateErrorModal] = useState(false)
+  const [duplicateErrorMessage, setDuplicateErrorMessage] = useState<string>('')
+  const [showUnavailableModal, setShowUnavailableModal] = useState(false)
+  const [unavailableErrorMessage, setUnavailableErrorMessage] = useState<string>('')
   const [appointmentResponse, setAppointmentResponse] = useState<AppointmentResponse | null>(null)
   const [finalAppointmentData, setFinalAppointmentData] = useState(appointmentData)
 
@@ -161,12 +169,31 @@ export default function ConfirmationModal({ open, onOpenChange, onBack, appointm
       if (!response.ok) {
         const errorText = await response.text()
         let errorMessage = `Error al enviar la solicitud: ${response.status}`
+        let isDuplicateError = false
+        let isUnavailableError = false
 
         try {
           // Intentar parsear el JSON de error para obtener el mensaje específico
           const errorData = JSON.parse(errorText)
           if (errorData.message) {
             errorMessage = errorData.message
+            
+            // Detectar si es un error de cita duplicada
+            if (errorMessage.toLowerCase().includes('ya tiene una solicitud') || 
+                errorMessage.toLowerCase().includes('cita generada') ||
+                errorMessage.toLowerCase().includes('ya existe una solicitud')) {
+              isDuplicateError = true
+              // Mensaje más amigable para el usuario
+              errorMessage = 'Ya tienes una solicitud de cita pendiente para este mes en esta especialidad. No puedes generar otra hasta que se resuelva la actual o inicie un nuevo mes.'
+            }
+            
+            // Detectar si es un error de cita no disponible
+            if (errorMessage.toLowerCase().includes('ya no está disponible') ||
+                errorMessage.toLowerCase().includes('no está disponible') ||
+                errorMessage.toLowerCase().includes('elija otro horario')) {
+              isUnavailableError = true
+              // Usar el mensaje del backend que ya es claro
+            }
           } else if (errorData.error) {
             errorMessage = errorData.error
           } else {
@@ -175,6 +202,22 @@ export default function ConfirmationModal({ open, onOpenChange, onBack, appointm
         } catch (parseError) {
           // Si no se puede parsear el JSON, usar el texto original
           errorMessage = `${errorMessage} - ${errorText}`
+        }
+
+        // Si es un error de cita duplicada, mostrar el modal especial
+        if (isDuplicateError) {
+          setDuplicateErrorMessage(errorMessage)
+          setShowDuplicateErrorModal(true)
+          setIsSubmitting(false)
+          return // No lanzar el error, solo mostrar el modal
+        }
+
+        // Si es un error de cita no disponible, mostrar el modal especial
+        if (isUnavailableError) {
+          setUnavailableErrorMessage(errorMessage)
+          setShowUnavailableModal(true)
+          setIsSubmitting(false)
+          return // No lanzar el error, solo mostrar el modal
         }
 
         throw new Error(errorMessage)
@@ -223,15 +266,51 @@ export default function ConfirmationModal({ open, onOpenChange, onBack, appointm
   }
 
   const handleCancel = () => {
-    // Close the modal first
-    onOpenChange(false)
-    // Redirigir a la página principal con un delay
-    goToHomePage(100) // 100ms delay should be enough for the modal to close
+    // Funciona como "Atrás" - volver al modal anterior
+    onBack()
+  }
+
+  const handleSearchAnotherSpecialty = () => {
+    // Cerrar el modal de error primero
+    setShowDuplicateErrorModal(false)
+    
+    // Usar setTimeout para asegurar que el modal de error se cierre antes de navegar
+    setTimeout(() => {
+      // Cerrar el modal de confirmación
+      onOpenChange(false)
+      
+      // Si existe el callback para volver a especialidades, usarlo
+      // Si no, usar onBack() como fallback
+      if (onBackToSpecialties) {
+        onBackToSpecialties()
+      } else {
+        onBack()
+      }
+    }, 100)
+  }
+
+  const handleGoBackToAppointments = () => {
+    // Cerrar el modal de cita no disponible
+    setShowUnavailableModal(false)
+    
+    // Usar setTimeout para asegurar que el modal se cierre antes de navegar
+    setTimeout(() => {
+      // Primero refrescar las citas si existe el callback
+      if (onRefreshAppointments) {
+        onRefreshAppointments()
+      }
+      
+      // Cerrar el modal de confirmación
+      onOpenChange(false)
+      
+      // Volver al modal anterior (AppointmentSelectionModal)
+      onBack()
+    }, 100)
   }
 
   return (
     <>
-      <Dialog open={open && !showFinalConfirmation} onOpenChange={onOpenChange}>
+      <Dialog open={open && !showFinalConfirmation && !showDuplicateErrorModal && !showUnavailableModal} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-md max-w-[95vw] max-h-[90vh] overflow-y-auto" redirectToHome={true}>
           <DialogHeader>
             <div className="flex items-center gap-2">
@@ -314,7 +393,7 @@ export default function ConfirmationModal({ open, onOpenChange, onBack, appointm
             {apiError && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded-md">
                 <p className="text-xs sm:text-sm">{apiError}</p>
-                <p className="text-xs mt-1">Por favor, intenta nuevamente o contacta con soporte.</p>
+                <p className="text-xs mt-1">Por favor, intenta nuevamente o contacta con (01) 418-3232 Opción 1.</p>
               </div>
             )}
 
@@ -362,6 +441,20 @@ export default function ConfirmationModal({ open, onOpenChange, onBack, appointm
         reservationCode={appointmentResponse?.codigo || ''}
         appointmentStatus={appointmentResponse?.estado || ''}
         appointmentData={finalAppointmentData}
+      />
+
+      <DuplicateAppointmentErrorModal
+        open={showDuplicateErrorModal}
+        onOpenChange={setShowDuplicateErrorModal}
+        onSearchAnotherSpecialty={handleSearchAnotherSpecialty}
+        errorMessage={duplicateErrorMessage}
+      />
+
+      <AppointmentUnavailableModal
+        open={showUnavailableModal}
+        onOpenChange={setShowUnavailableModal}
+        onGoBack={handleGoBackToAppointments}
+        errorMessage={unavailableErrorMessage}
       />
     </>
   )

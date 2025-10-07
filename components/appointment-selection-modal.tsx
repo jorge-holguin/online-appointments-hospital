@@ -13,6 +13,9 @@ interface AppointmentSelectionModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onBack: () => void
+  onBackToSpecialties?: () => void  // Callback para volver a especialidades
+  onRefreshAppointments?: () => void  // Callback para refrescar citas
+  refreshTrigger?: number  // Trigger para forzar refresco de citas
   patientData: any
   selectedSpecialty: string
   selectedSpecialtyId: string
@@ -46,6 +49,9 @@ export default function AppointmentSelectionModal({
   open,
   onOpenChange,
   onBack,
+  onBackToSpecialties,
+  onRefreshAppointments,
+  refreshTrigger,
   patientData,
   selectedSpecialty,
   selectedSpecialtyId,
@@ -107,11 +113,24 @@ export default function AppointmentSelectionModal({
     }
 
     fetchAppointments()
-  }, [open, selectedDate, selectedShift, selectedSpecialtyId, selectedTimeRange])
+  }, [open, selectedDate, selectedShift, selectedSpecialtyId, selectedTimeRange, refreshTrigger])
 
   const handleSelectAppointment = (appointment: ApiTimeSlot) => {
     setSelectedAppointment(appointment)
     setShowConfirmation(true)
+  }
+
+  // Callback mejorado para volver a especialidades
+  const handleBackToSpecialtiesFromChild = () => {
+    // Cerrar el modal de confirmación
+    setShowConfirmation(false)
+    // Resetear la cita seleccionada
+    setSelectedAppointment(null)
+    
+    // Luego llamar al callback del padre
+    if (onBackToSpecialties) {
+      onBackToSpecialties()
+    }
   }
 
   return (
@@ -298,6 +317,8 @@ export default function AppointmentSelectionModal({
           open={showConfirmation}
           onOpenChange={setShowConfirmation}
           onBack={() => setShowConfirmation(false)}
+          onBackToSpecialties={handleBackToSpecialtiesFromChild}
+          onRefreshAppointments={onRefreshAppointments}
           appointmentData={{
             patient: patientData,
             specialty: selectedSpecialtyId,

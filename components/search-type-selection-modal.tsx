@@ -12,6 +12,7 @@ interface SearchTypeSelectionModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onBack: () => void
+  onBackToSpecialties?: () => void  // Callback para volver a especialidades
   patientData: any
   selectedSpecialty: string
   selectedSpecialtyId: string
@@ -21,6 +22,7 @@ export default function SearchTypeSelectionModal({
   open,
   onOpenChange,
   onBack,
+  onBackToSpecialties,
   patientData,
   selectedSpecialty,
   selectedSpecialtyId,
@@ -35,6 +37,19 @@ export default function SearchTypeSelectionModal({
       setShowDoctorSelection(true)
     } else {
       setShowDateTimeRangeSelection(true)
+    }
+  }
+
+  // Callback mejorado para volver a especialidades
+  const handleBackToSpecialtiesFromChild = () => {
+    // Cerrar todos los modales hijos primero
+    setShowDoctorSelection(false)
+    setShowDateTimeRangeSelection(false)
+    setSearchType(null)
+    
+    // Luego llamar al callback del padre
+    if (onBackToSpecialties) {
+      onBackToSpecialties()
     }
   }
 
@@ -123,6 +138,7 @@ export default function SearchTypeSelectionModal({
         open={showDateTimeRangeSelection}
         onOpenChange={setShowDateTimeRangeSelection}
         onBack={() => setShowDateTimeRangeSelection(false)}
+        onBackToSpecialties={handleBackToSpecialtiesFromChild}
         patientData={patientData}
         selectedSpecialty={selectedSpecialty}
         selectedSpecialtyId={selectedSpecialtyId}

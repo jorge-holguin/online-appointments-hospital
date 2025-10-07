@@ -15,6 +15,7 @@ interface DateTimeRangeSelectionModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onBack: () => void
+  onBackToSpecialties?: () => void  // Callback para volver a especialidades
   patientData: any
   selectedSpecialty: string
   selectedSpecialtyId: string
@@ -66,6 +67,7 @@ export default function DateTimeRangeSelectionModal({
   open,
   onOpenChange,
   onBack,
+  onBackToSpecialties,
   patientData,
   selectedSpecialty,
   selectedSpecialtyId,
@@ -83,6 +85,7 @@ export default function DateTimeRangeSelectionModal({
   const [error, setError] = useState<string | null>(null)
   const [availableDates, setAvailableDates] = useState<string[]>([])
   const [showAppointmentSelection, setShowAppointmentSelection] = useState(false)
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
   const minDate = parseISO(startDate)
   const maxDate = parseISO(endDate)
   const minNavigationDate = addMonths(startOfMonth(minDate), -6)
@@ -144,6 +147,26 @@ export default function DateTimeRangeSelectionModal({
       // Abrir el modal de selección de citas
       setShowAppointmentSelection(true)
     }
+  }
+
+  // Callback mejorado para volver a especialidades
+  const handleBackToSpecialtiesFromChild = () => {
+    // Cerrar el modal de selección de citas
+    setShowAppointmentSelection(false)
+    // Resetear selecciones
+    setSelectedDay(null)
+    setSelectedTimeRange(null)
+    
+    // Luego llamar al callback del padre
+    if (onBackToSpecialties) {
+      onBackToSpecialties()
+    }
+  }
+
+  // Callback para refrescar las citas cuando se vuelve del modal de confirmación
+  const handleRefreshAppointments = () => {
+    // Incrementar el trigger para forzar el refresco
+    setRefreshTrigger(prev => prev + 1)
   }
 
   const canGoPrevMonth = () => {
@@ -351,11 +374,11 @@ export default function DateTimeRangeSelectionModal({
             )}
 
             {/* Botón siguiente */}
-            <div className="flex justify-end pt-2">
+            <div className="pt-2">
               <Button
                 onClick={handleNext}
                 disabled={!selectedDay || !selectedTimeRange}
-                className="bg-[#3e92cc] hover:bg-[#3e92cc]/90 text-white px-8 py-3 text-base font-semibold disabled:opacity-50 transition-all"
+                className="w-full bg-[#3e92cc] hover:bg-[#3e92cc]/90 text-white px-8 py-3 text-base font-semibold disabled:opacity-50 transition-all"
                 size="lg"
               >
                 Continuar
@@ -372,6 +395,9 @@ export default function DateTimeRangeSelectionModal({
           open={showAppointmentSelection}
           onOpenChange={setShowAppointmentSelection}
           onBack={() => setShowAppointmentSelection(false)}
+          onBackToSpecialties={handleBackToSpecialtiesFromChild}
+          onRefreshAppointments={handleRefreshAppointments}
+          refreshTrigger={refreshTrigger}
           patientData={patientData}
           selectedSpecialty={selectedSpecialty}
           selectedSpecialtyId={selectedSpecialtyId}

@@ -103,6 +103,16 @@ export default function SpecialtySelectionModal({
     }
   }
 
+  // Callback para volver a este modal desde modales hijos
+  const handleBackToSpecialties = () => {
+    // Cerrar el modal de tipo de búsqueda y todos sus hijos
+    setShowSearchTypeSelection(false)
+    // Resetear la especialidad para forzar una nueva selección
+    // Esto asegura que todos los modales se cierren completamente
+    setSelectedSpecialty("")
+    setSelectedSpecialtyId("")
+  }
+
   return (
     <>
       <Dialog open={open && !showSearchTypeSelection} onOpenChange={onOpenChange}>
@@ -263,6 +273,7 @@ export default function SpecialtySelectionModal({
         open={showSearchTypeSelection}
         onOpenChange={setShowSearchTypeSelection}
         onBack={() => setShowSearchTypeSelection(false)}
+        onBackToSpecialties={handleBackToSpecialties}
         patientData={patientData}
         selectedSpecialty={selectedSpecialty}
         selectedSpecialtyId={selectedSpecialtyId}

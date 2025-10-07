@@ -464,11 +464,11 @@ export default function DateTimeSelectionModal({
             <div className="h-16 sm:hidden"></div>
             
             {/* Botón para pantallas medianas y grandes */}
-            <div className="hidden sm:flex justify-end pt-2">
+            <div className="hidden sm:block pt-2">
               <Button
                 onClick={handleNext}
                 disabled={!selectedTimeSlot}
-                className="bg-[#3e92cc] hover:bg-[#3e92cc]/90 text-white px-8 py-3 text-base font-semibold disabled:opacity-50 transition-all"
+                className="w-full bg-[#3e92cc] hover:bg-[#3e92cc]/90 text-white px-8 py-3 text-base font-semibold disabled:opacity-50 transition-all"
                 size="lg"
               >
                 Continuar
