@@ -116,7 +116,7 @@ export default function FinalConfirmationModal({
       }}
     >
     <DialogContent
-      className="w-[95vw] max-w-lg max-h-[90vh] flex flex-col"
+      className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto flex flex-col"
       onEscapeKeyDown={(e) => {
         // Bloquear ESC - no permitir cerrar con ESC
         e.preventDefault()

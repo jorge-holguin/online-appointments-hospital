@@ -41,7 +41,7 @@ export default function SearchTypeSelectionModal({
   return (
     <>
       <Dialog open={open && !showDoctorSelection && !showDateTimeRangeSelection} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="icon" onClick={onBack}>

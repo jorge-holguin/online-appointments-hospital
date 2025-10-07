@@ -88,7 +88,7 @@ export default function DoctorSelectionModal({
   return (
     <>
       <Dialog open={open && !showDateTimeSelection} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-lg" redirectToHome={true}>
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto" redirectToHome={true}>
           <DialogHeader>
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="icon" onClick={onBack} className="hover:bg-blue-50">

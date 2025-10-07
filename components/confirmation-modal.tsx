@@ -160,7 +160,24 @@ export default function ConfirmationModal({ open, onOpenChange, onBack, appointm
 
       if (!response.ok) {
         const errorText = await response.text()
-        throw new Error(`Error al enviar la solicitud: ${response.status} - ${errorText}`)
+        let errorMessage = `Error al enviar la solicitud: ${response.status}`
+
+        try {
+          // Intentar parsear el JSON de error para obtener el mensaje específico
+          const errorData = JSON.parse(errorText)
+          if (errorData.message) {
+            errorMessage = errorData.message
+          } else if (errorData.error) {
+            errorMessage = errorData.error
+          } else {
+            errorMessage = `${errorMessage} - ${errorText}`
+          }
+        } catch (parseError) {
+          // Si no se puede parsear el JSON, usar el texto original
+          errorMessage = `${errorMessage} - ${errorText}`
+        }
+
+        throw new Error(errorMessage)
       }
 
       const responseData = await response.json()
