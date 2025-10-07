@@ -6,11 +6,13 @@ import { Button } from "@/components/ui/button"
 import { ChevronLeft, UserSearch, CalendarClock } from "lucide-react"
 import DoctorSelectionModal from "./doctor-selection-modal"
 import DateTimeRangeSelectionModal from "./date-time-range-selection-modal"
+import SessionTimer from "./session-timer"
 
 interface SearchTypeSelectionModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onBack: () => void
+  onBackToSpecialties?: () => void  // Callback para volver a especialidades
   patientData: any
   selectedSpecialty: string
   selectedSpecialtyId: string
@@ -20,6 +22,7 @@ export default function SearchTypeSelectionModal({
   open,
   onOpenChange,
   onBack,
+  onBackToSpecialties,
   patientData,
   selectedSpecialty,
   selectedSpecialtyId,
@@ -37,10 +40,23 @@ export default function SearchTypeSelectionModal({
     }
   }
 
+  // Callback mejorado para volver a especialidades
+  const handleBackToSpecialtiesFromChild = () => {
+    // Cerrar todos los modales hijos primero
+    setShowDoctorSelection(false)
+    setShowDateTimeRangeSelection(false)
+    setSearchType(null)
+    
+    // Luego llamar al callback del padre
+    if (onBackToSpecialties) {
+      onBackToSpecialties()
+    }
+  }
+
   return (
     <>
       <Dialog open={open && !showDoctorSelection && !showDateTimeRangeSelection} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="icon" onClick={onBack}>
@@ -51,6 +67,10 @@ export default function SearchTypeSelectionModal({
             <DialogDescription>
               Selecciona el método de búsqueda que prefieras
             </DialogDescription>
+            {/* Timer de sesión */}
+            <div className="mt-3">
+              <SessionTimer />
+            </div>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
@@ -118,6 +138,7 @@ export default function SearchTypeSelectionModal({
         open={showDateTimeRangeSelection}
         onOpenChange={setShowDateTimeRangeSelection}
         onBack={() => setShowDateTimeRangeSelection(false)}
+        onBackToSpecialties={handleBackToSpecialtiesFromChild}
         patientData={patientData}
         selectedSpecialty={selectedSpecialty}
         selectedSpecialtyId={selectedSpecialtyId}

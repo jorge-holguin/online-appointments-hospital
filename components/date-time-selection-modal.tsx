@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Sun, Moon, Clock } from "lucide-react"
 import ConfirmationModal from "./confirmation-modal"
+import SessionTimer from "./session-timer"
 import { format, addMonths, startOfMonth, parseISO } from "date-fns"
 import { es } from "date-fns/locale"
 import { AvailabilityCalendar } from "@/components/ui/availability-calendar"
@@ -270,6 +271,10 @@ export default function DateTimeSelectionModal({
                 </div>
               </div>
             </div>
+            {/* Timer de sesión */}
+            <div className="mt-3">
+              <SessionTimer />
+            </div>
           </DialogHeader>
 
           <div className="space-y-3 sm:space-y-4">
@@ -459,11 +464,11 @@ export default function DateTimeSelectionModal({
             <div className="h-16 sm:hidden"></div>
             
             {/* Botón para pantallas medianas y grandes */}
-            <div className="hidden sm:flex justify-end pt-2">
+            <div className="hidden sm:block pt-2">
               <Button
                 onClick={handleNext}
                 disabled={!selectedTimeSlot}
-                className="bg-[#3e92cc] hover:bg-[#3e92cc]/90 text-white px-8 py-3 text-base font-semibold disabled:opacity-50 transition-all"
+                className="w-full bg-[#3e92cc] hover:bg-[#3e92cc]/90 text-white px-8 py-3 text-base font-semibold disabled:opacity-50 transition-all"
                 size="lg"
               >
                 Continuar
