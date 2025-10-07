@@ -8,6 +8,8 @@ interface SessionContextType {
   startSession: (token: string) => void
   endSession: () => void
   refreshSession: () => Promise<void>
+  onSessionExpired?: () => void
+  setOnSessionExpired: (callback: () => void) => void
 }
 
 interface SessionTimerContextType {
@@ -25,6 +27,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [isSessionActive, setIsSessionActive] = useState(false)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const sessionStartTimeRef = useRef<number | null>(null)
+  const onSessionExpiredRef = useRef<(() => void) | undefined>(undefined)
 
   const endSession = useCallback(() => {
     setToken(null)
@@ -35,6 +38,11 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     if (timerRef.current) {
       clearInterval(timerRef.current)
       timerRef.current = null
+    }
+    
+    // Llamar al callback de expiración si existe
+    if (onSessionExpiredRef.current) {
+      onSessionExpiredRef.current()
     }
   }, [])
 
@@ -83,6 +91,11 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     }
   }, [startSession])
 
+  // Función para establecer el callback de expiración
+  const setOnSessionExpired = useCallback((callback: () => void) => {
+    onSessionExpiredRef.current = callback
+  }, [])
+
   // Limpiar el timer cuando el componente se desmonte
   useEffect(() => {
     return () => {
@@ -99,7 +112,9 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     startSession,
     endSession,
     refreshSession,
-  }), [token, isSessionActive, startSession, endSession, refreshSession])
+    onSessionExpired: onSessionExpiredRef.current,
+    setOnSessionExpired,
+  }), [token, isSessionActive, startSession, endSession, refreshSession, setOnSessionExpired])
 
   // Valor del timer separado
   const timerValue = useMemo(() => ({

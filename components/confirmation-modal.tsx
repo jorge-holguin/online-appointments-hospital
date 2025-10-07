@@ -75,13 +75,24 @@ const uploadReferenceFile = async (reservationCode: string, file: File) => {
 }
 
 export default function ConfirmationModal({ open, onOpenChange, onBack, appointmentData }: ConfirmationModalProps) {
-  const { token } = useSession()
+  const { token, setOnSessionExpired } = useSession()
   const [showFinalConfirmation, setShowFinalConfirmation] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isUploadingFile, setIsUploadingFile] = useState(false)
   const [apiError, setApiError] = useState<string | null>(null)
   const [appointmentResponse, setAppointmentResponse] = useState<AppointmentResponse | null>(null)
   const [finalAppointmentData, setFinalAppointmentData] = useState(appointmentData)
+
+  // Configurar redirección automática cuando la sesión expire
+  useEffect(() => {
+    setOnSessionExpired(() => {
+      // Cerrar todos los modales
+      setShowFinalConfirmation(false)
+      onOpenChange(false)
+      // Redirigir al inicio después de un breve delay
+      goToHomePage(500)
+    })
+  }, [setOnSessionExpired, onOpenChange])
   
   // Update the finalAppointmentData when the API response is received
   useEffect(() => {
