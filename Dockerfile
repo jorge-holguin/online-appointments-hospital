@@ -3,6 +3,8 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm ci
 COPY . .
+# Copiar archivo de variables de entorno de producción
+COPY .env.production .env.production
 RUN npm run build
 
 FROM node:20-alpine AS runner
