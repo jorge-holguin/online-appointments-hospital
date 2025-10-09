@@ -140,7 +140,8 @@ export default function ConfirmationModal({ open, onOpenChange, onBack, onBackTo
         fecha: formatDateForApi(appointmentData.dateTime?.date || new Date()),
         hora: appointmentData.dateTime?.time || "",
         turno: getShiftFromTime(appointmentData.dateTime?.time || ""),
-        tipoAtencion: mapPatientTypeToApiFormat(appointmentData.patient.patientType) // Tipo de atención: SIS o PAGANTE
+        tipoAtencion: mapPatientTypeToApiFormat(appointmentData.patient.patientType), // Tipo de atención: SIS o PAGANTE
+        tipoCita: appointmentData.patient.tipoCita || "" // Tipo de cita: CITADO o INTERCONSULTA
       }
       
       logEvent('BOOKING_ATTEMPT', {

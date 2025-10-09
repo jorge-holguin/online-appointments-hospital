@@ -21,9 +21,11 @@ interface FinalConfirmationModalProps {
       medicoId: string
     }
     specialty?: string
+    specialtyName?: string
     patient?: {
       email?: string
-      patientType?: 'SIS' | 'PAGANTE'
+      patientType?: 'SIS' | 'SOAT' | 'PAGANTE'
+      tipoCita?: string
     }
     tipoAtencion?: string
     idCita?: string
@@ -262,9 +264,9 @@ export default function FinalConfirmationModal({
                   <p className="font-medium text-gray-900">
                     Dr(a). {appointmentData.doctor.medicoId}
                   </p>
-                  {appointmentData.specialty && (
+                  {(appointmentData.specialtyName || appointmentData.specialty) && (
                     <p className="text-sm text-gray-600">
-                      {appointmentData.specialty}
+                      {appointmentData.specialtyName || appointmentData.specialty}
                     </p>
                   )}
                 </div>
@@ -297,6 +299,8 @@ export default function FinalConfirmationModal({
               <div className="w-4 h-4 text-gray-500 flex items-center justify-center">
                 {appointmentData?.patient?.patientType === "SIS" ? (
                   <span className="text-blue-500 font-bold">S</span>
+                ) : appointmentData?.patient?.patientType === "SOAT" ? (
+                  <span className="text-purple-500 font-bold">SO</span>
                 ) : (
                   <span className="text-green-500 font-bold">P</span>
                 )}
@@ -308,16 +312,37 @@ export default function FinalConfirmationModal({
                     className={`px-2 py-1 rounded text-xs font-medium ${
                       appointmentData?.patient?.patientType === "SIS"
                         ? "bg-blue-100 text-blue-700"
+                        : appointmentData?.patient?.patientType === "SOAT"
+                        ? "bg-purple-100 text-purple-700"
                         : "bg-green-100 text-green-700"
                     }`}
                   >
                     {appointmentData?.patient?.patientType === "SIS"
                       ? "Paciente SIS"
+                      : appointmentData?.patient?.patientType === "SOAT"
+                      ? "Paciente SOAT"
                       : "Paciente Pagante"}
                   </span>
                 </div>
               </div>
             </div>
+
+            {/* Tipo de Cita */}
+            {appointmentData?.patient?.tipoCita && (
+              <div className="flex items-center gap-3">
+                <div className="w-4 h-4 text-gray-500 flex items-center justify-center">
+                  <span className="text-orange-500 font-bold">TC</span>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Tipo de Cita</p>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-1 rounded text-xs font-medium bg-orange-100 text-orange-700">
+                      {appointmentData.patient.tipoCita}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
   
           {/* Email Notification */}

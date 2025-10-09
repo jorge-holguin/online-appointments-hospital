@@ -1,12 +1,11 @@
-"use client"
 
 import { useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight, Upload, FileImage, X, AlertCircle } from "lucide-react"
+import { ChevronLeft, ChevronRight, AlertCircle } from "lucide-react"
 import SpecialtySelectionModal from "./specialty-selection-modal"
+import AppointmentTypeModal from "./appointment-type-modal"
 import SessionTimer from "./session-timer"
-import { mapPatientTypeToApiFormat } from "@/lib/appointment-utils"
 
 interface SISVerificationModalProps {
   open: boolean
@@ -15,7 +14,7 @@ interface SISVerificationModalProps {
   patientData: any
 }
 
-type PatientType = 'SIS' | 'PAGANTE'
+type PatientType = 'SIS' | 'SOAT' | 'PAGANTE'
 
 export default function SISVerificationModal({
   open,
@@ -24,64 +23,31 @@ export default function SISVerificationModal({
   patientData,
 }: SISVerificationModalProps) {
   const [showSpecialtySelection, setShowSpecialtySelection] = useState(false)
+  const [showAppointmentType, setShowAppointmentType] = useState(false)
   const [patientType, setPatientType] = useState<PatientType>('SIS')
-  const [referenceImage, setReferenceImage] = useState<File | null>(null)
-  const [imageError, setImageError] = useState<string | null>(null)
-
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    setImageError(null)
-    
-    if (!file) {
-      setReferenceImage(null)
-      return
-    }
-    
-    // Validar tipo de archivo
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf']
-    if (!allowedTypes.includes(file.type)) {
-      setImageError('Solo se permiten archivos JPG, PNG o PDF')
-      return
-    }
-    
-    // Validar tamaño (5MB)
-    const maxSize = 5 * 1024 * 1024 // 5MB en bytes
-    if (file.size > maxSize) {
-      setImageError('El archivo no debe superar los 5MB')
-      return
-    }
-    
-    setReferenceImage(file)
-  }
-  
-  const handleRemoveImage = () => {
-    setReferenceImage(null)
-    setImageError(null)
-    // Limpiar el input file
-    const fileInput = document.getElementById('referenceImage') as HTMLInputElement
-    if (fileInput) {
-      fileInput.value = ''
-    }
-  }
+  const [tipoCita, setTipoCita] = useState<string>('')
 
   const handleContinue = () => {
-    // Asegurarse de que el tipo de paciente sea un valor válido
-    const validatedPatientType = patientType === 'SIS' ? 'SIS' : 'PAGANTE'
-    
-    // Mostrar el modal de selección de especialidad
-    setShowSpecialtySelection(true)
-  }
-  
-  const handleClose = () => {
-    // Redirigir a la página principal
-    window.location.href =   '/'
+    // Si es SIS o SOAT, mostrar el modal de tipo de cita
+    if (patientType === 'SIS' || patientType === 'SOAT') {
+      setShowAppointmentType(true)
+    } else {
+      // Si es PAGANTE, ir directo a selección de especialidad
+      setShowSpecialtySelection(true)
+    }
   }
 
-  const canContinue = patientType === 'PAGANTE' || (patientType === 'SIS' /* && referenceImage !== null */)
+  const canContinue = patientType === 'PAGANTE' || patientType === 'SIS' || patientType === 'SOAT'
+
+  const handleAppointmentTypeSelected = (selectedType: string) => {
+    setTipoCita(selectedType)
+    setShowAppointmentType(false)
+    setShowSpecialtySelection(true)
+  }
 
     return (
       <>
-        <Dialog open={open && !showSpecialtySelection} onOpenChange={onOpenChange}>
+        <Dialog open={open && !showSpecialtySelection && !showAppointmentType} onOpenChange={onOpenChange}>
           <DialogContent
             className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto flex flex-col"
             redirectToHome={true}
@@ -208,78 +174,40 @@ export default function SISVerificationModal({
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
-    
-              {/* Subida de imagen si es SIS */}
-            {/*   {patientType === "SIS" && (
-                <div className="space-y-4 bg-green-50 border border-green-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-green-900 flex items-center gap-2">
-                    <FileImage className="w-4 h-4" />
-                    Imagen de Referencia SIS
-                  </h4>
-    
-                  <p className="text-sm text-green-700">
-                    Sube una foto o escaneo de tu documento de referencia del SIS
-                  </p>
-    
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-center w-full">
-                      <label
-                        htmlFor="referenceImage"
-                        className="flex flex-col items-center justify-center w-full h-32 border-2 border-green-300 border-dashed rounded-lg cursor-pointer bg-green-50 hover:bg-green-100"
-                      >
-                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                          <Upload className="w-8 h-8 mb-2 text-green-500" />
-                          <p className="mb-2 text-sm text-green-700">
-                            <span className="font-semibold">Haz clic para subir</span>{" "}
-                            o arrastra y suelta
-                          </p>
-                          <p className="text-xs text-green-600">
-                            JPG, PNG o PDF (Máx. 5MB)
-                          </p>
-                        </div>
-                        <input
-                          id="referenceImage"
-                          type="file"
-                          className="hidden"
-                          accept=".jpg,.jpeg,.png,.pdf"
-                          onChange={handleImageUpload}
-                        />
-                      </label>
-                    </div>
-    
-                    {referenceImage && (
-                      <div className="flex items-center justify-between bg-white border border-green-200 rounded-lg p-3">
-                        <div className="flex items-center gap-2">
-                          <FileImage className="w-4 h-4 text-green-600" />
-                          <span className="text-sm text-gray-700">
-                            {referenceImage.name}
-                          </span>
-                          <span className="text-xs text-gray-500">
-                            ({(referenceImage.size / 1024 / 1024).toFixed(2)} MB)
-                          </span>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={handleRemoveImage}
-                          className="text-red-600 hover:text-red-700"
+
+                  <div
+                    className={`border rounded-lg p-4 cursor-pointer transition-colors ${
+                      patientType === "SOAT"
+                        ? "border-purple-500 bg-purple-50"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                    onClick={() => setPatientType("SOAT")}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <input
+                        type="radio"
+                        id="soat"
+                        name="patientType"
+                        value="SOAT"
+                        checked={patientType === "SOAT"}
+                        onChange={() => setPatientType("SOAT")}
+                        className="h-4 w-4 text-purple-600"
+                      />
+                      <div>
+                        <label
+                          htmlFor="soat"
+                          className="text-base font-medium text-gray-900 cursor-pointer"
                         >
-                          <X className="w-4 h-4" />
-                        </Button>
+                          Atención con SOAT
+                        </label>
+                        <p className="text-sm text-gray-600">
+                          Usar tu Seguro Obligatorio de Accidentes de Tránsito (SOAT)
+                        </p>
                       </div>
-                    )}
-    
-                    {imageError && (
-                      <div className="flex items-center gap-2 text-red-600 text-sm">
-                        <AlertCircle className="w-4 h-4" />
-                        <span>{imageError}</span>
-                      </div>
-                    )}
+                    </div>
                   </div>
                 </div>
-              )} */}
+              </div>
             </div>
     
             {/* Footer fijo */}
@@ -297,15 +225,26 @@ export default function SISVerificationModal({
           </DialogContent>
         </Dialog>
     
+        <AppointmentTypeModal
+          open={showAppointmentType}
+          onOpenChange={setShowAppointmentType}
+          onBack={() => setShowAppointmentType(false)}
+          onContinue={handleAppointmentTypeSelected}
+          patientData={{
+            ...patientData,
+            patientType: patientType,
+          }}
+        />
+
         <SpecialtySelectionModal
           open={showSpecialtySelection}
           onOpenChange={setShowSpecialtySelection}
           onBack={() => setShowSpecialtySelection(false)}
           patientData={{
             ...patientData,
-            patientType: patientType === "SIS" ? "SIS" : "PAGANTE",
-            referenceImage: patientType === "SIS" ? referenceImage : null,
-            tipoAtencion: patientType === "SIS" ? "SIS" : "PAGANTE",
+            patientType: patientType,
+            tipoAtencion: patientType,
+            tipoCita: tipoCita,
           }}
         />
       </>
