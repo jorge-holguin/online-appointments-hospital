@@ -37,9 +37,9 @@ export const patientValidationSchema = z.object({
   
   phone: z
     .string()
-    .min(7, 'El teléfono debe tener al menos 7 dígitos')
-    .max(15, 'El teléfono no puede exceder 15 dígitos')
+    .length(9, 'El número de celular debe tener exactamente 9 dígitos para recibir el SMS')
     .regex(/^\d+$/, 'El teléfono solo puede contener números')
+    .regex(/^9\d{8}$/, 'El número de celular debe comenzar con 9 y tener 9 dígitos')
     .transform(normalizePhone),
   
   documento: z

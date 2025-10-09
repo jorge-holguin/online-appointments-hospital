@@ -16,6 +16,9 @@ interface DateTimeSelectionModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onBack: () => void
+  onBackToSpecialties?: () => void  // Callback para volver a especialidades
+  onRefreshAppointments?: () => void  // Callback para refrescar citas
+  refreshTrigger?: number  // Trigger para forzar refresco de citas
   patientData: any
   selectedSpecialty: string
   selectedDoctor: any
@@ -62,6 +65,9 @@ export default function DateTimeSelectionModal({
   open,
   onOpenChange,
   onBack,
+  onBackToSpecialties,
+  onRefreshAppointments,
+  refreshTrigger,
   patientData,
   selectedSpecialty,
   selectedDoctor,
@@ -135,7 +141,7 @@ export default function DateTimeSelectionModal({
     }
     
     fetchAvailableSlots()
-  }, [selectedDoctor, selectedShift, startDate, endDate, open, config])
+  }, [selectedDoctor, selectedShift, startDate, endDate, open, config, refreshTrigger])
   
   // No necesitamos slides para la nueva interfaz
   
@@ -147,6 +153,49 @@ export default function DateTimeSelectionModal({
     setSelectedDay(date || null)
     setSelectedTimeSlot(null) // Resetear la hora seleccionada cuando se cambia de día
   }
+
+  // Seleccionar automáticamente el primer horario DISPONIBLE cuando se selecciona un día
+  useEffect(() => {
+    if (!selectedDay || !availableSlots.length) return
+
+    const dateKey = formatDateForAPI(selectedDay)
+    const timesForDay = dayTimeSlots.get(dateKey) || []
+    
+    // Buscar el primer horario disponible (conSolicitud === false)
+    const firstAvailableTime = timesForDay.find(time => {
+      const apiSlot = availableSlots.find(slot => 
+        slot.fecha === dateKey && slot.hora.trim() === time
+      )
+      return apiSlot && !apiSlot.conSolicitud
+    })
+
+    // Si hay un horario disponible, seleccionarlo automáticamente
+    if (firstAvailableTime) {
+      const apiSlot = availableSlots.find(slot => 
+        slot.fecha === dateKey && slot.hora.trim() === firstAvailableTime
+      )
+      
+      if (apiSlot && !apiSlot.conSolicitud) {
+        const dayName = format(selectedDay, 'EEEE', { locale: es })
+        const dayNameCapitalized = dayName.charAt(0).toUpperCase() + dayName.slice(1)
+        const formattedDate = format(selectedDay, 'yyyy-MM-dd')
+        const displayDate = format(selectedDay, 'dd/MM/yyyy')
+        
+        const citaIdValue = apiSlot.idCita || apiSlot.citaId || apiSlot.id
+        
+        setSelectedTimeSlot({ 
+          day: dayNameCapitalized, 
+          date: formattedDate,
+          displayDate: displayDate,
+          time: firstAvailableTime,
+          fullDate: selectedDay,
+          idCita: citaIdValue !== undefined ? String(citaIdValue) : undefined,
+          consultorio: apiSlot?.consultorio ? apiSlot.consultorio.trim() : undefined,
+          available: true
+        })
+      }
+    }
+  }, [selectedDay, availableSlots, dayTimeSlots])
   
   // Obtener las horas disponibles para el día seleccionado
   const getAvailableTimesForSelectedDay = () => {
@@ -240,7 +289,11 @@ export default function DateTimeSelectionModal({
   return (
     <>
       <Dialog open={open && !showConfirmation} onOpenChange={onOpenChange}>
-        <DialogContent className="w-[95vw] max-w-5xl max-h-[95vh] overflow-y-auto p-3 sm:p-6 sm:max-h-[90vh]" redirectToHome={true}>
+        <DialogContent 
+          className="w-[95vw] max-w-5xl max-h-[95vh] overflow-y-auto p-3 sm:p-6 sm:max-h-[90vh]" 
+          redirectToHome={true}
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <div className="flex items-center gap-2 sm:gap-3">
               <Button variant="ghost" size="icon" onClick={onBack} className="hover:bg-blue-50 h-8 w-8 sm:h-10 sm:w-10">
@@ -483,6 +536,8 @@ export default function DateTimeSelectionModal({
         open={showConfirmation}
         onOpenChange={setShowConfirmation}
         onBack={() => setShowConfirmation(false)}
+        onBackToSpecialties={onBackToSpecialties}
+        onRefreshAppointments={onRefreshAppointments}
         appointmentData={{
           patient: patientData,
           specialty: selectedDoctor?.especialidadId || "", // ID de la especialidad

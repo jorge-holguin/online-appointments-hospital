@@ -14,6 +14,7 @@ interface DoctorSelectionModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onBack: () => void
+  onBackToSpecialties?: () => void  // Callback para volver a especialidades
   patientData: any
   selectedSpecialty: string
   selectedSpecialtyId: string
@@ -30,6 +31,7 @@ export default function DoctorSelectionModal({
   open,
   onOpenChange,
   onBack,
+  onBackToSpecialties,
   patientData,
   selectedSpecialty,
   selectedSpecialtyId,
@@ -40,6 +42,7 @@ export default function DoctorSelectionModal({
   const [doctors, setDoctors] = useState<Doctor[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
   
   // Usar configuración centralizada
   const { config } = useAppConfig()
@@ -85,10 +88,33 @@ export default function DoctorSelectionModal({
     }
   }
 
+  // Callback para refrescar las citas cuando se vuelve del modal de confirmación
+  const handleRefreshAppointments = () => {
+    // Incrementar el trigger para forzar el refresco
+    setRefreshTrigger(prev => prev + 1)
+  }
+
+  // Callback mejorado para volver a especialidades
+  const handleBackToSpecialtiesFromChild = () => {
+    // Cerrar el modal de selección de fecha/hora
+    setShowDateTimeSelection(false)
+    // Resetear el doctor seleccionado
+    setSelectedDoctor(null)
+    
+    // Luego llamar al callback del padre
+    if (onBackToSpecialties) {
+      onBackToSpecialties()
+    }
+  }
+
   return (
     <>
       <Dialog open={open && !showDateTimeSelection} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto" redirectToHome={true}>
+        <DialogContent 
+          className="sm:max-w-lg max-h-[90vh] overflow-y-auto" 
+          redirectToHome={true}
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="icon" onClick={onBack} className="hover:bg-blue-50">
@@ -207,6 +233,9 @@ export default function DoctorSelectionModal({
         open={showDateTimeSelection}
         onOpenChange={setShowDateTimeSelection}
         onBack={() => setShowDateTimeSelection(false)}
+        onBackToSpecialties={handleBackToSpecialtiesFromChild}
+        onRefreshAppointments={handleRefreshAppointments}
+        refreshTrigger={refreshTrigger}
         patientData={patientData}
         selectedSpecialty={selectedSpecialty}
         selectedDoctor={{

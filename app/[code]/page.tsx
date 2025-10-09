@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Search, Calendar, User, MapPin, Loader2, AlertCircle, CheckCircle, Clock, XCircle, RefreshCw, ArrowLeft, Phone } from "lucide-react"
+import { Search, Calendar, User, MapPin, Loader2, AlertCircle, CheckCircle, Clock, XCircle, RefreshCw, ArrowLeft, Phone, Stethoscope, FileText } from "lucide-react"
 
 interface AppointmentResponse {
   tipoDocumento: string;
@@ -24,6 +24,7 @@ interface AppointmentResponse {
   estado: string;
   observacion?: string;
   tipoAtencion?: string;
+  tipoCita?: string;
 }
 
 export default function AppointmentCodePage({ params }: { readonly params: { code: string } }) {
@@ -76,7 +77,8 @@ export default function AppointmentCodePage({ params }: { readonly params: { cod
         especialidad: data.especialidad,
         turno: data.turno,
         observacion: data.observacion,
-        tipoAtencion: data.tipoAtencion
+        tipoAtencion: data.tipoAtencion,
+        tipoCita: data.tipoCita
       })
     } catch (err) {
       console.error('Error fetching appointment:', err)
@@ -263,42 +265,91 @@ export default function AppointmentCodePage({ params }: { readonly params: { cod
 
               <div className="border rounded-lg p-3 sm:p-4 bg-white space-y-3 shadow-sm">
                 <div className="flex items-start gap-3">
-                  <Calendar className="w-4 h-4 text-blue-600 mt-1 flex-shrink-0" />
+                  <Calendar className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-500">Fecha y hora</p>
-                    <p className="font-medium text-sm sm:text-base break-words">{appointmentData.date} - {appointmentData.time}</p>
+                    <p className="text-xs text-gray-500 mb-1">Fecha y hora</p>
+                    <p className="font-semibold text-sm sm:text-base text-gray-900 break-words">{appointmentData.date} - {appointmentData.time}</p>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <User className="w-4 h-4 text-blue-600 mt-1 flex-shrink-0" />
+                  <Stethoscope className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-500">Médico</p>
-                    <p className="font-medium text-sm sm:text-base break-words">{appointmentData.doctor}</p>
-                    <span className="inline-block text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded mt-1">
-                      {appointmentData.specialty}
-                    </span>
+                    <p className="text-xs text-gray-500 mb-1">Especialidad</p>
+                    <p className="font-semibold text-sm sm:text-base text-gray-900 break-words">{appointmentData.specialty}</p>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <MapPin className="w-4 h-4 text-blue-600 mt-1 flex-shrink-0" />
+                  <User className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-500">Ubicación</p>
-                    <p className="font-medium text-sm sm:text-base">{appointmentData.location}</p>
-                    <p className="text-xs text-gray-600 break-words">
+                    <p className="text-xs text-gray-500 mb-1">Médico</p>
+                    <p className="font-semibold text-sm sm:text-base text-gray-900 break-words">{appointmentData.doctor}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <MapPin className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-gray-500 mb-1">Ubicación</p>
+                    <p className="font-semibold text-sm sm:text-base text-gray-900">{appointmentData.location}</p>
+                    <p className="text-xs text-gray-600 mt-0.5 break-words">
                       {process.env.NEXT_PUBLIC_HOSPITAL_ADDRESS || "Jr. Cuzco 274 - Chosica"}
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <User className="w-4 h-4 text-blue-600 mt-1 flex-shrink-0" />
+                  <User className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-500">Paciente</p>
-                    <p className="font-medium text-sm sm:text-base break-words">{appointmentData.patient}</p>
+                    <p className="text-xs text-gray-500 mb-1">Paciente</p>
+                    <p className="font-semibold text-sm sm:text-base text-gray-900 break-words">{appointmentData.patient}</p>
                   </div>
                 </div>
+
+                {appointmentData.tipoAtencion && (
+                  <div className="flex items-start gap-3 pt-2 border-t border-gray-100">
+                    <div className="w-5 h-5 flex items-center justify-center mt-0.5 flex-shrink-0">
+                      {appointmentData.tipoAtencion === "SIS" ? (
+                        <span className="text-blue-600 font-bold text-sm">S</span>
+                      ) : appointmentData.tipoAtencion === "SOAT" ? (
+                        <span className="text-purple-600 font-bold text-xs">SO</span>
+                      ) : (
+                        <span className="text-green-600 font-bold text-sm">P</span>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-gray-500 mb-1">Tipo de Atención</p>
+                      <span
+                        className={`inline-block px-2 py-1 rounded text-xs font-medium ${
+                          appointmentData.tipoAtencion === "SIS"
+                            ? "bg-blue-100 text-blue-700"
+                            : appointmentData.tipoAtencion === "SOAT"
+                            ? "bg-purple-100 text-purple-700"
+                            : "bg-green-100 text-green-700"
+                        }`}
+                      >
+                        {appointmentData.tipoAtencion === "SIS"
+                          ? "Paciente SIS"
+                          : appointmentData.tipoAtencion === "SOAT"
+                          ? "Paciente SOAT"
+                          : "Paciente Pagante"}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {appointmentData.tipoCita && (
+                  <div className="flex items-start gap-3">
+                    <FileText className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-gray-500 mb-1">Tipo de Cita</p>
+                      <span className="inline-block px-2 py-1 rounded text-xs font-medium bg-orange-100 text-orange-700">
+                        {appointmentData.tipoCita}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="border rounded-lg p-3 bg-gray-50 border-gray-200">

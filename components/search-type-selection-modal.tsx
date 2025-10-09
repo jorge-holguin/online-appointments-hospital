@@ -40,14 +40,14 @@ export default function SearchTypeSelectionModal({
     }
   }
 
-  // Callback mejorado para volver a especialidades
+  // Callback mejorado para volver a especialidades desde modales hijos
   const handleBackToSpecialtiesFromChild = () => {
     // Cerrar todos los modales hijos primero
     setShowDoctorSelection(false)
     setShowDateTimeRangeSelection(false)
     setSearchType(null)
     
-    // Luego llamar al callback del padre
+    // Luego llamar al callback del padre para cerrar este modal y volver a especialidades
     if (onBackToSpecialties) {
       onBackToSpecialties()
     }
@@ -56,7 +56,10 @@ export default function SearchTypeSelectionModal({
   return (
     <>
       <Dialog open={open && !showDoctorSelection && !showDateTimeRangeSelection} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogContent 
+          className="sm:max-w-md max-h-[90vh] overflow-y-auto"
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="icon" onClick={onBack}>
@@ -128,6 +131,7 @@ export default function SearchTypeSelectionModal({
         open={showDoctorSelection}
         onOpenChange={setShowDoctorSelection}
         onBack={() => setShowDoctorSelection(false)}
+        onBackToSpecialties={handleBackToSpecialtiesFromChild}
         patientData={patientData}
         selectedSpecialty={selectedSpecialty}
         selectedSpecialtyId={selectedSpecialtyId}

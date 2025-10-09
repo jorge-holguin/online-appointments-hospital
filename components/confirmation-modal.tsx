@@ -140,7 +140,8 @@ export default function ConfirmationModal({ open, onOpenChange, onBack, onBackTo
         fecha: formatDateForApi(appointmentData.dateTime?.date || new Date()),
         hora: appointmentData.dateTime?.time || "",
         turno: getShiftFromTime(appointmentData.dateTime?.time || ""),
-        tipoAtencion: mapPatientTypeToApiFormat(appointmentData.patient.patientType) // Tipo de atención: SIS o PAGANTE
+        tipoAtencion: mapPatientTypeToApiFormat(appointmentData.patient.patientType), // Tipo de atención: SIS o PAGANTE
+        tipoCita: appointmentData.patient.tipoCita || "" // Tipo de cita: CITADO o INTERCONSULTA
       }
       
       logEvent('BOOKING_ATTEMPT', {
@@ -311,7 +312,11 @@ export default function ConfirmationModal({ open, onOpenChange, onBack, onBackTo
   return (
     <>
       <Dialog open={open && !showFinalConfirmation && !showDuplicateErrorModal && !showUnavailableModal} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-md max-w-[95vw] max-h-[90vh] overflow-y-auto" redirectToHome={true}>
+        <DialogContent 
+          className="sm:max-w-md max-w-[95vw] max-h-[90vh] overflow-y-auto" 
+          redirectToHome={true}
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="icon" onClick={onBack} className="p-1 sm:p-2 hover:bg-blue-50">
