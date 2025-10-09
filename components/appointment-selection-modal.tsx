@@ -136,7 +136,11 @@ export default function AppointmentSelectionModal({
   return (
     <>
       <Dialog open={open && !showConfirmation} onOpenChange={onOpenChange}>
-        <DialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-y-auto p-3 sm:p-6" redirectToHome={true}>
+        <DialogContent 
+          className="w-[95vw] max-w-4xl max-h-[90vh] overflow-y-auto p-3 sm:p-6" 
+          redirectToHome={true}
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <div className="flex items-center gap-2 sm:gap-3">
               <Button

@@ -19,7 +19,10 @@ export default function DuplicateAppointmentErrorModal({
 }: DuplicateAppointmentErrorModalProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent 
+        className="sm:max-w-md max-h-[90vh] overflow-y-auto"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <div className="flex flex-col items-center text-center space-y-3">
             <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center">

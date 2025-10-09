@@ -85,6 +85,8 @@ export default function SISVerificationModal({
           <DialogContent
             className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto flex flex-col"
             redirectToHome={true}
+            onInteractOutside={(e) => e.preventDefault()}
+            onEscapeKeyDown={(e) => e.preventDefault()}
           >
             {/* Header fijo */}
             <DialogHeader className="flex-shrink-0">

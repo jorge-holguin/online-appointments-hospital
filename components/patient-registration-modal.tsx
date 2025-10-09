@@ -247,7 +247,11 @@ export default function PatientRegistrationModal({ open, onOpenChange }: Patient
   return (
     <>
       <Dialog open={open && !showSISVerification} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-md max-h-[90vh] md:max-h-[85vh] overflow-y-auto">
+        <DialogContent 
+          className="sm:max-w-md max-h-[90vh] md:max-h-[85vh] overflow-y-auto"
+          onInteractOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle className="text-center text-xl font-semibold">Registro de paciente</DialogTitle>
             <DialogDescription className="text-center">
