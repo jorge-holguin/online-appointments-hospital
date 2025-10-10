@@ -117,7 +117,7 @@ export default function SpecialtySelectionModal({
     <>
       <Dialog open={open && !showSearchTypeSelection} onOpenChange={onOpenChange}>
         <DialogContent 
-          className="sm:max-w-2xl max-h-[90vh] overflow-y-auto"
+          className="sm:max-w-2xl max-h-[90vh] overflow-y-auto pb-20 sm:pb-6"
           onInteractOutside={(e) => e.preventDefault()}
           onEscapeKeyDown={(e) => e.preventDefault()}
         >
@@ -258,8 +258,8 @@ export default function SpecialtySelectionModal({
               </div>
             )}
 
-            {/* Action Button */}
-            <div className="pt-4 border-t">
+            {/* Action Button - Flotante en móviles */}
+            <div className="fixed sm:relative bottom-0 left-0 right-0 p-4 bg-white border-t sm:border-t-0 sm:pt-4 z-50 shadow-lg sm:shadow-none">
               <Button
                 onClick={handleNext}
                 disabled={!selectedSpecialty || configLoading}

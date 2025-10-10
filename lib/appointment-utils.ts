@@ -5,7 +5,7 @@
 /**
  * Tipo de atención para pacientes
  */
-export type PatientType = 'SIS' | 'PAGANTE';
+export type PatientType = 'SIS' | 'SOAT' | 'PAGANTE';
 
 /**
  * Turno de atención
@@ -14,7 +14,7 @@ export type ShiftType = 'M' | 'T'; // M = Mañana, T = Tarde
 
 /**
  * Mapea el tipo de paciente al formato correcto para la API
- * @param patientType - Tipo de paciente (SIS o PAGANTE)
+ * @param patientType - Tipo de paciente (SIS, SOAT o PAGANTE)
  * @returns Tipo de atención formateado para la API
  */
 export function mapPatientTypeToApiFormat(patientType?: string): PatientType {
@@ -24,7 +24,9 @@ export function mapPatientTypeToApiFormat(patientType?: string): PatientType {
   const normalizedType = patientType.trim().toUpperCase();
   
   // Verifica si es un tipo válido
-  return normalizedType === 'SIS' ? 'SIS' : 'PAGANTE';
+  if (normalizedType === 'SIS') return 'SIS';
+  if (normalizedType === 'SOAT') return 'SOAT';
+  return 'PAGANTE';
 }
 
 /**
