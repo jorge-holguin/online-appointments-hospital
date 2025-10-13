@@ -46,6 +46,7 @@ interface ApiTimeSlot {
   turnoConsulta: string
   consultorio: string
   conSolicitud: boolean
+  estado: string // Estado de la cita: "1" = disponible, otros = no disponible
 }
 
 type ShiftType = 'M' | 'T' // M = Mañana, T = Tarde
@@ -161,12 +162,12 @@ export default function DateTimeSelectionModal({
     const dateKey = formatDateForAPI(selectedDay)
     const timesForDay = dayTimeSlots.get(dateKey) || []
     
-    // Buscar el primer horario disponible (conSolicitud === false)
+    // Buscar el primer horario disponible (conSolicitud === false y estado === "1")
     const firstAvailableTime = timesForDay.find(time => {
       const apiSlot = availableSlots.find(slot => 
         slot.fecha === dateKey && slot.hora.trim() === time
       )
-      return apiSlot && !apiSlot.conSolicitud
+      return apiSlot && !apiSlot.conSolicitud && apiSlot.estado === "1"
     })
 
     // Si hay un horario disponible, seleccionarlo automáticamente
@@ -175,7 +176,7 @@ export default function DateTimeSelectionModal({
         slot.fecha === dateKey && slot.hora.trim() === firstAvailableTime
       )
       
-      if (apiSlot && !apiSlot.conSolicitud) {
+      if (apiSlot && !apiSlot.conSolicitud && apiSlot.estado === "1") {
         const dayName = format(selectedDay, 'EEEE', { locale: es })
         const dayNameCapitalized = dayName.charAt(0).toUpperCase() + dayName.slice(1)
         const formattedDate = format(selectedDay, 'yyyy-MM-dd')
@@ -217,8 +218,8 @@ export default function DateTimeSelectionModal({
       slot.fecha === formattedDate && slot.hora.trim() === time
     );
     
-    // Si no encontramos el slot en la API o si conSolicitud es true (no disponible), no permitir la selección
-    if (!selectedApiSlot || selectedApiSlot.conSolicitud === true) {
+    // Si no encontramos el slot en la API o si conSolicitud es true o estado !== "1" (no disponible), no permitir la selección
+    if (!selectedApiSlot || selectedApiSlot.conSolicitud === true || selectedApiSlot.estado !== "1") {
       // No hacemos nada si la cita no está disponible
       return;
     }
@@ -240,7 +241,7 @@ export default function DateTimeSelectionModal({
       // Incluir idCita y consultorio si están disponibles
       idCita: citaIdValue,
       consultorio: selectedApiSlot?.consultorio ? selectedApiSlot.consultorio.trim() : undefined,
-      available: !selectedApiSlot.conSolicitud // La cita está disponible si conSolicitud es false
+      available: !selectedApiSlot.conSolicitud && selectedApiSlot.estado === "1" // La cita está disponible si conSolicitud es false y estado es "1"
     });
     
     // El slot se ha seleccionado correctamente
@@ -453,8 +454,8 @@ export default function DateTimeSelectionModal({
                               slot.fecha === formatDateForAPI(selectedDay) && slot.hora.trim() === time
                             );
                             
-                            // Determinar si está disponible (conSolicitud === false)
-                            const isAvailable = apiSlot && !apiSlot.conSolicitud;
+                            // Determinar si está disponible (conSolicitud === false y estado === "1")
+                            const isAvailable = apiSlot && !apiSlot.conSolicitud && apiSlot.estado === "1";
                             
                             return (
                               <button

@@ -37,6 +37,7 @@ interface ApiTimeSlot {
   medico: string
   nombreMedico: string
   conSolicitud: boolean
+  estado: string // Estado de la cita: "1" = disponible, otros = no disponible
 }
 
 interface DoctorAppointments {
@@ -211,7 +212,7 @@ export default function AppointmentSelectionModal({
                     Se encontraron{" "}
                     <span className="font-semibold text-blue-600">
                       {doctorAppointments.reduce(
-                        (acc, doc) => acc + doc.appointments.filter((a) => !a.conSolicitud).length,
+                        (acc, doc) => acc + doc.appointments.filter((a) => !a.conSolicitud && a.estado === "1").length,
                         0
                       )}
                     </span>{" "}
@@ -221,17 +222,17 @@ export default function AppointmentSelectionModal({
                   </p>
 
                   {doctorAppointments.reduce(
-                    (acc, doc) => acc + doc.appointments.filter((a) => a.conSolicitud).length,
+                    (acc, doc) => acc + doc.appointments.filter((a) => a.conSolicitud || a.estado !== "1").length,
                     0
                   ) > 0 && (
                     <p className="text-gray-500">
                       <span className="font-semibold">
                         {doctorAppointments.reduce(
-                          (acc, doc) => acc + doc.appointments.filter((a) => a.conSolicitud).length,
+                          (acc, doc) => acc + doc.appointments.filter((a) => a.conSolicitud || a.estado !== "1").length,
                           0
                         )}
                       </span>{" "}
-                      citas ya fueron otorgadas
+                      citas no disponibles
                     </p>
                   )}
                 </div>
@@ -248,14 +249,14 @@ export default function AppointmentSelectionModal({
                         <div>
                           <p className="font-bold text-lg">Dr(a). {doctor.nombreMedico}</p>
                           <p className="text-sm text-blue-100">
-                            {doctor.appointments.filter((a) => !a.conSolicitud).length}{" "}
-                            {doctor.appointments.filter((a) => !a.conSolicitud).length === 1
+                            {doctor.appointments.filter((a) => !a.conSolicitud && a.estado === "1").length}{" "}
+                            {doctor.appointments.filter((a) => !a.conSolicitud && a.estado === "1").length === 1
                               ? "horario disponible"
                               : "horarios disponibles"}
-                            {doctor.appointments.filter((a) => a.conSolicitud).length > 0 && (
+                            {doctor.appointments.filter((a) => a.conSolicitud || a.estado !== "1").length > 0 && (
                               <span className="text-gray-300">
                                 {" "}
-                                • {doctor.appointments.filter((a) => a.conSolicitud).length} otorgada(s)
+                                • {doctor.appointments.filter((a) => a.conSolicitud || a.estado !== "1").length} no disponible(s)
                               </span>
                             )}
                           </p>
@@ -265,47 +266,50 @@ export default function AppointmentSelectionModal({
 
                     {/* Lista de horarios */}
                     <div className="p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                      {doctor.appointments.map((appointment) => (
-                        <button
-                          key={appointment.citaId}
-                          onClick={() => !appointment.conSolicitud && handleSelectAppointment(appointment)}
-                          disabled={appointment.conSolicitud}
-                          className={`p-3 rounded-lg border-2 transition-all duration-200 group relative ${
-                            appointment.conSolicitud
-                              ? "border-gray-300 bg-gray-100 cursor-not-allowed opacity-75"
-                              : "border-gray-200 hover:border-blue-500 hover:bg-blue-50"
-                          }`}
-                        >
-                          <div className="flex flex-col items-center gap-1">
-                            <Clock
-                              className={`w-5 h-5 ${
-                                appointment.conSolicitud
-                                  ? "text-gray-400"
-                                  : "text-gray-500 group-hover:text-blue-600"
-                              }`}
-                            />
-                            <span
-                              className={`font-bold ${
-                                appointment.conSolicitud
-                                  ? "text-gray-500 line-through"
-                                  : "text-gray-900 group-hover:text-blue-600"
-                              }`}
-                            >
-                              {appointment.hora}
-                            </span>
-                            <span
-                              className={`text-xs ${
-                                appointment.conSolicitud ? "text-gray-400" : "text-gray-500"
-                              }`}
-                            >
-                              Cons. {appointment.consultorio.trim()}
-                            </span>
-                            {appointment.conSolicitud && (
-                              <span className="text-[10px] font-semibold text-gray-500 mt-1">OTORGADA</span>
-                            )}
-                          </div>
-                        </button>
-                      ))}
+                      {doctor.appointments.map((appointment) => {
+                        const isAvailable = !appointment.conSolicitud && appointment.estado === "1";
+                        return (
+                          <button
+                            key={appointment.citaId}
+                            onClick={() => isAvailable && handleSelectAppointment(appointment)}
+                            disabled={!isAvailable}
+                            className={`p-3 rounded-lg border-2 transition-all duration-200 group relative ${
+                              !isAvailable
+                                ? "border-gray-300 bg-gray-100 cursor-not-allowed opacity-75"
+                                : "border-gray-200 hover:border-blue-500 hover:bg-blue-50"
+                            }`}
+                          >
+                            <div className="flex flex-col items-center gap-1">
+                              <Clock
+                                className={`w-5 h-5 ${
+                                  !isAvailable
+                                    ? "text-gray-400"
+                                    : "text-gray-500 group-hover:text-blue-600"
+                                }`}
+                              />
+                              <span
+                                className={`font-bold ${
+                                  !isAvailable
+                                    ? "text-gray-500 line-through"
+                                    : "text-gray-900 group-hover:text-blue-600"
+                                }`}
+                              >
+                                {appointment.hora}
+                              </span>
+                              <span
+                                className={`text-xs ${
+                                  !isAvailable ? "text-gray-400" : "text-gray-500"
+                                }`}
+                              >
+                                Cons. {appointment.consultorio.trim()}
+                              </span>
+                              {!isAvailable && (
+                                <span className="text-[10px] font-semibold text-gray-500 mt-1">NO DISPONIBLE</span>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 ))}

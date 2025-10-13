@@ -61,6 +61,7 @@ interface ApiTimeSlot {
   medico: string
   nombreMedico: string
   conSolicitud: boolean
+  estado: string // Estado de la cita: "1" = disponible, otros = no disponible
 }
 
 export default function DateTimeRangeSelectionModal({
