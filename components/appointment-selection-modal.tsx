@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, User, Clock, MapPin, Loader2, Calendar } from "lucide-react"
-import { format } from "date-fns"
+import { format, isToday } from "date-fns"
 import { es } from "date-fns/locale"
 import ConfirmationModal from "./confirmation-modal"
 import SessionTimer from "./session-timer"
@@ -85,8 +85,25 @@ export default function AppointmentSelectionModal({
 
         const data: ApiTimeSlot[] = await response.json()
 
+        // Filtrar citas que ya pasaron si es el día de hoy
+        const now = new Date()
+        const currentHour = now.getHours()
+        const currentMinute = now.getMinutes()
+        
+        const filteredData = data.filter((slot) => {
+          // Si no es hoy, mostrar todas las citas
+          if (!isToday(selectedDate)) return true
+          
+          // Si es hoy, solo mostrar citas futuras
+          const [slotHour, slotMinute] = slot.hora.trim().split(':').map(Number)
+          const slotTimeInMinutes = slotHour * 60 + slotMinute
+          const currentTimeInMinutes = currentHour * 60 + currentMinute
+          
+          return slotTimeInMinutes > currentTimeInMinutes
+        })
+
         // Agrupar por médico
-        const groupedByDoctor = data.reduce((acc, slot) => {
+        const groupedByDoctor = filteredData.reduce((acc, slot) => {
           const doctorKey = slot.medico
           if (!acc[doctorKey]) {
             acc[doctorKey] = {

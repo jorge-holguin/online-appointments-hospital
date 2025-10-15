@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Sun, Moon, Clock, CheckCircle, AlertCircle } from "lucide-react"
-import { format, addMonths, startOfMonth, parseISO } from "date-fns"
+import { format, addMonths, startOfMonth, parseISO, isToday } from "date-fns"
 import { es } from "date-fns/locale"
 import { AvailabilityCalendar } from "@/components/ui/availability-calendar"
 import AppointmentSelectionModal from "./appointment-selection-modal"
@@ -140,6 +140,23 @@ export default function DateTimeRangeSelectionModal({
   }
 
   const handleTimeRangeSelect = (range: TimeRange) => {
+    // Verificar si el rango ya pasó (solo para el día de hoy)
+    if (selectedDay && isToday(selectedDay)) {
+      const now = new Date()
+      const currentHour = now.getHours()
+      const currentMinute = now.getMinutes()
+      const currentTimeInMinutes = currentHour * 60 + currentMinute
+      
+      // Obtener la hora de fin del rango
+      const [endHour, endMinute] = range.end.split(':').map(Number)
+      const rangeEndTimeInMinutes = endHour * 60 + endMinute
+      
+      // Si el rango ya terminó, no permitir selección
+      if (rangeEndTimeInMinutes <= currentTimeInMinutes) {
+        return
+      }
+    }
+    
     setSelectedTimeRange(range)
   }
 
@@ -193,6 +210,23 @@ export default function DateTimeRangeSelectionModal({
   }
 
   const timeRanges = selectedShift === 'M' ? morningTimeRanges : afternoonTimeRanges
+
+  // Función para verificar si un rango de hora ya pasó
+  const isTimeRangePast = (range: TimeRange): boolean => {
+    if (!selectedDay || !isToday(selectedDay)) return false
+    
+    const now = new Date()
+    const currentHour = now.getHours()
+    const currentMinute = now.getMinutes()
+    const currentTimeInMinutes = currentHour * 60 + currentMinute
+    
+    // Obtener la hora de fin del rango
+    const [endHour, endMinute] = range.end.split(':').map(Number)
+    const rangeEndTimeInMinutes = endHour * 60 + endMinute
+    
+    // El rango está en el pasado si su hora de fin ya pasó
+    return rangeEndTimeInMinutes <= currentTimeInMinutes
+  }
 
   return (
     <>
@@ -342,28 +376,49 @@ export default function DateTimeRangeSelectionModal({
                           {format(selectedDay, 'EEEE dd/MM/yyyy', { locale: es })}
                         </p>
                         <div className="grid grid-cols-1 gap-2">
-                          {timeRanges.map((range) => (
-                            <button
-                              key={range.label}
-                              onClick={() => handleTimeRangeSelect(range)}
-                              className={`p-3 rounded-lg border-2 transition-all duration-200 ${
-                                selectedTimeRange?.label === range.label
-                                  ? 'border-blue-500 bg-blue-50 shadow-sm'
-                                  : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
-                              }`}
-                            >
-                              <div className="flex items-center justify-center gap-2">
-                                <Clock className="w-4 h-4 text-blue-600" />
-                                <span className={`font-medium ${
-                                  selectedTimeRange?.label === range.label
-                                    ? 'text-blue-600'
-                                    : 'text-gray-700'
-                                }`}>
-                                  {range.label}
-                                </span>
-                              </div>
-                            </button>
-                          ))}
+                          {timeRanges.map((range) => {
+                            const isPast = isTimeRangePast(range)
+                            const isSelected = selectedTimeRange?.label === range.label
+                            
+                            return (
+                              <button
+                                key={range.label}
+                                onClick={() => handleTimeRangeSelect(range)}
+                                disabled={isPast}
+                                className={`p-3 rounded-lg border-2 transition-all duration-200 ${
+                                  isPast
+                                    ? 'border-gray-300 bg-gray-100 cursor-not-allowed opacity-60'
+                                    : isSelected
+                                      ? 'border-blue-500 bg-blue-50 shadow-sm'
+                                      : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
+                                }`}
+                              >
+                                <div className="flex items-center justify-center gap-2">
+                                  <Clock className={`w-4 h-4 ${
+                                    isPast
+                                      ? 'text-gray-400'
+                                      : isSelected
+                                        ? 'text-blue-600'
+                                        : 'text-blue-600'
+                                  }`} />
+                                  <span className={`font-medium ${
+                                    isPast
+                                      ? 'text-gray-500'
+                                      : isSelected
+                                        ? 'text-blue-600'
+                                        : 'text-gray-700'
+                                  }`}>
+                                    {range.label}
+                                  </span>
+                                </div>
+                                {isPast && (
+                                  <div className="text-[10px] text-gray-500 mt-1 font-semibold">
+                                    NO DISPONIBLE
+                                  </div>
+                                )}
+                              </button>
+                            )
+                          })}
                         </div>
 
                       </div>

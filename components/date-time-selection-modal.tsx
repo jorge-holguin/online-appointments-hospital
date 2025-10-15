@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Sun, Moon, Clock } from "lucide-react"
 import ConfirmationModal from "./confirmation-modal"
 import SessionTimer from "./session-timer"
-import { format, addMonths, startOfMonth, parseISO } from "date-fns"
+import { format, addMonths, startOfMonth, parseISO, isToday } from "date-fns"
 import { es } from "date-fns/locale"
 import { AvailabilityCalendar } from "@/components/ui/availability-calendar"
 import { cn } from "@/lib/utils"
@@ -115,11 +115,31 @@ export default function DateTimeSelectionModal({
         if (!response.ok) throw new Error(`Error al obtener horarios: ${response.status}`)
         
         const data = await response.json()
-        setAvailableSlots(data)
+        
+        // Filtrar citas que ya pasaron si es el día de hoy
+        const now = new Date()
+        const currentHour = now.getHours()
+        const currentMinute = now.getMinutes()
+        
+        const filteredData = data.filter((slot: ApiTimeSlot) => {
+          const slotDate = parseISO(slot.fecha.split(' ')[0])
+          
+          // Si no es hoy, mostrar todas las citas
+          if (!isToday(slotDate)) return true
+          
+          // Si es hoy, solo mostrar citas futuras
+          const [slotHour, slotMinute] = slot.hora.trim().split(':').map(Number)
+          const slotTimeInMinutes = slotHour * 60 + slotMinute
+          const currentTimeInMinutes = currentHour * 60 + currentMinute
+          
+          return slotTimeInMinutes > currentTimeInMinutes
+        })
+        
+        setAvailableSlots(filteredData)
         
         // Procesar los datos para crear el mapa de horarios por día
         const slotsMap = new Map<string, string[]>()
-        data.forEach((slot: ApiTimeSlot) => {
+        filteredData.forEach((slot: ApiTimeSlot) => {
           // Procesamos todas las citas, independientemente de su disponibilidad
           const dateKey = slot.fecha
           if (!slotsMap.has(dateKey)) {
