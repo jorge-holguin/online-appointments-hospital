@@ -13,23 +13,24 @@ interface AppointmentLookupModalProps {
   onOpenChange: (open: boolean) => void
 }
 
+// Interfaz más permisiva para datos de la API (permite null/undefined)
 interface AppointmentResponse {
-  tipoDocumento: string;
-  numeroDocumento: string;
-  nombres: string;
-  especialidad: string;
-  especialidadNombre: string;
-  medico: string;
-  medicoNombre: string;
-  turno: string;
-  fecha: string;
-  hora: string;
-  correo: string;
-  codigo: string;
-  estado: string;
-  observacion?: string;
-  tipoAtencion?: string;
-  tipoCita?: string;
+  tipoDocumento?: string | null;
+  numeroDocumento?: string | null;
+  nombres?: string | null;
+  especialidad?: string | null;
+  especialidadNombre?: string | null;
+  medico?: string | null;
+  medicoNombre?: string | null;
+  turno?: string | null;
+  fecha?: string | null;
+  hora?: string | null;
+  correo?: string | null;
+  codigo?: string | null;
+  estado?: string | null;
+  observacion?: string | null;
+  tipoAtencion?: string | null;
+  tipoCita?: string | null;
 }
 
 export default function AppointmentLookupModal({ open, onOpenChange }: AppointmentLookupModalProps) {
@@ -60,20 +61,26 @@ export default function AppointmentLookupModal({ open, onOpenChange }: Appointme
 
       const data: AppointmentResponse = await response.json()
       
+      // Validar que tenemos al menos los datos mínimos necesarios
+      if (!data || (!data.codigo && !data.estado)) {
+        throw new Error('Datos de cita inválidos')
+      }
+      
+      // Normalizar datos, manejando valores null/undefined
       setAppointmentData({
-        code: data.codigo,
-        specialty: data.especialidadNombre,
-        doctor: `Dr(a). ${data.medicoNombre}`,
-        date: data.fecha,
-        time: `${data.hora}hs`,
+        code: data.codigo || 'N/A',
+        specialty: data.especialidadNombre || 'Especialidad no disponible',
+        doctor: `Dr(a). ${data.medicoNombre || 'Médico no disponible'}`,
+        date: data.fecha || 'Fecha no disponible',
+        time: data.hora ? `${data.hora}hs` : 'Hora no disponible',
         location: "Consultorios Externos",
-        patient: data.nombres,
-        status: data.estado,
-        especialidad: data.especialidad,
-        turno: data.turno,
-        observacion: data.observacion,
-        tipoAtencion: data.tipoAtencion,
-        tipoCita: data.tipoCita
+        patient: data.nombres || 'Paciente no disponible',
+        status: data.estado || 'PENDIENTE',
+        especialidad: data.especialidad || '',
+        turno: data.turno || '',
+        observacion: data.observacion || undefined,
+        tipoAtencion: data.tipoAtencion || undefined,
+        tipoCita: data.tipoCita || undefined
       })
     } catch (err) {
       console.error('Error fetching appointment:', err)

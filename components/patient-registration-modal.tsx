@@ -22,6 +22,17 @@ interface PatientRegistrationModalProps {
 
 // Using react-simple-captcha for visual captcha verification
 
+// Interfaz más permisiva para datos de la API (permite null/undefined)
+interface ApiDocumentType {
+  tipoDocumento?: string | null
+  nombre?: string | null
+  activo?: number | null
+  tipoLabo?: number | null
+  tipoRef?: number | null
+  tipoSis?: string | null
+  tipoCdc?: string | null
+}
+
 interface DocumentType {
   tipoDocumento: string
   nombre: string
@@ -84,11 +95,24 @@ export default function PatientRegistrationModal({ open, onOpenChange }: Patient
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         
-        const data: DocumentType[] = await response.json();
+        const data: ApiDocumentType[] = await response.json();
         
-        // La API no devuelve campo 'activo', así que solo filtramos por nombre
-        const filteredTypes = data.filter(type => type.nombre && type.nombre !== "*Ninguno");
-        setDocumentTypes(filteredTypes);
+        // Normalizar y filtrar datos nulos/inválidos
+        const normalizedTypes: DocumentType[] = data
+          .filter(type => type != null) // Filtrar elementos null/undefined
+          .filter(type => type.nombre && type.tipoDocumento) // Filtrar sin datos esenciales
+          .filter(type => type.nombre !== "*Ninguno") // Filtrar "*Ninguno"
+          .map(type => ({
+            tipoDocumento: type.tipoDocumento!,
+            nombre: type.nombre!,
+            activo: type.activo ?? undefined,
+            tipoLabo: type.tipoLabo ?? undefined,
+            tipoRef: type.tipoRef ?? undefined,
+            tipoSis: type.tipoSis ?? undefined,
+            tipoCdc: type.tipoCdc ?? undefined
+          }));
+        
+        setDocumentTypes(normalizedTypes);
         hasLoadedDocumentTypes.current = true;
         
       } catch (error) {

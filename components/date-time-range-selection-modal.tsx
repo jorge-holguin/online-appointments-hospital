@@ -47,21 +47,23 @@ const afternoonTimeRanges: TimeRange[] = [
   { start: "18:00", end: "19:00", label: "18:00 - 19:00" },
 ]
 
+// Interfaz más permisiva para datos de la API (permite null/undefined)
 interface ApiAvailableDate {
-  fecha: string
-  consultorio: string
+  fecha?: string | null
+  consultorio?: string | null
 }
 
+// Interfaz más permisiva para datos de la API (permite null/undefined)
 interface ApiTimeSlot {
-  citaId: string
-  fecha: string
-  hora: string
-  turnoConsulta: string
-  consultorio: string
-  medico: string
-  nombreMedico: string
-  conSolicitud: boolean
-  estado: string // Estado de la cita: "1" = disponible, otros = no disponible
+  citaId?: string | null
+  fecha?: string | null
+  hora?: string | null
+  turnoConsulta?: string | null
+  consultorio?: string | null
+  medico?: string | null
+  nombreMedico?: string | null
+  conSolicitud?: boolean | null
+  estado?: string | null // Estado de la cita: "1" = disponible, otros = no disponible
 }
 
 export default function DateTimeRangeSelectionModal({
@@ -115,11 +117,21 @@ export default function DateTimeRangeSelectionModal({
         
         const data: ApiAvailableDate[] = await response.json()
         
-        // Extraer fechas únicas y formatearlas
-        const uniqueDates = Array.from(new Set(data.map(item => {
-          // La fecha viene como "2025-08-01 00:00:00.0", necesitamos solo "2025-08-01"
-          return item.fecha.split(' ')[0]
-        })))
+        // Normalizar y filtrar datos nulos/inválidos, extraer fechas únicas
+        const uniqueDates = Array.from(new Set(
+          data
+            .filter(item => item != null && item.fecha) // Filtrar elementos null/undefined o sin fecha
+            .map(item => {
+              // La fecha viene como "2025-08-01 00:00:00.0", necesitamos solo "2025-08-01"
+              try {
+                return item.fecha!.split(' ')[0]
+              } catch (e) {
+                console.error('Error parsing date:', e, item)
+                return null
+              }
+            })
+            .filter((date): date is string => date !== null && date.trim() !== '') // Filtrar nulls y strings vacíos
+        ))
         setAvailableDates(uniqueDates)
       } catch (err) {
         console.error('Error fetching available dates:', err)
@@ -164,6 +176,14 @@ export default function DateTimeRangeSelectionModal({
     if (selectedDay && selectedTimeRange) {
       // Abrir el modal de selección de citas
       setShowAppointmentSelection(true)
+    }
+  }
+
+  // Manejar tecla Enter para continuar
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && selectedDay && selectedTimeRange) {
+      e.preventDefault()
+      handleNext()
     }
   }
 
@@ -235,6 +255,7 @@ export default function DateTimeRangeSelectionModal({
           className="w-[95vw] max-w-5xl max-h-[95vh] overflow-y-auto p-3 sm:p-6 sm:max-h-[90vh]" 
           redirectToHome={true}
           onInteractOutside={(e) => e.preventDefault()}
+          onKeyDown={handleKeyDown}
         >
           <DialogHeader>
             <div className="flex items-center gap-2 sm:gap-3">

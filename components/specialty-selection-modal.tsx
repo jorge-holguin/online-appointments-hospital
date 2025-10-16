@@ -22,6 +22,14 @@ interface Specialty {
   nombre: string
 }
 
+// Interfaz más permisiva para datos de la API (permite null/undefined)
+interface ApiSpecialty {
+  idEspecialidad?: string | null
+  nombre?: string | null
+  nombreEspecialidad?: string | null
+  Nombre?: string | null
+}
+
 export default function SpecialtySelectionModal({
   open,
   onOpenChange,
@@ -65,8 +73,22 @@ export default function SpecialtySelectionModal({
           throw new Error(`Error al obtener especialidades: ${response.status}`)
         }
         
-        const data = await response.json()
-        setSpecialties(data)
+        const data: ApiSpecialty[] = await response.json()
+        
+        // Normalizar y filtrar datos nulos/inválidos
+        const normalizedSpecialties: Specialty[] = data
+          .filter(item => item != null) // Filtrar elementos null/undefined
+          .map(item => ({
+            idEspecialidad: item.idEspecialidad || '',
+            nombre: item.nombre || item.nombreEspecialidad || item.Nombre || ''
+          }))
+          .filter(specialty => 
+            specialty.idEspecialidad && 
+            specialty.nombre && 
+            specialty.nombre.trim() !== ''
+          ) // Filtrar especialidades sin datos válidos
+        
+        setSpecialties(normalizedSpecialties)
       } catch (err) {
         console.error('Error fetching specialties:', err)
         setError('No se pudieron cargar las especialidades. Por favor, inténtelo de nuevo.')
@@ -93,13 +115,29 @@ export default function SpecialtySelectionModal({
     }
   }, [open, config, startDate, endDate])
 
-  const filteredSpecialties = specialties.filter((specialty) =>
-    specialty.nombre.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+  // Filtrado a prueba de nulos
+  const filteredSpecialties = specialties.filter((specialty) => {
+    // Verificar que specialty y nombre existen y no son nulos
+    if (!specialty || !specialty.nombre) return false
+    
+    const nombre = specialty.nombre.trim()
+    if (!nombre) return false
+    
+    // Solo entonces aplicar toLowerCase
+    return nombre.toLowerCase().includes(searchTerm.toLowerCase())
+  })
 
   const handleNext = () => {
     if (selectedSpecialty) {
       setShowSearchTypeSelection(true)
+    }
+  }
+
+  // Manejar tecla Enter para continuar
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && selectedSpecialty) {
+      e.preventDefault()
+      handleNext()
     }
   }
 
@@ -120,6 +158,7 @@ export default function SpecialtySelectionModal({
           className="sm:max-w-2xl max-h-[90vh] overflow-y-auto pb-20 sm:pb-6"
           onInteractOutside={(e) => e.preventDefault()}
           onEscapeKeyDown={(e) => e.preventDefault()}
+          onKeyDown={handleKeyDown}
         >
           <DialogHeader>
             <div className="flex items-center gap-3">

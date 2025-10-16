@@ -35,18 +35,19 @@ interface TimeSlot {
   available: boolean
 }
 
+// Interfaz más permisiva para datos de la API (permite null/undefined)
 interface ApiTimeSlot {
   // Posibles nombres para el ID de cita
-  idCita?: number
-  citaId?: number
-  id?: number
+  idCita?: number | null
+  citaId?: number | null
+  id?: number | null
   
-  fecha: string
-  hora: string
-  turnoConsulta: string
-  consultorio: string
-  conSolicitud: boolean
-  estado: string // Estado de la cita: "1" = disponible, otros = no disponible
+  fecha?: string | null
+  hora?: string | null
+  turnoConsulta?: string | null
+  consultorio?: string | null
+  conSolicitud?: boolean | null
+  estado?: string | null // Estado de la cita: "1" = disponible, otros = no disponible
 }
 
 type ShiftType = 'M' | 'T' // M = Mañana, T = Tarde
@@ -114,32 +115,51 @@ export default function DateTimeSelectionModal({
         const response = await fetch(url)
         if (!response.ok) throw new Error(`Error al obtener horarios: ${response.status}`)
         
-        const data = await response.json()
+        const data: ApiTimeSlot[] = await response.json()
         
         // Filtrar citas que ya pasaron si es el día de hoy
         const now = new Date()
         const currentHour = now.getHours()
         const currentMinute = now.getMinutes()
         
-        const filteredData = data.filter((slot: ApiTimeSlot) => {
-          const slotDate = parseISO(slot.fecha.split(' ')[0])
-          
-          // Si no es hoy, mostrar todas las citas
-          if (!isToday(slotDate)) return true
-          
-          // Si es hoy, solo mostrar citas futuras
-          const [slotHour, slotMinute] = slot.hora.trim().split(':').map(Number)
-          const slotTimeInMinutes = slotHour * 60 + slotMinute
-          const currentTimeInMinutes = currentHour * 60 + currentMinute
-          
-          return slotTimeInMinutes > currentTimeInMinutes
-        })
+        // Normalizar y filtrar datos nulos/inválidos
+        const filteredData = data
+          .filter(slot => slot != null) // Filtrar elementos null/undefined
+          .filter(slot => {
+            // Verificar que tenemos los campos mínimos necesarios
+            if (!slot.fecha || !slot.hora) return false
+            
+            try {
+              const slotDate = parseISO(slot.fecha.split(' ')[0])
+              
+              // Si no es hoy, mostrar todas las citas
+              if (!isToday(slotDate)) return true
+              
+              // Si es hoy, solo mostrar citas futuras
+              const horaTrimmed = slot.hora.trim()
+              if (!horaTrimmed) return false
+              
+              const [slotHour, slotMinute] = horaTrimmed.split(':').map(Number)
+              if (isNaN(slotHour) || isNaN(slotMinute)) return false
+              
+              const slotTimeInMinutes = slotHour * 60 + slotMinute
+              const currentTimeInMinutes = currentHour * 60 + currentMinute
+              
+              return slotTimeInMinutes > currentTimeInMinutes
+            } catch (e) {
+              console.error('Error parsing slot date/time:', e, slot)
+              return false // Excluir slots con datos inválidos
+            }
+          })
         
         setAvailableSlots(filteredData)
         
         // Procesar los datos para crear el mapa de horarios por día
         const slotsMap = new Map<string, string[]>()
-        filteredData.forEach((slot: ApiTimeSlot) => {
+        filteredData.forEach((slot) => {
+          // Verificar que tenemos los datos necesarios
+          if (!slot.fecha || !slot.hora) return
+          
           // Procesamos todas las citas, independientemente de su disponibilidad
           const dateKey = slot.fecha
           if (!slotsMap.has(dateKey)) {
@@ -147,7 +167,9 @@ export default function DateTimeSelectionModal({
           }
           // Eliminar espacios en blanco que puedan venir en la hora
           const hora = slot.hora.trim()
-          slotsMap.get(dateKey)?.push(hora)
+          if (hora) {
+            slotsMap.get(dateKey)?.push(hora)
+          }
         })
         
         setDayTimeSlots(slotsMap)
@@ -185,7 +207,7 @@ export default function DateTimeSelectionModal({
     // Buscar el primer horario disponible (conSolicitud === false y estado === "1")
     const firstAvailableTime = timesForDay.find(time => {
       const apiSlot = availableSlots.find(slot => 
-        slot.fecha === dateKey && slot.hora.trim() === time
+        slot.fecha === dateKey && slot.hora && slot.hora.trim() === time
       )
       return apiSlot && !apiSlot.conSolicitud && apiSlot.estado === "1"
     })
@@ -193,7 +215,7 @@ export default function DateTimeSelectionModal({
     // Si hay un horario disponible, seleccionarlo automáticamente
     if (firstAvailableTime) {
       const apiSlot = availableSlots.find(slot => 
-        slot.fecha === dateKey && slot.hora.trim() === firstAvailableTime
+        slot.fecha === dateKey && slot.hora && slot.hora.trim() === firstAvailableTime
       )
       
       if (apiSlot && !apiSlot.conSolicitud && apiSlot.estado === "1") {
@@ -235,7 +257,7 @@ export default function DateTimeSelectionModal({
     
     // Buscar la información completa del slot seleccionado en los datos de la API
     const selectedApiSlot = availableSlots.find(slot => 
-      slot.fecha === formattedDate && slot.hora.trim() === time
+      slot.fecha === formattedDate && slot.hora && slot.hora.trim() === time
     );
     
     // Si no encontramos el slot en la API o si conSolicitud es true o estado !== "1" (no disponible), no permitir la selección
@@ -270,6 +292,14 @@ export default function DateTimeSelectionModal({
   const handleNext = () => {
     if (selectedTimeSlot) {
       setShowConfirmation(true)
+    }
+  }
+
+  // Manejar tecla Enter para continuar
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && selectedTimeSlot) {
+      e.preventDefault()
+      handleNext()
     }
   }
 
@@ -314,6 +344,7 @@ export default function DateTimeSelectionModal({
           className="w-[95vw] max-w-5xl max-h-[95vh] overflow-y-auto p-3 sm:p-6 sm:max-h-[90vh]" 
           redirectToHome={true}
           onInteractOutside={(e) => e.preventDefault()}
+          onKeyDown={handleKeyDown}
         >
           <DialogHeader>
             <div className="flex items-center gap-2 sm:gap-3">
@@ -471,7 +502,7 @@ export default function DateTimeSelectionModal({
                             
                             // Buscar el slot en los datos de la API para determinar disponibilidad
                             const apiSlot = availableSlots.find(slot => 
-                              slot.fecha === formatDateForAPI(selectedDay) && slot.hora.trim() === time
+                              slot.fecha === formatDateForAPI(selectedDay) && slot.hora && slot.hora.trim() === time
                             );
                             
                             // Determinar si está disponible (conSolicitud === false y estado === "1")

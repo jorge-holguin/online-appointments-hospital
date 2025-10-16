@@ -28,16 +28,17 @@ interface AppointmentSelectionModalProps {
   }
 }
 
+// Interfaz más permisiva para datos de la API (permite null/undefined)
 interface ApiTimeSlot {
-  citaId: string
-  fecha: string
-  hora: string
-  turnoConsulta: string
-  consultorio: string
-  medico: string
-  nombreMedico: string
-  conSolicitud: boolean
-  estado: string // Estado de la cita: "1" = disponible, otros = no disponible
+  citaId?: string | null
+  fecha?: string | null
+  hora?: string | null
+  turnoConsulta?: string | null
+  consultorio?: string | null
+  medico?: string | null
+  nombreMedico?: string | null
+  conSolicitud?: boolean | null
+  estado?: string | null // Estado de la cita: "1" = disponible, otros = no disponible
 }
 
 interface DoctorAppointments {
@@ -90,29 +91,48 @@ export default function AppointmentSelectionModal({
         const currentHour = now.getHours()
         const currentMinute = now.getMinutes()
         
-        const filteredData = data.filter((slot) => {
-          // Si no es hoy, mostrar todas las citas
-          if (!isToday(selectedDate)) return true
-          
-          // Si es hoy, solo mostrar citas futuras
-          const [slotHour, slotMinute] = slot.hora.trim().split(':').map(Number)
-          const slotTimeInMinutes = slotHour * 60 + slotMinute
-          const currentTimeInMinutes = currentHour * 60 + currentMinute
-          
-          return slotTimeInMinutes > currentTimeInMinutes
-        })
+        // Normalizar y filtrar datos nulos/inválidos
+        const filteredData = data
+          .filter(slot => slot != null) // Filtrar elementos null/undefined
+          .filter((slot) => {
+            // Verificar que tenemos los campos mínimos necesarios
+            if (!slot.hora || !slot.citaId) return false
+            
+            try {
+              // Si no es hoy, mostrar todas las citas
+              if (!isToday(selectedDate)) return true
+              
+              // Si es hoy, solo mostrar citas futuras
+              const horaTrimmed = slot.hora.trim()
+              if (!horaTrimmed) return false
+              
+              const [slotHour, slotMinute] = horaTrimmed.split(':').map(Number)
+              if (isNaN(slotHour) || isNaN(slotMinute)) return false
+              
+              const slotTimeInMinutes = slotHour * 60 + slotMinute
+              const currentTimeInMinutes = currentHour * 60 + currentMinute
+              
+              return slotTimeInMinutes > currentTimeInMinutes
+            } catch (e) {
+              console.error('Error parsing slot time:', e, slot)
+              return false // Excluir slots con datos inválidos
+            }
+          })
 
         // Agrupar por médico
         const groupedByDoctor = filteredData.reduce((acc, slot) => {
-          const doctorKey = slot.medico
+          // Verificar que tenemos los datos necesarios del médico
+          const doctorKey = slot.medico || 'unknown'
+          if (!doctorKey || doctorKey === 'unknown') return acc
+          
           if (!acc[doctorKey]) {
             acc[doctorKey] = {
-              medico: slot.medico,
-              nombreMedico: slot.nombreMedico,
+              medico: slot.medico || '',
+              nombreMedico: slot.nombreMedico || 'Médico desconocido',
               appointments: [],
             }
           }
-          acc[doctorKey].appointments.push(slot)
+          acc[doctorKey].appointments.push(slot as Required<ApiTimeSlot>)
           return acc
         }, {} as Record<string, DoctorAppointments>)
 
@@ -138,6 +158,23 @@ export default function AppointmentSelectionModal({
     setShowConfirmation(true)
   }
 
+  // Manejar tecla Enter para seleccionar la primera cita disponible
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && doctorAppointments.length > 0) {
+      e.preventDefault()
+      // Buscar la primera cita disponible
+      for (const doctorGroup of doctorAppointments) {
+        const firstAvailable = doctorGroup.appointments.find(
+          apt => !apt.conSolicitud && apt.estado === "1"
+        )
+        if (firstAvailable) {
+          handleSelectAppointment(firstAvailable)
+          break
+        }
+      }
+    }
+  }
+
   // Callback mejorado para volver a especialidades
   const handleBackToSpecialtiesFromChild = () => {
     // Cerrar el modal de confirmación
@@ -158,6 +195,7 @@ export default function AppointmentSelectionModal({
           className="w-[95vw] max-w-4xl max-h-[90vh] overflow-y-auto p-3 sm:p-6" 
           redirectToHome={true}
           onInteractOutside={(e) => e.preventDefault()}
+          onKeyDown={handleKeyDown}
         >
           <DialogHeader>
             <div className="flex items-center gap-2 sm:gap-3">
@@ -318,7 +356,7 @@ export default function AppointmentSelectionModal({
                                   !isAvailable ? "text-gray-400" : "text-gray-500"
                                 }`}
                               >
-                                Cons. {appointment.consultorio.trim()}
+                                Cons. {appointment.consultorio ? appointment.consultorio.trim() : 'N/A'}
                               </span>
                               {!isAvailable && (
                                 <span className="text-[10px] font-semibold text-gray-500 mt-1">NO DISPONIBLE</span>
@@ -358,11 +396,11 @@ export default function AppointmentSelectionModal({
                 format(selectedDate, "EEEE", { locale: es }).slice(1),
               date: format(selectedDate, "yyyy-MM-dd"),
               displayDate: format(selectedDate, "dd/MM/yyyy"),
-              time: selectedAppointment.hora.trim(),
+              time: selectedAppointment.hora ? selectedAppointment.hora.trim() : '',
               fullDate: selectedDate,
             },
-            idCita: selectedAppointment.citaId,
-            consultorio: selectedAppointment.consultorio.trim(),
+            idCita: selectedAppointment.citaId || '',
+            consultorio: selectedAppointment.consultorio ? selectedAppointment.consultorio.trim() : '',
           }}
         />
       )}

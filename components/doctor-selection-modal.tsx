@@ -25,6 +25,14 @@ interface Doctor {
   medicoId: string
 }
 
+// Interfaz más permisiva para datos de la API (permite null/undefined)
+interface ApiDoctor {
+  nombre?: string | null
+  medicoId?: string | null
+  nombreMedico?: string | null
+  id?: string | null
+}
+
 // Ya no necesitamos datos de respaldo, usaremos la API
 
 export default function DoctorSelectionModal({
@@ -64,8 +72,23 @@ export default function DoctorSelectionModal({
         const response = await fetch(url)
         if (!response.ok) throw new Error(`Error al obtener doctores: ${response.status}`)
         
-        const data = await response.json()
-        setDoctors(data)
+        const data: ApiDoctor[] = await response.json()
+        
+        // Normalizar y filtrar datos nulos/inválidos
+        const normalizedDoctors: Doctor[] = data
+          .filter(item => item != null) // Filtrar elementos null/undefined
+          .map(item => ({
+            nombre: item.nombre || item.id || '',
+            medicoId: item.medicoId || item.nombreMedico || ''
+          }))
+          .filter(doctor => 
+            doctor.nombre && 
+            doctor.medicoId && 
+            doctor.nombre.trim() !== '' &&
+            doctor.medicoId.trim() !== ''
+          ) // Filtrar doctores sin datos válidos
+        
+        setDoctors(normalizedDoctors)
       } catch (err) {
         console.error('Error fetching doctors:', err)
         setError('No se pudieron cargar los doctores. Por favor, inténtelo de nuevo.')
@@ -78,13 +101,29 @@ export default function DoctorSelectionModal({
     fetchDoctors()
   }, [selectedSpecialtyId, startDate, endDate, open, config])
   
-  const filteredDoctors = doctors.filter((doctor) => 
-    doctor.medicoId.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  // Filtrado a prueba de nulos
+  const filteredDoctors = doctors.filter((doctor) => {
+    // Verificar que doctor y medicoId existen y no son nulos
+    if (!doctor || !doctor.medicoId) return false
+    
+    const medicoId = doctor.medicoId.trim()
+    if (!medicoId) return false
+    
+    // Solo entonces aplicar toLowerCase
+    return medicoId.toLowerCase().includes(searchTerm.toLowerCase())
+  })
 
   const handleNext = () => {
     if (selectedDoctor) {
       setShowDateTimeSelection(true)
+    }
+  }
+
+  // Manejar tecla Enter para continuar
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && selectedDoctor) {
+      e.preventDefault()
+      handleNext()
     }
   }
 
@@ -114,6 +153,7 @@ export default function DoctorSelectionModal({
           className="sm:max-w-lg max-h-[90vh] overflow-y-auto" 
           redirectToHome={true}
           onInteractOutside={(e) => e.preventDefault()}
+          onKeyDown={handleKeyDown}
         >
           <DialogHeader>
             <div className="flex items-center gap-2">

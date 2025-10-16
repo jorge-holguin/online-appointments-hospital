@@ -84,6 +84,12 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       }
 
       const data = await response.json()
+      
+      // Validar que tenemos el token
+      if (!data || !data.token) {
+        throw new Error('Token no recibido del servidor')
+      }
+      
       startSession(data.token)
     } catch (error) {
       console.error('Error al renovar sesión:', error)
