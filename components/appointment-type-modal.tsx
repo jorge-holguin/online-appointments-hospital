@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, Calendar, FileText } from "lucide-react"
@@ -22,6 +22,19 @@ export default function AppointmentTypeModal({
   patientData,
 }: AppointmentTypeModalProps) {
   const [selectedType, setSelectedType] = useState<string>("")
+  
+  // Ref para el botón de continuar
+  const continueButtonRef = useRef<HTMLButtonElement>(null)
+  
+  // Enfocar el botón de continuar cuando se selecciona un tipo
+  useEffect(() => {
+    if (selectedType && continueButtonRef.current) {
+      // Pequeño delay para asegurar que el botón esté habilitado
+      setTimeout(() => {
+        continueButtonRef.current?.focus()
+      }, 100)
+    }
+  }, [selectedType])
 
   const handleContinue = () => {
     if (selectedType) {
@@ -171,6 +184,7 @@ export default function AppointmentTypeModal({
         {/* Footer fijo */}
         <div className="flex-shrink-0 p-4">
           <Button
+            ref={continueButtonRef}
             onClick={handleContinue}
             disabled={!selectedType}
             className="w-full bg-[#3e92cc] hover:bg-[#3e92cc]/90 text-white py-3 font-semibold disabled:opacity-50 flex items-center justify-center transition-all"

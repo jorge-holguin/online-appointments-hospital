@@ -112,7 +112,7 @@ export default function AppointmentLookupModal({ open, onOpenChange }: Appointme
           bgColor: "bg-yellow-100",
           textColor: "text-yellow-700",
           borderColor: "border-yellow-200",
-          message: "Tu solicitud de cita está siendo procesada. Te notificaremos cuando tengamos una respuesta."
+          message: "Tu solicitud de reserva de cita está siendo procesada. Te notificaremos cuando tengamos una respuesta."
         }
       case "EN_REVISION":
         return {
@@ -120,7 +120,7 @@ export default function AppointmentLookupModal({ open, onOpenChange }: Appointme
           bgColor: "bg-blue-100",
           textColor: "text-blue-700",
           borderColor: "border-blue-200",
-          message: "Tu solicitud está en revisión por nuestro equipo. Pronto tendrás una respuesta."
+          message: "Tu solicitud de reserva de cita está en revisión por nuestro equipo. Pronto tendrás una respuesta."
         }
       case "CITADO":
         return {
@@ -128,7 +128,7 @@ export default function AppointmentLookupModal({ open, onOpenChange }: Appointme
           bgColor: "bg-green-100",
           textColor: "text-green-700",
           borderColor: "border-green-200",
-          message: "¡Felicidades! Tu cita ha sido otorgada. Debes llegar 30 minutos antes de la hora programada con tu DNI" + 
+          message: "¡Felicidades! Tu reserva de cita ha sido otorgada. Debes llegar 30 minutos antes de la hora programada con tu DNI" + 
                    (appointmentData?.tipoAtencion === "SIS" ? " y una copia impresa de tu referencia." : ".")
         }
       case "DENEGADO":
@@ -166,23 +166,23 @@ export default function AppointmentLookupModal({ open, onOpenChange }: Appointme
         onInteractOutside={(e) => e.preventDefault()}
       >
         <DialogHeader>
-          <DialogTitle className="text-center text-xl font-semibold">Consulta de cita</DialogTitle>
+          <DialogTitle className="text-center text-xl font-semibold">Consulta de solicitud de reserva de cita</DialogTitle>
           <DialogDescription className="text-center">
-            Ingresa tu código de reserva para ver los detalles de tu cita
+            Ingresa tu código de solicitud para ver los detalles de tu solicitud de reserva de cita.
           </DialogDescription>
         </DialogHeader>
 
         {!appointmentData ? (
           <form onSubmit={handleSearch} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="code">Código de reserva</Label>
+              <Label htmlFor="code">Código de solicitud de reserva</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                 <Input
                   id="code"
                   value={reservationCode}
                   onChange={(e) => setReservationCode(e.target.value)}
-                  placeholder="Ingresa tu código de reserva"
+                  placeholder="Ingresa tu código de solicitud"
                   className="pl-10"
                   required
                 />
@@ -327,7 +327,7 @@ export default function AppointmentLookupModal({ open, onOpenChange }: Appointme
 
             <div className="border rounded-lg p-3 bg-gray-50 border-gray-200">
               <p className="text-sm text-gray-800">
-                <strong>Código de reserva:</strong> {appointmentData.code}
+                <strong>Código de solicitud de reserva:</strong> {appointmentData.code}
               </p>
             </div>
 

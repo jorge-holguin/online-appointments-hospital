@@ -1,5 +1,5 @@
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight, AlertCircle } from "lucide-react"
@@ -26,6 +26,19 @@ export default function SISVerificationModal({
   const [showAppointmentType, setShowAppointmentType] = useState(false)
   const [patientType, setPatientType] = useState<PatientType>('SIS')
   const [tipoCita, setTipoCita] = useState<string>('')
+  
+  // Ref para el botón de continuar
+  const continueButtonRef = useRef<HTMLButtonElement>(null)
+  
+  // Enfocar el botón de continuar cuando se selecciona un tipo de atención
+  useEffect(() => {
+    if (patientType && continueButtonRef.current) {
+      // Pequeño delay para asegurar que el botón esté habilitado
+      setTimeout(() => {
+        continueButtonRef.current?.focus()
+      }, 100)
+    }
+  }, [patientType])
 
   const handleContinue = () => {
     // Si es SIS o SOAT, mostrar el modal de tipo de cita
@@ -83,7 +96,7 @@ export default function SISVerificationModal({
                 <p>
                   <strong>Advertencia:</strong> Si eres paciente SIS, debes
                   seleccionar la opción <strong>Atención con SIS</strong>. De lo
-                  contrario, tu reserva será rechazada automáticamente. Asegúrate de
+                  contrario, tu reserva de cita será rechazada automáticamente. Asegúrate de
                   ingresar información verídica y confiable.
                 </p>
               </div>
@@ -213,6 +226,7 @@ export default function SISVerificationModal({
             {/* Footer fijo */}
             <div className="flex-shrink-0 p-4">
               <Button
+                ref={continueButtonRef}
                 onClick={handleContinue}
                 disabled={!canContinue}
                 className="w-full bg-[#3e92cc] hover:bg-[#3e92cc]/90 text-white py-3 font-semibold disabled:opacity-50 flex items-center justify-center transition-all"

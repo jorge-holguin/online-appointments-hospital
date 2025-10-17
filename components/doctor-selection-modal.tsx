@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -51,6 +51,19 @@ export default function DoctorSelectionModal({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
+  
+  // Ref para el botón de continuar
+  const continueButtonRef = useRef<HTMLButtonElement>(null)
+  
+  // Enfocar el botón de continuar cuando se selecciona un doctor
+  useEffect(() => {
+    if (selectedDoctor && continueButtonRef.current) {
+      // Pequeño delay para asegurar que el botón esté habilitado
+      setTimeout(() => {
+        continueButtonRef.current?.focus()
+      }, 100)
+    }
+  }, [selectedDoctor])
   
   // Usar configuración centralizada
   const { config } = useAppConfig()
@@ -258,6 +271,7 @@ export default function DoctorSelectionModal({
             </div>
 
             <Button
+              ref={continueButtonRef}
               onClick={handleNext}
               disabled={!selectedDoctor}
               className="w-full bg-[#3e92cc] hover:bg-[#3e92cc]/90 text-white py-3 mt-6 font-semibold disabled:opacity-50 transition-all"

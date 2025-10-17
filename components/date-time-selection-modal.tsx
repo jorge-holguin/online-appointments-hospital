@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Sun, Moon, Clock } from "lucide-react"
@@ -80,6 +80,25 @@ export default function DateTimeSelectionModal({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedDay, setSelectedDay] = useState<Date | null>(null) // Día seleccionado en el calendario
+  
+  // Ref para los botones de continuar (móvil y desktop)
+  const continueButtonMobileRef = useRef<HTMLButtonElement>(null)
+  const continueButtonDesktopRef = useRef<HTMLButtonElement>(null)
+  
+  // Enfocar el botón de continuar cuando se selecciona un horario
+  useEffect(() => {
+    if (selectedTimeSlot) {
+      // Pequeño delay para asegurar que el botón esté habilitado
+      setTimeout(() => {
+        // Intentar enfocar el botón visible (móvil o desktop)
+        if (continueButtonMobileRef.current?.offsetParent !== null) {
+          continueButtonMobileRef.current?.focus()
+        } else if (continueButtonDesktopRef.current?.offsetParent !== null) {
+          continueButtonDesktopRef.current?.focus()
+        }
+      }, 100)
+    }
+  }, [selectedTimeSlot])
   
   // Datos de disponibilidad desde la API
   const [availableSlots, setAvailableSlots] = useState<ApiTimeSlot[]>([])
@@ -554,6 +573,7 @@ export default function DateTimeSelectionModal({
           {/* Botón para móviles con sticky */}
 <div className="sticky bottom-0 left-0 right-0 sm:hidden z-20 bg-white p-3 border-t">
   <Button
+    ref={continueButtonMobileRef}
     onClick={handleNext}
     disabled={!selectedTimeSlot}
     className="w-full bg-[#3e92cc] hover:bg-[#3e92cc]/90 text-white py-3 text-sm font-semibold disabled:opacity-50 shadow-lg rounded-full flex items-center justify-center transition-all"
@@ -571,6 +591,7 @@ export default function DateTimeSelectionModal({
             {/* Botón para pantallas medianas y grandes */}
             <div className="hidden sm:block pt-2">
               <Button
+                ref={continueButtonDesktopRef}
                 onClick={handleNext}
                 disabled={!selectedTimeSlot}
                 className="w-full bg-[#3e92cc] hover:bg-[#3e92cc]/90 text-white px-8 py-3 text-base font-semibold disabled:opacity-50 transition-all"

@@ -325,7 +325,7 @@ export default function ConfirmationModal({ open, onOpenChange, onBack, onBackTo
               <DialogTitle className="text-lg sm:text-xl font-semibold">¡Ya casi terminas!</DialogTitle>
             </div>
             <DialogDescription>
-              Revisa los detalles de tu cita y confirma para reservar
+              Revisa los detalles de tu solicitud de reserva de cita y luego confirma para que tu solicitud se genere.
             </DialogDescription>
             {/* Timer de sesión */}
             <div className="mt-3">
@@ -431,7 +431,7 @@ export default function ConfirmationModal({ open, onOpenChange, onBack, onBackTo
                 ) : (
                   <>
                     <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                    Confirmar cita
+                    Confirmar solicitud
                   </>
                 )}
               </Button>

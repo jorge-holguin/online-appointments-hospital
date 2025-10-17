@@ -158,10 +158,10 @@ export default function FinalConfirmationModal({
         {/* Mensaje de éxito */}
         <div className="space-y-2">
           <h2 className="text-2xl font-bold text-gray-900">
-            Tu cita ha sido reservada
+            Tu solicitud de reserva de cita ha sido confirmada
           </h2>
           <p className="text-gray-600">
-            Se ha enviado un correo con los detalles de tu cita
+            Se ha enviado un correo con los detalles de tu solicitud de reserva de cita.
           </p>
         </div>
 
@@ -174,7 +174,7 @@ export default function FinalConfirmationModal({
           }}
         >
           <p className="text-sm mb-1" style={{ color: "#0a2463" }}>
-            Código único de reserva
+            Código único de solicitud
           </p>
           <div className="flex items-center justify-center gap-2">
             <p
@@ -209,7 +209,7 @@ export default function FinalConfirmationModal({
               className={`text-xs absolute w-full transition-all duration-300 ${copied ? "opacity-0" : "opacity-100"}`} 
               style={{ color: "#3e92cc" }}
             >
-              Guarda este código para consultar tu cita
+              Guarda este código para consultar tu solicitud de reserva de cita
             </p>
           </div>
           {appointmentData?.idCita && (
@@ -224,18 +224,19 @@ export default function FinalConfirmationModal({
             <div className="flex items-start gap-2">
               <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5 shrink-0" />
               <div>
-                <p className="font-semibold text-blue-800">Aviso importante</p>
-                <p className="text-sm text-gray-700">
-                  Esta <strong>reserva no significa que la cita ya esté
-                  otorgada</strong>. Debes revisar periódicamente el estado de tu
-                  cita para confirmar si ha sido <strong>OTORGADA</strong>.
-                </p>
-                <p className="mt-2 text-sm text-gray-700">
-                  Se recomienda llegar con <strong>30 minutos de
-                  anticipación</strong> a la cita otorgada y presentar una{" "}
-                  <strong>copia de la referencia</strong> junto con el{" "}
-                  <strong>DNI del paciente</strong>.
-                </p>
+  <p className="font-semibold text-blue-800">Aviso importante</p>
+  <p className="text-sm text-gray-700">
+    Usted ha realizado el registro de su <strong>SOLICITUD de reserva de cita</strong>. 
+    Esto significa que su cita aún <strong>NO ha sido otorgada</strong>. 
+    Su solicitud será revisada por el personal del <strong>Call Center</strong>, 
+    quienes le confirmarán si su reserva ha sido aprobada. 
+    Le recomendamos revisar periódicamente el estado de su solicitud para verificar si ha sido <strong>aprobada</strong>.
+  </p>
+  <p className="mt-2 text-sm text-gray-700">
+    En caso de que su solicitud sea aprobada y se le otorgue la cita, 
+    se recomienda llegar con <strong>30 minutos de anticipación</strong>. 
+    Si es paciente <strong>SIS</strong>, deberá presentar una <strong>copia de la referencia </strong>junto con el <strong>DNI del paciente</strong>.
+  </p>
               </div>
             </div>
           </div>
@@ -353,7 +354,7 @@ export default function FinalConfirmationModal({
             >
               <Mail className="w-4 h-4" />
               <span>
-                Confirmación enviada a {appointmentData.patient.email}
+                 Generación de solicitud enviada a {appointmentData.patient.email}
               </span>
             </div>
           ) : (

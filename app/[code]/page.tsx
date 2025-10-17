@@ -403,7 +403,7 @@ export default function AppointmentCodePage({ params }: { readonly params: { cod
           <div className="text-center space-y-3 sm:space-y-4">
             <div className="text-xs sm:text-sm">
               <h4 className="font-semibold mb-2" style={{ color: "#0a2463" }}>
-                Reserve su cita - opción 1
+                Realice su solicitud de reserva de cita - opción 1
               </h4>
               <p className="font-medium text-base sm:text-lg" style={{ color: "#3e92cc" }}>
                 01 418 3232

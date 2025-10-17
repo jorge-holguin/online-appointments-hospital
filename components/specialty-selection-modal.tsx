@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -49,12 +49,25 @@ export default function SpecialtySelectionModal({
   const startDate = config?.dateRange.startDate || "2025-08-01"
   const endDate = config?.dateRange.endDate || "2025-08-31"
   
+  // Ref para el botón de continuar
+  const continueButtonRef = useRef<HTMLButtonElement>(null)
+  
   // Resetear el filtro cuando se cierra el modal
   useEffect(() => {
     if (!open) {
       setSearchTerm("")
     }
   }, [open])
+  
+  // Enfocar el botón de continuar cuando se selecciona una especialidad
+  useEffect(() => {
+    if (selectedSpecialty && continueButtonRef.current) {
+      // Pequeño delay para asegurar que el botón esté habilitado
+      setTimeout(() => {
+        continueButtonRef.current?.focus()
+      }, 100)
+    }
+  }, [selectedSpecialty])
   
   // Cargar especialidades desde la API
   useEffect(() => {
@@ -300,6 +313,7 @@ export default function SpecialtySelectionModal({
             {/* Action Button - Flotante en móviles */}
             <div className="fixed sm:relative bottom-0 left-0 right-0 p-4 bg-white border-t sm:border-t-0 sm:pt-4 z-50 shadow-lg sm:shadow-none">
               <Button
+                ref={continueButtonRef}
                 onClick={handleNext}
                 disabled={!selectedSpecialty || configLoading}
                 className="w-full bg-[#3e92cc] hover:bg-[#3e92cc]/90 text-white py-6 text-base font-semibold disabled:opacity-50 transition-all rounded-xl shadow-md hover:shadow-lg"
