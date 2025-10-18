@@ -2,13 +2,14 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Calendar, Search, Phone } from "lucide-react"
+import { Calendar, Search, Phone, CalendarDays, X } from "lucide-react"
 import PatientRegistrationModal from "@/components/patient-registration-modal"
 import AppointmentLookupModal from "@/components/appointment-lookup-modal"
 
 export default function HomePage() {
   const [showRegistration, setShowRegistration] = useState(false)
   const [showLookup, setShowLookup] = useState(false)
+  const [showSchedule, setShowSchedule] = useState(false)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-50 relative">
@@ -97,6 +98,18 @@ export default function HomePage() {
           </div>
         </div>
 
+        {/* Schedule Button */}
+        <div className="text-center mt-8 max-w-2xl mx-auto">
+          <Button
+            onClick={() => setShowSchedule(true)}
+            variant="outline"
+            className="text-gray-700 hover:text-gray-900 border-gray-300 hover:border-gray-400 px-6 py-2"
+          >
+            <CalendarDays className="w-4 h-4 mr-2" />
+            Ver programación de citas para noviembre
+          </Button>
+        </div>
+
         {/* Contact Info */}
         <div className="text-center mt-12 p-6 bg-white/50 rounded-lg">
           <div className="flex items-center justify-center gap-2 text-gray-600">
@@ -132,6 +145,44 @@ export default function HomePage() {
       {/* Modals */}
       <PatientRegistrationModal open={showRegistration} onOpenChange={setShowRegistration} />
       <AppointmentLookupModal open={showLookup} onOpenChange={setShowLookup} />
+
+      {/* Schedule Viewer */}
+      {showSchedule && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-auto relative">
+            <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between z-10">
+              <h2 className="text-2xl font-bold" style={{ color: "#0a2463" }}>
+                Programación de Citas - Noviembre
+              </h2>
+              <Button
+                onClick={() => setShowSchedule(false)}
+                variant="ghost"
+                size="icon"
+                className="hover:bg-gray-100"
+              >
+                <X className="w-6 h-6" />
+              </Button>
+            </div>
+            <div className="p-6">
+              <img
+                src="/programacion.jpg"
+                alt="Programación de Citas para Noviembre"
+                className="w-full h-auto rounded-lg shadow-lg"
+              />
+              <div className="mt-6 flex justify-center">
+                <Button
+                  onClick={() => setShowSchedule(false)}
+                  className="text-white px-8 py-3 text-lg font-medium hover:opacity-90"
+                  style={{ backgroundColor: "#0a2463" }}
+                  size="lg"
+                >
+                  Volver a la página principal
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
