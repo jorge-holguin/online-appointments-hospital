@@ -127,8 +127,8 @@ export default function AppointmentCodePage({ params }: { readonly params: { cod
           bgColor: "bg-green-100",
           textColor: "text-green-700",
           borderColor: "border-green-200",
-          message: "¡Felicidades! Tu cita ha sido otorgada. Debes llegar 30 minutos antes de la hora programada con tu DNI" + 
-                   (appointmentData?.tipoAtencion === "SIS" ? " y una copia impresa de tu referencia." : ".")
+          message: "¡Felicidades! Tu cita ha sido otorgada. Debes llegar 30 minutos antes de la hora programada" + 
+                   (appointmentData?.tipoAtencion === "SIS" ? " y con una copia de tu DNI." : ".")
         }
       case "DENEGADO":
         return {

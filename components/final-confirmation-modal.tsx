@@ -235,7 +235,7 @@ export default function FinalConfirmationModal({
   <p className="mt-2 text-sm text-gray-700">
     En caso de que su solicitud sea aprobada y se le otorgue la cita, 
     se recomienda llegar con <strong>30 minutos de anticipación</strong>. 
-    Si es paciente <strong>SIS</strong>, deberá presentar una <strong>copia de la referencia </strong>junto con el <strong>DNI del paciente</strong>.
+    Si es paciente <strong>SIS</strong>, deberá presentar una copia de su <strong>DNI</strong>.
   </p>
               </div>
             </div>
