@@ -19,14 +19,15 @@ interface SessionTimerContextType {
 const SessionContext = createContext<SessionContextType | undefined>(undefined)
 const SessionTimerContext = createContext<SessionTimerContextType | undefined>(undefined)
 
-const SESSION_DURATION = 5 * 60 // 5 minutos en segundos
+const SESSION_DURATION = 10 * 60 // 10 minutos en segundos
 
 export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null)
   const [timeRemaining, setTimeRemaining] = useState<number>(0)
   const [isSessionActive, setIsSessionActive] = useState(false)
-  const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const animationFrameRef = useRef<number | null>(null)
   const sessionStartTimeRef = useRef<number | null>(null)
+  const sessionEndTimeRef = useRef<number | null>(null)
   const onSessionExpiredRef = useRef<(() => void) | undefined>(undefined)
 
   const endSession = useCallback(() => {
@@ -34,10 +35,11 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     setTimeRemaining(0)
     setIsSessionActive(false)
     sessionStartTimeRef.current = null
+    sessionEndTimeRef.current = null
     
-    if (timerRef.current) {
-      clearInterval(timerRef.current)
-      timerRef.current = null
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current)
+      animationFrameRef.current = null
     }
     
     // Llamar al callback de expiración si existe
@@ -48,25 +50,38 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   const startSession = useCallback((newToken: string) => {
     // Limpiar sesión anterior si existe
-    if (timerRef.current) {
-      clearInterval(timerRef.current)
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current)
     }
 
     setToken(newToken)
     setTimeRemaining(SESSION_DURATION)
     setIsSessionActive(true)
-    sessionStartTimeRef.current = Date.now()
+    const now = Date.now()
+    sessionStartTimeRef.current = now
+    sessionEndTimeRef.current = now + (SESSION_DURATION * 1000)
 
-    // Iniciar contador regresivo
-    timerRef.current = setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev <= 1) {
-          endSession()
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
+    // Iniciar contador regresivo usando requestAnimationFrame
+    const updateTimer = () => {
+      const now = Date.now()
+      const endTime = sessionEndTimeRef.current
+      
+      if (!endTime) {
+        return
+      }
+      
+      const remaining = Math.max(0, Math.ceil((endTime - now) / 1000))
+      
+      setTimeRemaining(remaining)
+      
+      if (remaining <= 0) {
+        endSession()
+      } else {
+        animationFrameRef.current = requestAnimationFrame(updateTimer)
+      }
+    }
+    
+    animationFrameRef.current = requestAnimationFrame(updateTimer)
   }, [endSession])
 
   const refreshSession = useCallback(async () => {
@@ -105,8 +120,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   // Limpiar el timer cuando el componente se desmonte
   useEffect(() => {
     return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current)
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current)
       }
     }
   }, [])
