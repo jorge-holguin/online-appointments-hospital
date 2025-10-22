@@ -7,7 +7,8 @@ import { es } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
 
 interface AvailabilityCalendarProps {
-  availableDates: string[] // Lista de fechas disponibles en formato YYYY-MM-DD
+  availableDates: string[] // Lista de fechas disponibles en formato YYYY-MM-DD (con totalDisponibles > 0)
+  unavailableDates?: string[] // Lista de fechas sin disponibilidad en formato YYYY-MM-DD (totalDisponibles = 0)
   onSelectDate: (date: Date | undefined) => void
   selectedDate?: Date
   className?: string
@@ -19,6 +20,7 @@ interface AvailabilityCalendarProps {
 
 export function AvailabilityCalendar({
   availableDates,
+  unavailableDates = [],
   onSelectDate,
   selectedDate,
   className,
@@ -29,12 +31,13 @@ export function AvailabilityCalendar({
 }: AvailabilityCalendarProps) {
   // Convertir las fechas disponibles de string a objetos Date
   const availableDateObjects = availableDates.map(dateStr => parseISO(dateStr))
+  const unavailableDateObjects = unavailableDates.map(dateStr => parseISO(dateStr))
   
   // Debug: mostrar las fechas disponibles
   React.useEffect(() => {
   }, [availableDates, month])
   
-  // Deshabilitar días que no están en las fechas disponibles
+  // Deshabilitar días que no están en las fechas disponibles O no disponibles
   const disabledDays = (date: Date) => {
     // Normalizar la fecha a medianoche para comparación
     const dateNormalized = new Date(date.getFullYear(), date.getMonth(), date.getDate())
@@ -55,17 +58,28 @@ export function AvailabilityCalendar({
       }
     }
     
-    // Si la fecha no está en la lista de fechas disponibles, deshabilitar
-    return !availableDateObjects.some(availableDate => 
+    // Verificar si está en fechas disponibles (verde)
+    const isAvailable = availableDateObjects.some(availableDate => 
       availableDate.getDate() === date.getDate() &&
       availableDate.getMonth() === date.getMonth() &&
       availableDate.getFullYear() === date.getFullYear()
     )
+    
+    // Verificar si está en fechas no disponibles (rojo)
+    const isUnavailable = unavailableDateObjects.some(unavailableDate => 
+      unavailableDate.getDate() === date.getDate() &&
+      unavailableDate.getMonth() === date.getMonth() &&
+      unavailableDate.getFullYear() === date.getFullYear()
+    )
+    
+    // Solo deshabilitar si NO está en ninguna de las dos listas (fechas grises)
+    return !isAvailable && !isUnavailable
   }
 
-  // Modificador para resaltar las fechas disponibles
+  // Modificador para resaltar las fechas disponibles y no disponibles
   const modifiers = {
     available: availableDateObjects,
+    unavailable: unavailableDateObjects,
     today: new Date(),
   }
 
@@ -74,6 +88,11 @@ export function AvailabilityCalendar({
     available: {
       fontWeight: 'bold',
       color: '#3e92cc',
+    },
+    unavailable: {
+      fontWeight: 'bold',
+      color: '#ef4444', // red-500
+      backgroundColor: '#fee2e2', // red-100
     },
     today: {
       fontWeight: 'bold',

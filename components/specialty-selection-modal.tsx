@@ -265,7 +265,7 @@ export default function SpecialtySelectionModal({
                               />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className={`font-semibold text-base truncate ${
+                              <p className={`font-semibold text-base line-clamp-2 ${
                                 isSelected ? "text-white" : "text-gray-900"
                               }`}>
                                 {specialty.nombre}

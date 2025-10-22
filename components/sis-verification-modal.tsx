@@ -26,6 +26,7 @@ export default function SISVerificationModal({
   const [showAppointmentType, setShowAppointmentType] = useState(false)
   const [patientType, setPatientType] = useState<PatientType>('SIS')
   const [tipoCita, setTipoCita] = useState<string>('')
+  const [especialidadInterconsulta, setEspecialidadInterconsulta] = useState<string>('')
   
   // Ref para el botón de continuar
   const continueButtonRef = useRef<HTMLButtonElement>(null)
@@ -41,19 +42,17 @@ export default function SISVerificationModal({
   }, [patientType])
 
   const handleContinue = () => {
-    // Si es SIS o SOAT, mostrar el modal de tipo de cita
-    if (patientType === 'SIS' || patientType === 'SOAT') {
-      setShowAppointmentType(true)
-    } else {
-      // Si es PAGANTE, ir directo a selección de especialidad
-      setShowSpecialtySelection(true)
-    }
+    // Todos los tipos (SIS, SOAT, PAGANTE) ahora pasan por el modal de tipo de cita
+    setShowAppointmentType(true)
   }
 
   const canContinue = patientType === 'PAGANTE' || patientType === 'SIS' || patientType === 'SOAT'
 
-  const handleAppointmentTypeSelected = (selectedType: string) => {
+  const handleAppointmentTypeSelected = (selectedType: string, especialidad?: string) => {
     setTipoCita(selectedType)
+    if (especialidad) {
+      setEspecialidadInterconsulta(especialidad)
+    }
     setShowAppointmentType(false)
     setShowSpecialtySelection(true)
   }
@@ -259,6 +258,7 @@ export default function SISVerificationModal({
             patientType: patientType,
             tipoAtencion: patientType,
             tipoCita: tipoCita,
+            especialidadInterconsulta: especialidadInterconsulta,
           }}
         />
       </>

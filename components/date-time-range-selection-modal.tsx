@@ -51,6 +51,7 @@ const afternoonTimeRanges: TimeRange[] = [
 interface ApiAvailableDate {
   fecha?: string | null
   consultorio?: string | null
+  totalDisponibles?: number | null
 }
 
 // Interfaz más permisiva para datos de la API (permite null/undefined)
@@ -87,6 +88,7 @@ export default function DateTimeRangeSelectionModal({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [availableDates, setAvailableDates] = useState<string[]>([])
+  const [unavailableDates, setUnavailableDates] = useState<string[]>([]) // Fechas con totalDisponibles = 0
   const [showAppointmentSelection, setShowAppointmentSelection] = useState(false)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const minDate = parseISO(startDate)
@@ -117,22 +119,32 @@ export default function DateTimeRangeSelectionModal({
         
         const data: ApiAvailableDate[] = await response.json()
         
-        // Normalizar y filtrar datos nulos/inválidos, extraer fechas únicas
-        const uniqueDates = Array.from(new Set(
-          data
-            .filter(item => item != null && item.fecha) // Filtrar elementos null/undefined o sin fecha
-            .map(item => {
-              // La fecha viene como "2025-08-01 00:00:00.0", necesitamos solo "2025-08-01"
-              try {
-                return item.fecha!.split(' ')[0]
-              } catch (e) {
-                console.error('Error parsing date:', e, item)
-                return null
+        // Separar fechas disponibles (totalDisponibles > 0) y no disponibles (totalDisponibles = 0)
+        const datesWithAvailability: string[] = []
+        const datesWithoutAvailability: string[] = []
+        
+        data
+          .filter(item => item != null && item.fecha) // Filtrar elementos null/undefined o sin fecha
+          .forEach(item => {
+            // La fecha viene como "2025-08-01 00:00:00.0", necesitamos solo "2025-08-01"
+            try {
+              const dateStr = item.fecha!.split(' ')[0]
+              if (dateStr && dateStr.trim() !== '') {
+                const totalDisp = item.totalDisponibles ?? 1 // Si no viene el campo, asumir que hay disponibles
+                if (totalDisp > 0) {
+                  datesWithAvailability.push(dateStr)
+                } else {
+                  datesWithoutAvailability.push(dateStr)
+                }
               }
-            })
-            .filter((date): date is string => date !== null && date.trim() !== '') // Filtrar nulls y strings vacíos
-        ))
-        setAvailableDates(uniqueDates)
+            } catch (e) {
+              console.error('Error parsing date:', e, item)
+            }
+          })
+        
+        // Eliminar duplicados
+        setAvailableDates(Array.from(new Set(datesWithAvailability)))
+        setUnavailableDates(Array.from(new Set(datesWithoutAvailability)))
       } catch (err) {
         console.error('Error fetching available dates:', err)
         setError('No se pudieron cargar las fechas disponibles.')
@@ -150,6 +162,14 @@ export default function DateTimeRangeSelectionModal({
     setSelectedDay(date || null)
     setSelectedTimeRange(null) // Resetear el rango de hora seleccionado
   }
+
+  // Verificar si la fecha seleccionada está en la lista de fechas sin disponibilidad
+  const isSelectedDateUnavailable = selectedDay && unavailableDates.some(dateStr => {
+    const unavailableDate = parseISO(dateStr)
+    return unavailableDate.getDate() === selectedDay.getDate() &&
+           unavailableDate.getMonth() === selectedDay.getMonth() &&
+           unavailableDate.getFullYear() === selectedDay.getFullYear()
+  })
 
   const handleTimeRangeSelect = (range: TimeRange) => {
     // Verificar si el rango ya pasó (solo para el día de hoy)
@@ -358,6 +378,7 @@ export default function DateTimeRangeSelectionModal({
                     <div className="flex justify-center">
                       <AvailabilityCalendar
                         availableDates={availableDates}
+                        unavailableDates={unavailableDates}
                         onSelectDate={handleDateSelect}
                         selectedDate={selectedDay || undefined}
                         fromDate={minDate}
@@ -367,14 +388,18 @@ export default function DateTimeRangeSelectionModal({
                         className="max-w-[320px] mx-auto"
                       />
                     </div>
-                    <div className="mt-3 flex items-center justify-center gap-4">
+                    <div className="mt-3 flex items-center justify-center gap-4 flex-wrap">
                       <div className="flex items-center">
                         <div className="w-3 h-3 rounded-full bg-gray-300 mr-1"></div>
-                        <span className="text-xs text-gray-500">Sin horarios</span>
+                        <span className="text-xs text-gray-500">Sin programación</span>
+                      </div>
+                      <div className="flex items-center">
+                        <div className="w-3 h-3 rounded-full bg-red-500 mr-1"></div>
+                        <span className="text-xs text-gray-500">Sin disponibilidad</span>
                       </div>
                       <div className="flex items-center">
                         <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "#3e92cc" }}></div>
-                        <span className="text-xs text-gray-500">Con horarios</span>
+                        <span className="text-xs text-gray-500">Disponible</span>
                       </div>
                     </div>
                   </div>
@@ -396,52 +421,73 @@ export default function DateTimeRangeSelectionModal({
                         <p className="text-sm text-gray-600 text-center font-medium capitalize">
                           {format(selectedDay, 'EEEE dd/MM/yyyy', { locale: es })}
                         </p>
-                        <div className="grid grid-cols-1 gap-2">
-                          {timeRanges.map((range) => {
-                            const isPast = isTimeRangePast(range)
-                            const isSelected = selectedTimeRange?.label === range.label
-                            
-                            return (
-                              <button
-                                key={range.label}
-                                onClick={() => handleTimeRangeSelect(range)}
-                                disabled={isPast}
-                                className={`p-3 rounded-lg border-2 transition-all duration-200 ${
-                                  isPast
-                                    ? 'border-gray-300 bg-gray-100 cursor-not-allowed opacity-60'
-                                    : isSelected
-                                      ? 'border-blue-500 bg-blue-50 shadow-sm'
-                                      : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
-                                }`}
-                              >
-                                <div className="flex items-center justify-center gap-2">
-                                  <Clock className={`w-4 h-4 ${
-                                    isPast
-                                      ? 'text-gray-400'
-                                      : isSelected
-                                        ? 'text-blue-600'
-                                        : 'text-blue-600'
-                                  }`} />
-                                  <span className={`font-medium ${
-                                    isPast
-                                      ? 'text-gray-500'
-                                      : isSelected
-                                        ? 'text-blue-600'
-                                        : 'text-gray-700'
-                                  }`}>
-                                    {range.label}
-                                  </span>
+                        
+                        {isSelectedDateUnavailable ? (
+                          <div className="flex flex-col items-center justify-center py-8 px-4">
+                            <div className="bg-red-50 border-2 border-red-200 rounded-lg p-6 w-full">
+                              <div className="flex flex-col items-center text-center">
+                                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                                  <Clock className="w-8 h-8 text-red-500" />
                                 </div>
-                                {isPast && (
-                                  <div className="text-[10px] text-gray-500 mt-1 font-semibold">
-                                    NO DISPONIBLE
+                                <h4 className="text-lg font-bold text-red-700 mb-2">
+                                  Sin Citas Disponibles
+                                </h4>
+                                <p className="text-sm text-red-600">
+                                  Este día tuvo programación pero ya no quedan citas disponibles.
+                                </p>
+                                <p className="text-xs text-red-500 mt-2">
+                                  Por favor, selecciona otra fecha.
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-1 gap-2">
+                            {timeRanges.map((range) => {
+                              const isPast = isTimeRangePast(range)
+                              const isSelected = selectedTimeRange?.label === range.label
+                              
+                              return (
+                                <button
+                                  key={range.label}
+                                  onClick={() => handleTimeRangeSelect(range)}
+                                  disabled={isPast}
+                                  className={`p-3 rounded-lg border-2 transition-all duration-200 ${
+                                    isPast
+                                      ? 'border-gray-300 bg-gray-100 cursor-not-allowed opacity-60'
+                                      : isSelected
+                                        ? 'border-blue-500 bg-blue-50 shadow-sm'
+                                        : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-center gap-2">
+                                    <Clock className={`w-4 h-4 ${
+                                      isPast
+                                        ? 'text-gray-400'
+                                        : isSelected
+                                          ? 'text-blue-600'
+                                          : 'text-blue-600'
+                                    }`} />
+                                    <span className={`font-medium ${
+                                      isPast
+                                        ? 'text-gray-500'
+                                        : isSelected
+                                          ? 'text-blue-600'
+                                          : 'text-gray-700'
+                                    }`}>
+                                      {range.label}
+                                    </span>
                                   </div>
-                                )}
+                                  {isPast && (
+                                    <div className="text-[10px] text-gray-500 mt-1 font-semibold">
+                                      NO DISPONIBLE
+                                    </div>
+                                  )}
                               </button>
                             )
                           })}
                         </div>
-
+                        )}
                       </div>
                     ) : (
                       <div className="flex flex-col items-center justify-center py-12 text-gray-500">

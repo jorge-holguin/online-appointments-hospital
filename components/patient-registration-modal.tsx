@@ -381,7 +381,7 @@ export default function PatientRegistrationModal({ open, onOpenChange }: Patient
 
             {/* Dígito Verificador - Solo se muestra si es DNI */}
 
-   {/*          {formData.tipoDocumento === "D  " && (
+            {formData.tipoDocumento === "D  " && (
               <div className="space-y-2">
                 <Label htmlFor="digitoVerificador">Dígito Verificador</Label>
                 <div className="relative">
@@ -396,7 +396,7 @@ export default function PatientRegistrationModal({ open, onOpenChange }: Patient
                   />
                 </div>
               </div>
-            )} */}
+            )} 
 
             <div className="space-y-2">
               <Label htmlFor="email">Correo electrónico *</Label>

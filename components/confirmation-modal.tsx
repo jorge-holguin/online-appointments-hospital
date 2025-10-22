@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft, Calendar, User, MapPin, ChevronRight, Loader2 } from "lucide-react"
+import { ChevronLeft, Calendar, User, MapPin, ChevronRight, Loader2, MessageSquare } from "lucide-react"
 import FinalConfirmationModal from "./final-confirmation-modal"
 import DuplicateAppointmentErrorModal from "./duplicate-appointment-error-modal"
 import AppointmentUnavailableModal from "./appointment-unavailable-modal"
@@ -90,6 +90,7 @@ export default function ConfirmationModal({ open, onOpenChange, onBack, onBackTo
   const [unavailableErrorMessage, setUnavailableErrorMessage] = useState<string>('')
   const [appointmentResponse, setAppointmentResponse] = useState<AppointmentResponse | null>(null)
   const [finalAppointmentData, setFinalAppointmentData] = useState(appointmentData)
+  const [observacionPaciente, setObservacionPaciente] = useState<string>('')
 
   // Configurar redirección automática cuando la sesión expire
   useEffect(() => {
@@ -140,8 +141,12 @@ export default function ConfirmationModal({ open, onOpenChange, onBack, onBackTo
         fecha: formatDateForApi(appointmentData.dateTime?.date || new Date()),
         hora: appointmentData.dateTime?.time || "",
         turno: getShiftFromTime(appointmentData.dateTime?.time || ""),
-        tipoAtencion: mapPatientTypeToApiFormat(appointmentData.patient.patientType), // Tipo de atención: SIS o PAGANTE
-        tipoCita: appointmentData.patient.tipoCita || "" // Tipo de cita: CITADO o INTERCONSULTA
+        tipoAtencion: appointmentData.patient.tipoCita === 'TRAMITE' 
+          ? 'PAGANTE' 
+          : mapPatientTypeToApiFormat(appointmentData.patient.patientType), // Si es TRAMITE siempre es PAGANTE
+        tipoCita: appointmentData.patient.tipoCita || "", // Tipo de cita: CITADO, INTERCONSULTA o TRAMITE
+        especialidadInterconsulta: appointmentData.patient.especialidadInterconsulta || "", // Especialidad de interconsulta
+        observacionPaciente: observacionPaciente.trim() || "" // Observaciones del paciente
       }
       
       logEvent('BOOKING_ATTEMPT', {
@@ -397,6 +402,39 @@ export default function ConfirmationModal({ open, onOpenChange, onBack, onBackTo
               </div>
             </div>
 
+            {/* Campo de Observaciones */}
+            <div className="space-y-2">
+              <label htmlFor="observaciones" className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                <MessageSquare className="w-4 h-4" />
+                Observaciones
+                {appointmentData.patient?.tipoCita === 'TRAMITE' && (
+                  <span className="text-red-500">*</span>
+                )}
+                {(appointmentData.patient?.tipoCita === 'CITADO' || appointmentData.patient?.tipoCita === 'INTERCONSULTA') && (
+                  <span className="text-xs text-gray-500 font-normal">(Opcional)</span>
+                )}
+              </label>
+              <p className="text-xs text-gray-600">
+                {appointmentData.patient?.tipoCita === 'TRAMITE' 
+                  ? 'Describe el motivo de tu trámite administrativo (obligatorio) Ejm: Certificado de Salud Mental'
+                  : 'Puedes agregar información adicional sobre tu solicitud de cita'}
+              </p>
+              <textarea
+                id="observaciones"
+                value={observacionPaciente}
+                onChange={(e) => setObservacionPaciente(e.target.value)}
+                maxLength={100}
+                rows={3}
+                className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-[#3e92cc] focus:outline-none resize-none text-sm"
+                placeholder={appointmentData.patient?.tipoCita === 'TRAMITE' 
+                  ? 'Ejemplo: Solicitud de certificado médico para trabajo...'
+                  : 'Agrega cualquier detalle adicional que consideres importante...'}
+              />
+              <p className="text-xs text-gray-500 text-right">
+                {observacionPaciente.length}/100 caracteres
+              </p>
+            </div>
+
             {apiError && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded-md">
                 <p className="text-xs sm:text-sm">{apiError}</p>
@@ -418,7 +456,11 @@ export default function ConfirmationModal({ open, onOpenChange, onBack, onBackTo
                 onClick={handleConfirm}
                 className="flex-1 bg-[#3e92cc] hover:bg-[#3e92cc]/90 text-white px-4 sm:px-8 py-2 sm:py-3 text-sm sm:text-base font-semibold disabled:opacity-50 transition-all"
                 size="lg"
-                disabled={isSubmitting || isUploadingFile}
+                disabled={
+                  isSubmitting || 
+                  isUploadingFile || 
+                  (appointmentData.patient?.tipoCita === 'TRAMITE' && !observacionPaciente.trim())
+                }
               >
                 {isSubmitting ? (
                   <>
