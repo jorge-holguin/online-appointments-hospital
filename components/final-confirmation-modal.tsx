@@ -229,7 +229,7 @@ export default function FinalConfirmationModal({
     Usted ha realizado el registro de su <strong>Solicitud de cita</strong>. 
     Esto significa que su cita aún <strong>NO ha sido otorgada</strong>. 
     Su solicitud será revisada por el personal del <strong>Call Center</strong>, 
-    quienes le confirmarán si su reserva ha sido aprobada. 
+    quienes le confirmarán si ha sido aprobada. 
     Le recomendamos revisar periódicamente el estado de su solicitud para verificar si ha sido <strong>aprobada</strong>.
   </p>
   <p className="mt-2 text-sm text-gray-700">
@@ -279,7 +279,7 @@ export default function FinalConfirmationModal({
               <div>
                 <p className="text-sm text-gray-500">Ubicación</p>
                 <p className="font-medium text-gray-900">
-                  Consultorios Externos
+                  {process.env.NEXT_PUBLIC_HOSPITAL_LOCATION || "Consultorios Externos"}
                 </p>
                 <p className="text-sm text-gray-600">
                   {process.env.NEXT_PUBLIC_HOSPITAL_ADDRESS ||

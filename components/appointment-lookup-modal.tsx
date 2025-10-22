@@ -73,7 +73,7 @@ export default function AppointmentLookupModal({ open, onOpenChange }: Appointme
         doctor: `Dr(a). ${data.medicoNombre || 'Médico no disponible'}`,
         date: data.fecha || 'Fecha no disponible',
         time: data.hora ? `${data.hora}hs` : 'Hora no disponible',
-        location: "Consultorios Externos",
+        location: "Consultorios Externos | Sede Central Hospital Chosica",
         patient: data.nombres || 'Paciente no disponible',
         status: data.estado || 'PENDIENTE',
         especialidad: data.especialidad || '',
@@ -129,7 +129,7 @@ export default function AppointmentLookupModal({ open, onOpenChange }: Appointme
           textColor: "text-green-700",
           borderColor: "border-green-200",
           message: "¡Felicidades! Tu cita ha sido otorgada. Debes llegar 30 minutos antes de la hora programada" + 
-                   (appointmentData?.tipoAtencion === "SIS" ? " y con una copia de tu DNI." : ".")
+                   (appointmentData?.tipoAtencion === "SIS" ? " " : ".")
         }
       case "DENEGADO":
         return {
