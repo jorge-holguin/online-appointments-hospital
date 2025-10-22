@@ -342,10 +342,10 @@ export default function DateTimeRangeSelectionModal({
               </div>
             ) : error ? (
               <div className="text-center text-red-500 py-4">{error}</div>
-            ) : availableDates.length === 0 ? (
+            ) : (availableDates.length === 0 && unavailableDates.length === 0) ? (
               <div className="text-center py-8 text-gray-500">
                 <CalendarIcon className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                <p>No hay fechas disponibles para el turno {selectedShift === 'M' ? 'de mañana' : 'de tarde'}</p>
+                <p>No hay fechas programadas para el turno {selectedShift === 'M' ? 'de mañana' : 'de tarde'}</p>
               </div>
             ) : (
               <div className="flex flex-col md:flex-row gap-4 md:gap-6">
