@@ -128,8 +128,8 @@ export default function DateTimeSelectionModal({
       setError(null)
       
       try {
-        // Construir la URL de la API con los parámetros necesarios
-        const url = `${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/v1/app-citas/citas?fechaInicio=${startDate}&fechaFin=${endDate}&medicoId=${selectedDoctor.nombre}&turnoConsulta=${selectedShift}`
+        // Construir la URL de la API con los parámetros necesarios, incluyendo idEspecialidad
+        const url = `${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/v1/app-citas/citas?fechaInicio=${startDate}&fechaFin=${endDate}&medicoId=${selectedDoctor.nombre}&turnoConsulta=${selectedShift}&idEspecialidad=${selectedDoctor.especialidadId}`
         
         const response = await fetch(url)
         if (!response.ok) throw new Error(`Error al obtener horarios: ${response.status}`)
