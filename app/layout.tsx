@@ -7,8 +7,8 @@ import { SessionProvider } from '@/context/session-context'
 import ConsoleBlocker from '@/components/security/console-blocker'
 
 export const metadata: Metadata = {
-  title: 'Solicitud de Reserva de Citas',
-  description: 'Pagina para reserva de citas en linea',
+  title: 'Solicitud de Citas',
+  description: 'Pagina para solicitud de citas en linea',
   generator: 'Jorge Holguin',
 }
 

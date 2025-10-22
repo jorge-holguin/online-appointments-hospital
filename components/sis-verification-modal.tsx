@@ -96,7 +96,7 @@ export default function SISVerificationModal({
                 <p>
                   <strong>Advertencia:</strong> Si eres paciente SIS, debes
                   seleccionar la opción <strong>Atención con SIS</strong>. De lo
-                  contrario, tu reserva de cita será rechazada automáticamente. Asegúrate de
+                  contrario, tu solicitud de cita será rechazada automáticamente. Asegúrate de
                   ingresar información verídica y confiable.
                 </p>
               </div>

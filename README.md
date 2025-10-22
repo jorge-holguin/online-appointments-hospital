@@ -1,6 +1,6 @@
 # 🏥 Sistema de Reserva de Citas Online
 
-Sistema web para la reserva de citas médicas en línea con integración a servicios externos.
+Sistema web para la solicitud de citas médicas en línea con integración a servicios externos.
 
 ## 📋 Tabla de Contenidos
 

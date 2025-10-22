@@ -136,10 +136,10 @@ export default function FinalConfirmationModal({
       {/* Header fijo */}
       <div className="flex-shrink-0">
         <DialogTitle className="sr-only">
-          Confirmación de reserva de cita
+          Confirmación de solicitud de cita
         </DialogTitle>
         <DialogDescription className="sr-only">
-          Confirmación de reserva de cita exitosa
+          Confirmación de solicitud de cita exitosa
         </DialogDescription>
       </div>
 
@@ -158,10 +158,10 @@ export default function FinalConfirmationModal({
         {/* Mensaje de éxito */}
         <div className="space-y-2">
           <h2 className="text-2xl font-bold text-gray-900">
-            Tu solicitud de reserva de cita ha sido confirmada
+            Tu solicitud de cita ha sido confirmada
           </h2>
           <p className="text-gray-600">
-            Se ha enviado un correo con los detalles de tu solicitud de reserva de cita.
+            Se ha enviado un correo con los detalles de tu solicitud de cita.
           </p>
         </div>
 
@@ -209,7 +209,7 @@ export default function FinalConfirmationModal({
               className={`text-xs absolute w-full transition-all duration-300 ${copied ? "opacity-0" : "opacity-100"}`} 
               style={{ color: "#3e92cc" }}
             >
-              Guarda este código para consultar tu solicitud de reserva de cita
+              Guarda este código para consultar tu solicitud de cita
             </p>
           </div>
           {appointmentData?.idCita && (
@@ -226,7 +226,7 @@ export default function FinalConfirmationModal({
               <div>
   <p className="font-semibold text-blue-800">Aviso importante</p>
   <p className="text-sm text-gray-700">
-    Usted ha realizado el registro de su <strong>SOLICITUD de reserva de cita</strong>. 
+    Usted ha realizado el registro de su <strong>Solicitud de cita</strong>. 
     Esto significa que su cita aún <strong>NO ha sido otorgada</strong>. 
     Su solicitud será revisada por el personal del <strong>Call Center</strong>, 
     quienes le confirmarán si su reserva ha sido aprobada. 

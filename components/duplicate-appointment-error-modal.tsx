@@ -29,7 +29,7 @@ export default function DuplicateAppointmentErrorModal({
               <AlertCircle className="w-8 h-8 text-orange-600" />
             </div>
             <DialogTitle className="text-xl font-bold text-gray-900">
-              No se puede reservar la cita
+              No se puede generar esta solicitud de cita.
             </DialogTitle>
             <DialogDescription className="text-center text-gray-600">
               {errorMessage}

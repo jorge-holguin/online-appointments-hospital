@@ -62,7 +62,7 @@ export default function HomePage() {
               >
                 <Calendar className="w-8 h-8" style={{ color: "#3e92cc" }} />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Solicitud de reserva de cita</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Solicitud de cita</h3>
               <p className="text-gray-600 mb-6 flex-1">Solicita una cita con un especialista</p>
               <Button
                 onClick={() => setShowRegistration(true)}
@@ -85,7 +85,7 @@ export default function HomePage() {
                 <Search className="w-8 h-8" style={{ color: "#0a2463" }} />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">Consultar solicitud de cita</h3>
-              <p className="text-gray-600 mb-6 flex-1">Revisa el estado de tu solicitud de la reserva de cita</p>
+              <p className="text-gray-600 mb-6 flex-1">Revisa el estado de tu solicitud de cita</p>
               <Button
                 onClick={() => setShowLookup(true)}
                 className="w-full text-white py-3 text-lg font-medium hover:opacity-90 mt-auto"
@@ -124,7 +124,7 @@ export default function HomePage() {
           <div className="text-center space-y-4">
             <div className="text-sm">
               <h4 className="font-semibold mb-2" style={{ color: "#0a2463" }}>
-                Realice su solicitud de reserva de cita  - opción 1
+                Realice su solicitud de cita  - opción 1
               </h4>
               <p className="font-medium text-lg" style={{ color: "#3e92cc" }}>
                 01 418 3232

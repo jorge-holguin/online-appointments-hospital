@@ -136,7 +136,7 @@ export default function AppointmentCodePage({ params }: { readonly params: { cod
           bgColor: "bg-red-100",
           textColor: "text-red-700",
           borderColor: "border-red-200",
-          message: `Su solicitud de reserva fue denegada por: "${observacion || 'No se especificó el motivo'}"`
+          message: `Su solicitud fue denegada por: "${observacion || 'No se especificó el motivo'}"`
         }
       case "ELIMINADO":
         return {
@@ -202,14 +202,14 @@ export default function AppointmentCodePage({ params }: { readonly params: { cod
           <div className="text-center mb-6">
             <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Consulta de cita</h2>
             <p className="text-sm sm:text-base text-gray-600">
-              Ingresa tu código de reserva para ver los detalles de tu cita
+              Ingresa tu código de solicitud para ver los detalles de tu cita
             </p>
           </div>
 
           {!appointmentData ? (
             <form onSubmit={(e) => handleSearch(e)} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="code" className="text-sm sm:text-base">Código de reserva</Label>
+                <Label htmlFor="code" className="text-sm sm:text-base">Código de solicitud</Label>
                 <div className="relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
@@ -255,7 +255,7 @@ export default function AppointmentCodePage({ params }: { readonly params: { cod
                     <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-3 ${statusConfig.bgColor}`}>
                       {statusConfig.icon}
                     </div>
-                    <h3 className="text-base sm:text-lg font-semibold text-gray-900">Reserva encontrada</h3>
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900">Solicitud encontrada</h3>
                     <div className={`inline-block ${statusConfig.bgColor} ${statusConfig.textColor} px-3 py-1 rounded-md text-xs sm:text-sm font-medium mb-3`}>
                       Estado: {appointmentData.status}
                     </div>
@@ -361,7 +361,7 @@ export default function AppointmentCodePage({ params }: { readonly params: { cod
 
               <div className="border rounded-lg p-3 bg-gray-50 border-gray-200">
                 <p className="text-xs sm:text-sm text-gray-800 break-words">
-                  <strong>Código de reserva:</strong> {appointmentData.code}
+                  <strong>Código de solicitud:</strong> {appointmentData.code}
                 </p>
               </div>
 
@@ -403,7 +403,7 @@ export default function AppointmentCodePage({ params }: { readonly params: { cod
           <div className="text-center space-y-3 sm:space-y-4">
             <div className="text-xs sm:text-sm">
               <h4 className="font-semibold mb-2" style={{ color: "#0a2463" }}>
-                Realice su solicitud de reserva de cita - opción 1
+                Realice su solicitud de cita - opción 1
               </h4>
               <p className="font-medium text-base sm:text-lg" style={{ color: "#3e92cc" }}>
                 01 418 3232

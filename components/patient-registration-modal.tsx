@@ -279,7 +279,7 @@ export default function PatientRegistrationModal({ open, onOpenChange }: Patient
           <DialogHeader>
             <DialogTitle className="text-center text-xl font-semibold">Registro de paciente</DialogTitle>
             <DialogDescription className="text-center">
-              Ingresa tus datos personales para solicitar la reserva de una cita.
+              Ingresa tus datos personales para solicitar tu cita.
             </DialogDescription>
           </DialogHeader>
 

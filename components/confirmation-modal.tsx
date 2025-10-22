@@ -182,7 +182,9 @@ export default function ConfirmationModal({ open, onOpenChange, onBack, onBackTo
             // Detectar si es un error de cita duplicada
             if (errorMessage.toLowerCase().includes('ya tiene una solicitud') || 
                 errorMessage.toLowerCase().includes('cita generada') ||
-                errorMessage.toLowerCase().includes('ya existe una solicitud')) {
+                errorMessage.toLowerCase().includes('ya existe una solicitud') ||
+                errorMessage.toLowerCase().includes('query did not return a unique result') ||
+                errorMessage.toLowerCase().includes('results were returned')) {
               isDuplicateError = true
               // Mensaje más amigable para el usuario
               errorMessage = 'Ya tienes una solicitud de cita pendiente para este mes en esta especialidad. No puedes generar otra hasta que se resuelva la actual o inicie un nuevo mes.'
@@ -325,7 +327,7 @@ export default function ConfirmationModal({ open, onOpenChange, onBack, onBackTo
               <DialogTitle className="text-lg sm:text-xl font-semibold">¡Ya casi terminas!</DialogTitle>
             </div>
             <DialogDescription>
-              Revisa los detalles de tu solicitud de reserva de cita y luego confirma para que tu solicitud se genere.
+              Revisa los detalles de tu solicitud de cita y luego confirma para que tu solicitud se genere.
             </DialogDescription>
             {/* Timer de sesión */}
             <div className="mt-3">
