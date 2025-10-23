@@ -224,19 +224,20 @@ export default function FinalConfirmationModal({
             <div className="flex items-start gap-2">
               <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5 shrink-0" />
               <div>
-  <p className="font-semibold text-blue-800">Aviso importante</p>
-  <p className="text-sm text-gray-700">
-    Usted ha realizado el registro de su <strong>Solicitud de cita</strong>. 
-    Esto significa que su cita aún <strong>NO ha sido otorgada</strong>. 
-    Su solicitud será revisada por el personal del <strong>Call Center</strong>, 
-    quienes le confirmarán si ha sido aprobada. 
-    Le recomendamos revisar periódicamente el estado de su solicitud para verificar si ha sido <strong>aprobada</strong>.
-  </p>
-  <p className="mt-2 text-sm text-gray-700">
-    En caso de que su solicitud sea aprobada y se le otorgue la cita, 
-    se recomienda llegar con <strong>30 minutos de anticipación</strong>. 
-    Si es paciente <strong>SIS</strong>, deberá presentar una su <strong>DNI</strong>.
-  </p>
+ <p className="font-semibold text-blue-800">Aviso importante</p>
+<p className="text-sm text-gray-700">
+  Usted ha realizado el registro de su <strong>solicitud de cita</strong>. 
+  Esto significa que su cita aún <strong>NO ha sido confirmada</strong>. 
+  Su solicitud será evaluada por el personal del <strong>Call Center</strong>, 
+  quienes se comunicarán con usted por <strong>correo electrónico</strong> o 
+  <strong>WhatsApp</strong> para informarle si la cita fue <strong>aceptada</strong> o 
+  <strong>rechazada</strong>.
+</p>
+<p className="mt-2 text-sm text-gray-700">
+  Le recordamos que debe <strong>esperar la confirmación</strong> antes de acudir al establecimiento. 
+  Si tiene alguna duda sobre el estado de su solicitud, puede comunicarse al 
+  <strong>01 418 3232 – opción 1</strong>.
+</p>
               </div>
             </div>
           </div>
