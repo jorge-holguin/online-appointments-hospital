@@ -158,7 +158,7 @@ export default function FinalConfirmationModal({
         {/* Mensaje de éxito */}
         <div className="space-y-2">
           <h2 className="text-2xl font-bold text-gray-900">
-            Tu solicitud de cita ha sido confirmada
+            Tu solicitud de cita ha sido admitida
           </h2>
           <p className="text-gray-600">
             Se ha enviado un correo con los detalles de tu solicitud de cita.
@@ -209,7 +209,7 @@ export default function FinalConfirmationModal({
               className={`text-xs absolute w-full transition-all duration-300 ${copied ? "opacity-0" : "opacity-100"}`} 
               style={{ color: "#3e92cc" }}
             >
-              Guarda este código para consultar tu solicitud de cita
+              Guarda este código para consultar el estado de tu solicitud de cita
             </p>
           </div>
           {appointmentData?.idCita && (
@@ -230,13 +230,13 @@ export default function FinalConfirmationModal({
   Esto significa que su cita aún <strong>NO ha sido confirmada</strong>. 
   Su solicitud será evaluada por el personal del <strong>Call Center</strong>, 
   quienes se comunicarán con usted por <strong>correo electrónico</strong> o 
-  <strong>WhatsApp</strong> para informarle si la cita fue <strong>aceptada</strong> o 
-  <strong>rechazada</strong>.
+  <strong> WhatsApp</strong> para informarle si la cita fue <strong>aceptada</strong> o 
+  <strong> rechazada</strong>.
 </p>
 <p className="mt-2 text-sm text-gray-700">
   Le recordamos que debe <strong>esperar la confirmación</strong> antes de acudir al establecimiento. 
   Si tiene alguna duda sobre el estado de su solicitud, puede comunicarse al 
-  <strong>01 418 3232 – opción 1</strong>.
+  <strong> 01 418 3232 – opción 1</strong>.
 </p>
               </div>
             </div>
@@ -280,11 +280,11 @@ export default function FinalConfirmationModal({
               <div>
                 <p className="text-sm text-gray-500">Ubicación</p>
                 <p className="font-medium text-gray-900">
-                  {process.env.NEXT_PUBLIC_HOSPITAL_LOCATION || "Consultorios Externos"}
+                  {process.env.NEXT_PUBLIC_HOSPITAL_LOCATION || "Consultorios Externos | Sede Central Hospital Chosica"}
                 </p>
                 <p className="text-sm text-gray-600">
                   {process.env.NEXT_PUBLIC_HOSPITAL_ADDRESS ||
-                    "Jr. Cuzco 274 - Chosica"}
+                    "Jr. Cuzco 274 - Chosica | Jr. Arequipa N° 214"}
                 </p>
                 {appointmentData?.consultorio && (
                   <div className="mt-1 inline-flex items-center px-2 py-1 rounded-md bg-blue-50 border border-blue-100">
@@ -355,7 +355,7 @@ export default function FinalConfirmationModal({
             >
               <Mail className="w-4 h-4" />
               <span>
-                 Generación de solicitud enviada a {appointmentData.patient.email}
+                 Tu solicitud de cita ha sido enviada a {appointmentData.patient.email}
               </span>
             </div>
           ) : (
