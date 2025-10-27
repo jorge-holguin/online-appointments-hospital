@@ -345,7 +345,7 @@ export default function AppointmentCodePage({ params }: { readonly params: { cod
                     </div>
                   </div>
                 )}
-
+{/* 
                 {appointmentData.tipoCita && (
                   <div className="flex items-start gap-3">
                     <FileText className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
@@ -356,7 +356,7 @@ export default function AppointmentCodePage({ params }: { readonly params: { cod
                       </span>
                     </div>
                   </div>
-                )}
+                )} */}
               </div>
 
               <div className="border rounded-lg p-3 bg-gray-50 border-gray-200">

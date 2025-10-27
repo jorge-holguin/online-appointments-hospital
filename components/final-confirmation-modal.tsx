@@ -330,7 +330,7 @@ export default function FinalConfirmationModal({
             </div>
 
             {/* Tipo de Cita */}
-            {appointmentData?.patient?.tipoCita && (
+            {/* {appointmentData?.patient?.tipoCita && (
               <div className="flex items-center gap-3">
                 <div className="w-4 h-4 text-gray-500 flex items-center justify-center">
                   <span className="text-orange-500 font-bold">TC</span>
@@ -345,6 +345,7 @@ export default function FinalConfirmationModal({
                 </div>
               </div>
             )}
+            */}
           </div>
   
           {/* Email Notification */}
