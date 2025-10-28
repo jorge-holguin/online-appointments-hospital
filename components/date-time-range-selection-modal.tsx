@@ -119,9 +119,8 @@ export default function DateTimeRangeSelectionModal({
         
         const data: ApiAvailableDate[] = await response.json()
         
-        // Separar fechas disponibles (totalDisponibles > 0) y no disponibles (totalDisponibles = 0)
-        const datesWithAvailability: string[] = []
-        const datesWithoutAvailability: string[] = []
+        // Agrupar por fecha para considerar múltiples consultorios
+        const dateMap = new Map<string, number[]>()
         
         data
           .filter(item => item != null && item.fecha) // Filtrar elementos null/undefined o sin fecha
@@ -131,20 +130,35 @@ export default function DateTimeRangeSelectionModal({
               const dateStr = item.fecha!.split(' ')[0]
               if (dateStr && dateStr.trim() !== '') {
                 const totalDisp = item.totalDisponibles ?? 1 // Si no viene el campo, asumir que hay disponibles
-                if (totalDisp > 0) {
-                  datesWithAvailability.push(dateStr)
-                } else {
-                  datesWithoutAvailability.push(dateStr)
+                
+                if (!dateMap.has(dateStr)) {
+                  dateMap.set(dateStr, [])
                 }
+                dateMap.get(dateStr)!.push(totalDisp)
               }
             } catch (e) {
               console.error('Error parsing date:', e, item)
             }
           })
         
-        // Eliminar duplicados
-        setAvailableDates(Array.from(new Set(datesWithAvailability)))
-        setUnavailableDates(Array.from(new Set(datesWithoutAvailability)))
+        // Separar fechas disponibles y no disponibles
+        const datesWithAvailability: string[] = []
+        const datesWithoutAvailability: string[] = []
+        
+        dateMap.forEach((disponibles, dateStr) => {
+          // Una fecha tiene disponibilidad si AL MENOS UN consultorio tiene disponibles > 0
+          const hasAvailability = disponibles.some(total => total > 0)
+          
+          if (hasAvailability) {
+            datesWithAvailability.push(dateStr)
+          } else {
+            // Solo marcar como no disponible si TODOS los consultorios tienen 0 disponibles
+            datesWithoutAvailability.push(dateStr)
+          }
+        })
+        
+        setAvailableDates(datesWithAvailability)
+        setUnavailableDates(datesWithoutAvailability)
       } catch (err) {
         console.error('Error fetching available dates:', err)
         setError('No se pudieron cargar las fechas disponibles.')
@@ -272,7 +286,7 @@ export default function DateTimeRangeSelectionModal({
     <>
       <Dialog open={open && !showAppointmentSelection} onOpenChange={onOpenChange}>
         <DialogContent 
-          className="w-[95vw] max-w-5xl max-h-[95vh] overflow-y-auto p-3 sm:p-6 sm:max-h-[90vh]" 
+          className="w-[98vw] max-w-7xl max-h-[95vh] overflow-y-auto p-3 sm:p-6 sm:max-h-[90vh]" 
           redirectToHome={true}
           onInteractOutside={(e) => e.preventDefault()}
           onKeyDown={handleKeyDown}
