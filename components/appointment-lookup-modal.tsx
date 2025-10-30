@@ -6,7 +6,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { X, Search, Calendar, User, MapPin, Loader2, AlertCircle, CheckCircle, Clock, XCircle, RefreshCw, Stethoscope, FileText } from "lucide-react"
+import { X, Search, Calendar, User, MapPin, Loader2, AlertCircle, CheckCircle, Clock, XCircle, Stethoscope, FileText, Hospital, RefreshCw } from "lucide-react"
+import { getHospitalAddress, getHospitalLocationName } from "@/lib/hospital-utils"
 
 interface AppointmentLookupModalProps {
   open: boolean
@@ -31,6 +32,8 @@ interface AppointmentResponse {
   observacion?: string | null;
   tipoAtencion?: string | null;
   tipoCita?: string | null;
+  lugar?: string | null;
+  consultorio?: string | null;
 }
 
 export default function AppointmentLookupModal({ open, onOpenChange }: AppointmentLookupModalProps) {
@@ -80,7 +83,10 @@ export default function AppointmentLookupModal({ open, onOpenChange }: Appointme
         turno: data.turno || '',
         observacion: data.observacion || undefined,
         tipoAtencion: data.tipoAtencion || undefined,
-        tipoCita: data.tipoCita || undefined
+        tipoCita: data.tipoCita || undefined,
+        lugar: data.lugar ?? null, // Mantener valor de API (null/undefined) para que utilidades apliquen fallback
+        consultorio: data.consultorio || undefined,
+        numeroDocumento: data.numeroDocumento || undefined
       })
     } catch (err) {
       console.error('Error fetching appointment:', err)
@@ -250,6 +256,11 @@ export default function AppointmentLookupModal({ open, onOpenChange }: Appointme
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-gray-500 mb-1">Especialidad</p>
                   <p className="font-semibold text-gray-900">{appointmentData.specialty}</p>
+                  {appointmentData.consultorio && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Consultorio: <span className="font-medium text-gray-700">{appointmentData.consultorio}</span>
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -261,22 +272,31 @@ export default function AppointmentLookupModal({ open, onOpenChange }: Appointme
                 </div>
               </div>
 
-              <div className="flex items-start gap-3">
-                <MapPin className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs text-gray-500 mb-1">Ubicación</p>
-                  <p className="font-semibold text-gray-900">{appointmentData.location}</p>
-                  <p className="text-xs text-gray-600 mt-0.5">
-                    {process.env.NEXT_PUBLIC_HOSPITAL_ADDRESS || "Jr. Cuzco 274 - Chosica"}
-                  </p>
+              {getHospitalLocationName(appointmentData.lugar) && (
+                <div className="flex items-start gap-3">
+                  <MapPin className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-gray-500 mb-1">Ubicación</p>
+                    <p className="font-semibold text-gray-900">{getHospitalLocationName(appointmentData.lugar)}</p>
+                    {getHospitalAddress(appointmentData.lugar) && (
+                      <p className="text-xs text-gray-600 mt-0.5">
+                        {getHospitalAddress(appointmentData.lugar)}
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="flex items-start gap-3">
                 <User className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-gray-500 mb-1">Paciente</p>
                   <p className="font-semibold text-gray-900">{appointmentData.patient}</p>
+                  {appointmentData.numeroDocumento && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      DNI: <span className="font-medium text-gray-700">{appointmentData.numeroDocumento}</span>
+                    </p>
+                  )}
                 </div>
               </div>
 

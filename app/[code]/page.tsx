@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Search, Calendar, User, MapPin, Loader2, AlertCircle, CheckCircle, Clock, XCircle, RefreshCw, ArrowLeft, Phone, Stethoscope, FileText } from "lucide-react"
+import { Search, Calendar, User, MapPin, Loader2, AlertCircle, CheckCircle, Clock, XCircle, RefreshCw, ArrowLeft, Phone, Stethoscope, Hospital, FileText } from "lucide-react"
+import { getHospitalAddress, getHospitalLocationName } from "@/lib/hospital-utils"
 
 // Interfaz más permisiva para datos de la API (permite null/undefined)
 interface AppointmentResponse {
@@ -26,6 +27,8 @@ interface AppointmentResponse {
   observacion?: string | null;
   tipoAtencion?: string | null;
   tipoCita?: string | null;
+  lugar?: string | null;
+
 }
 
 export default function AppointmentCodePage({ params }: { readonly params: { code: string } }) {
@@ -85,7 +88,10 @@ export default function AppointmentCodePage({ params }: { readonly params: { cod
         turno: data.turno || '',
         observacion: data.observacion || undefined,
         tipoAtencion: data.tipoAtencion || undefined,
-        tipoCita: data.tipoCita || undefined
+        tipoCita: data.tipoCita || undefined,
+        lugar: data.lugar ?? null, // Mantener valor de API (null/undefined) para que utilidades apliquen fallback
+        consultorio: data.consultorio || undefined,
+        numeroDocumento: data.numeroDocumento || undefined
       })
     } catch (err) {
       console.error('Error fetching appointment:', err)
@@ -280,37 +286,51 @@ export default function AppointmentCodePage({ params }: { readonly params: { cod
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <Stethoscope className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <Hospital className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-gray-500 mb-1">Especialidad</p>
                     <p className="font-semibold text-sm sm:text-base text-gray-900 break-words">{appointmentData.specialty}</p>
+                    {appointmentData.consultorio && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        Consultorio: <span className="font-medium text-gray-700">{appointmentData.consultorio}</span>
+                      </p>
+                    )}
                   </div>
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <User className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <Stethoscope className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-gray-500 mb-1">Médico</p>
                     <p className="font-semibold text-sm sm:text-base text-gray-900 break-words">{appointmentData.doctor}</p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3">
-                  <MapPin className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-500 mb-1">Ubicación</p>
-                    <p className="font-semibold text-sm sm:text-base text-gray-900">{appointmentData.location}</p>
-                    <p className="text-xs text-gray-600 mt-0.5 break-words">
-                      {process.env.NEXT_PUBLIC_HOSPITAL_ADDRESS || "Jr. Cuzco 274 - Chosica"}
-                    </p>
+                {getHospitalLocationName(appointmentData.lugar) && (
+                  <div className="flex items-start gap-3">
+                    <MapPin className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-gray-500 mb-1">Ubicación</p>
+                      <p className="font-semibold text-sm sm:text-base text-gray-900">{getHospitalLocationName(appointmentData.lugar)}</p>
+                      {getHospitalAddress(appointmentData.lugar) && (
+                        <p className="text-xs text-gray-600 mt-0.5 break-words">
+                          {getHospitalAddress(appointmentData.lugar)}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <div className="flex items-start gap-3">
                   <User className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-gray-500 mb-1">Paciente</p>
                     <p className="font-semibold text-sm sm:text-base text-gray-900 break-words">{appointmentData.patient}</p>
+                    {appointmentData.numeroDocumento && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        DNI: <span className="font-medium text-gray-700">{appointmentData.numeroDocumento}</span>
+                      </p>
+                    )}
                   </div>
                 </div>
 

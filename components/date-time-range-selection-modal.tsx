@@ -52,6 +52,7 @@ interface ApiAvailableDate {
   fecha?: string | null
   consultorio?: string | null
   totalDisponibles?: number | null
+  lugar?: string | null // Ubicación: "1" = Sede Central, "2" = Consultorios Externos
 }
 
 // Interfaz más permisiva para datos de la API (permite null/undefined)
@@ -65,6 +66,7 @@ interface ApiTimeSlot {
   nombreMedico?: string | null
   conSolicitud?: boolean | null
   estado?: string | null // Estado de la cita: "1" = disponible, otros = no disponible
+  lugar?: string | null // Ubicación: "1" = Sede Central, "2" = Consultorios Externos
 }
 
 export default function DateTimeRangeSelectionModal({

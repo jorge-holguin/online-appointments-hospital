@@ -39,6 +39,7 @@ interface ApiTimeSlot {
   nombreMedico?: string | null
   conSolicitud?: boolean | null
   estado?: string | null // Estado de la cita: "1" = disponible, otros = no disponible
+  lugar?: string | null // Ubicación: "1" = Sede Central, "2" = Consultorios Externos
 }
 
 interface DoctorAppointments {
@@ -401,6 +402,7 @@ export default function AppointmentSelectionModal({
             },
             idCita: selectedAppointment.citaId || '',
             consultorio: selectedAppointment.consultorio ? selectedAppointment.consultorio.trim() : '',
+            lugar: selectedAppointment.lugar ?? undefined,
           }}
         />
       )}

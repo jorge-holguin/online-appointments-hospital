@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { CheckCircle, Calendar, User, MapPin, Mail, AlertCircle, Copy, Check } from "lucide-react"
+import { CheckCircle, Calendar, User, MapPin, Mail, AlertCircle, Copy, Check, Stethoscope, Hospital } from "lucide-react"
 import { goToHomePage } from "@/lib/navigation"
+import { getHospitalAddress, getHospitalLocationName, getConsultorioLabel } from "@/lib/hospital-utils"
 
 interface FinalConfirmationModalProps {
   open: boolean
@@ -26,10 +27,15 @@ interface FinalConfirmationModalProps {
       email?: string
       patientType?: 'SIS' | 'SOAT' | 'PAGANTE'
       tipoCita?: string
+      fullName?: string
+      nombre?: string
+      documento?: string
+      dni?: string
     }
     tipoAtencion?: string
     idCita?: string
     consultorio?: string
+    lugar?: string
   }
 }
 
@@ -224,20 +230,20 @@ export default function FinalConfirmationModal({
             <div className="flex items-start gap-2">
               <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5 shrink-0" />
               <div>
- <p className="font-semibold text-blue-800">Aviso importante</p>
-<p className="text-sm text-gray-700">
-  Usted ha realizado el registro de su <strong>solicitud de cita</strong>. 
-  Esto significa que su cita aún <strong>NO ha sido confirmada</strong>. 
-  Su solicitud será evaluada por el personal del <strong>Call Center</strong>, 
-  quienes se comunicarán con usted por <strong>correo electrónico</strong> o 
-  <strong> WhatsApp</strong> para informarle si la cita fue <strong>aceptada</strong> o 
-  <strong> rechazada</strong>.
-</p>
-<p className="mt-2 text-sm text-gray-700">
-  Le recordamos que debe <strong>esperar la confirmación</strong> antes de acudir al establecimiento. 
-  Si tiene alguna duda sobre el estado de su solicitud, puede comunicarse al 
-  <strong> 01 418 3232 – opción 1</strong>.
-</p>
+                <p className="font-semibold text-blue-800">Aviso importante</p>
+                <p className="text-sm text-gray-700">
+                  Usted ha realizado el registro de su <strong>solicitud de cita</strong>. 
+                  Esto significa que su cita aún <strong>NO ha sido confirmada</strong>. 
+                  Su solicitud será evaluada por el personal del <strong>Call Center</strong>, 
+                  quienes se comunicarán con usted por <strong>correo electrónico</strong> o 
+                  <strong> WhatsApp</strong> para informarle si la cita fue <strong>aceptada</strong> o 
+                  <strong> rechazada</strong>.
+                </p>
+                <p className="mt-2 text-sm text-gray-700">
+                  Le recordamos que debe <strong>esperar la confirmación</strong> antes de acudir al establecimiento. 
+                  Si tiene alguna duda sobre el estado de su solicitud, puede comunicarse al 
+                  <strong> 01 418 3232 – opción 1</strong>.
+                </p>
               </div>
             </div>
           </div>
@@ -258,44 +264,77 @@ export default function FinalConfirmationModal({
               </div>
             )}
   
-            {appointmentData?.doctor && (
+            {(appointmentData?.specialtyName || appointmentData?.specialty) && (
               <div className="flex items-center gap-3">
-                <User className="w-4 h-4 text-gray-500" />
+                <Hospital className="w-4 h-4 text-gray-500" />
                 <div>
-                  <p className="text-sm text-gray-500">Médico</p>
+                  <p className="text-sm text-gray-500">Especialidad</p>
                   <p className="font-medium text-gray-900">
-                    Dr(a). {appointmentData.doctor.medicoId}
+                    {appointmentData.specialtyName || appointmentData.specialty}
                   </p>
-                  {(appointmentData.specialtyName || appointmentData.specialty) && (
-                    <p className="text-sm text-gray-600">
-                      {appointmentData.specialtyName || appointmentData.specialty}
+                  {appointmentData.consultorio && (
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      Consultorio: <span className="font-medium text-gray-700">{appointmentData.consultorio}</span>
                     </p>
                   )}
                 </div>
               </div>
             )}
-  
-            <div className="flex items-center gap-3">
-              <MapPin className="w-4 h-4 text-gray-500" />
-              <div>
-                <p className="text-sm text-gray-500">Ubicación</p>
-                <p className="font-medium text-gray-900">
-                  {process.env.NEXT_PUBLIC_HOSPITAL_LOCATION || "Consultorios Externos | Sede Central Hospital Chosica"}
-                </p>
-                <p className="text-sm text-gray-600">
-                  {process.env.NEXT_PUBLIC_HOSPITAL_ADDRESS ||
-                    "Jr. Cuzco 274 - Chosica | Jr. Arequipa N° 214"}
-                </p>
-                {appointmentData?.consultorio && (
-                  <div className="mt-1 inline-flex items-center px-2 py-1 rounded-md bg-blue-50 border border-blue-100">
-                    <span className="text-xs font-medium text-blue-700">
-                      Consultorio: {appointmentData.consultorio}
-                    </span>
-                  </div>
-                )}
+
+            {appointmentData?.doctor && (
+              <div className="flex items-center gap-3">
+                <Stethoscope className="w-4 h-4 text-gray-500" />
+                <div>
+                  <p className="text-sm text-gray-500">Médico</p>
+                  <p className="font-medium text-gray-900">
+                    Dr(a). {appointmentData.doctor.medicoId}
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
   
+            {getHospitalLocationName(appointmentData?.lugar) && (
+              <div className="flex items-center gap-3">
+                <MapPin className="w-4 h-4 text-gray-500" />
+                <div>
+                  <p className="text-sm text-gray-500">Ubicación</p>
+                  <p className="font-medium text-gray-900">
+                    {getHospitalLocationName(appointmentData?.lugar)}
+                  </p>
+                  {getHospitalAddress(appointmentData?.lugar) && (
+                    <p className="text-sm text-gray-600">
+                      {getHospitalAddress(appointmentData?.lugar)}
+                    </p>
+                  )}
+                  {getConsultorioLabel(appointmentData?.lugar, appointmentData?.consultorio) && (
+                    <div className="mt-1 inline-flex items-center px-2 py-1 rounded-md bg-blue-50 border border-blue-100">
+                      <span className="text-xs font-medium text-blue-700">
+                        {getConsultorioLabel(appointmentData?.lugar, appointmentData?.consultorio)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+  
+            {/* Paciente */}
+            {appointmentData?.patient && (
+              <div className="flex items-center gap-3">
+                <User className="w-4 h-4 text-gray-500" />
+                <div>
+                  <p className="text-sm text-gray-500">Paciente</p>
+                  <p className="font-medium text-gray-900">
+                    {appointmentData.patient.fullName || appointmentData.patient.nombre || 'Paciente'}
+                  </p>
+                  {(appointmentData.patient.documento || appointmentData.patient.dni) && (
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      DNI: <span className="font-medium text-gray-700">{appointmentData.patient.documento || appointmentData.patient.dni}</span>
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Tipo de Atención */}
             <div className="flex items-center gap-3">
               <div className="w-4 h-4 text-gray-500 flex items-center justify-center">

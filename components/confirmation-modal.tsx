@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft, Calendar, User, MapPin, ChevronRight, Loader2, MessageSquare } from "lucide-react"
+import { ChevronLeft, Calendar, User, MapPin, ChevronRight, Loader2, MessageSquare, Stethoscope, Hospital } from "lucide-react"
+import { getHospitalAddress } from "@/lib/hospital-utils"
 import FinalConfirmationModal from "./final-confirmation-modal"
 import DuplicateAppointmentErrorModal from "./duplicate-appointment-error-modal"
 import AppointmentUnavailableModal from "./appointment-unavailable-modal"
@@ -30,6 +31,7 @@ interface ConfirmationModalProps {
     tipoAtencion?: string  // Tipo de atención: SIS o PAGANTE
     idCita?: string        // ID de la cita
     consultorio?: string   // Número de consultorio
+    lugar?: string         // Ubicación de la cita: 1=Sede Central, 2=Consultorios Externos
   }
 };
 
@@ -50,6 +52,7 @@ interface AppointmentResponse {
   codigo: string;
   estado: string;
   tipoAtencion: string;
+  lugar?: string;
 }
 
 // Función para subir el archivo de referencia SIS
@@ -113,9 +116,10 @@ export default function ConfirmationModal({ open, onOpenChange, onBack, onBackTo
           email: appointmentResponse.correo || appointmentData.patient.email
         },
         tipoAtencion: appointmentResponse.tipoAtencion || appointmentData.patient.patientType,
-        // Mantener los valores de idCita y consultorio (del slot seleccionado)
+        // Mantener los valores de idCita, consultorio y lugar (del slot seleccionado)
         idCita: appointmentData.idCita,
-        consultorio: appointmentData.consultorio
+        consultorio: appointmentData.consultorio,
+        lugar: appointmentResponse.lugar || appointmentData.lugar || '1' // Priorizar backend, luego datos originales, luego default
       })
     }
   }, [appointmentResponse, appointmentData])
@@ -362,19 +366,34 @@ export default function ConfirmationModal({ open, onOpenChange, onBack, onBackTo
                 </div>
 
                 <div className="flex items-start gap-2 sm:gap-3">
-                  <User className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 mt-1 flex-shrink-0" />
+                  <Hospital className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 mt-1 flex-shrink-0" />
                   <div>
-                    <p className="text-xs sm:text-sm text-gray-500">{process.env.NEXT_PUBLIC_HOSPITAL_LOCATION || "Consultorios Externos HJATCH"} - {appointmentData.specialtyName || appointmentData.specialty}</p>
+                    <p className="text-xs sm:text-sm text-gray-500">Especialidad</p>
+                    <p className="font-semibold text-sm sm:text-base text-gray-900">{appointmentData.specialtyName || appointmentData.specialty}</p>
+                    {appointmentData.consultorio && (
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        Consultorio: <span className="font-medium text-gray-700">{appointmentData.consultorio}</span>
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2 sm:gap-3">
+                  <Stethoscope className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 mt-1 flex-shrink-0" />
+                  <div>
+                    <p className="text-xs sm:text-sm text-gray-500">Médico</p>
                     <p className="font-semibold text-sm sm:text-base text-gray-900">Dr(a). {appointmentData.doctor?.medicoId || 'Médico no disponible'}</p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium text-sm sm:text-base text-gray-900">{process.env.NEXT_PUBLIC_HOSPITAL_ADDRESS || "Jr. Cuzco 274 - Chosica"}</p>
+                {getHospitalAddress(appointmentData?.lugar) && (
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium text-sm sm:text-base text-gray-900">{getHospitalAddress(appointmentData?.lugar)}</p>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <div className="border-t pt-2 sm:pt-3 space-y-2">
                   <div className="flex items-center gap-2 sm:gap-3">
@@ -382,6 +401,11 @@ export default function ConfirmationModal({ open, onOpenChange, onBack, onBackTo
                     <div>
                       <p className="text-xs sm:text-sm text-gray-500">Paciente</p>
                       <p className="font-semibold text-sm sm:text-base text-gray-900">{appointmentData.patient?.fullName || 'Paciente no disponible'}</p>
+                      {appointmentData.patient?.documento && (
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          DNI: <span className="font-medium text-gray-700">{appointmentData.patient.documento}</span>
+                        </p>
+                      )}
                       <div className="flex items-center gap-2 mt-1">
                         <span className={`px-2 py-1 rounded text-xs font-medium ${
                           appointmentData.patient?.patientType === 'SIS' 
