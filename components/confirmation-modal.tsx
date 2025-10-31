@@ -119,7 +119,7 @@ export default function ConfirmationModal({ open, onOpenChange, onBack, onBackTo
         // Mantener los valores de idCita, consultorio y lugar (del slot seleccionado)
         idCita: appointmentData.idCita,
         consultorio: appointmentData.consultorio,
-        lugar: appointmentResponse.lugar || appointmentData.lugar || '1' // Priorizar backend, luego datos originales, luego default
+        lugar: (appointmentResponse.lugar ?? appointmentData.lugar ?? undefined) // Mantener tal como viene (0, 1, 2 o null). Usa undefined para tipo TS.
       })
     }
   }, [appointmentResponse, appointmentData])
@@ -150,7 +150,8 @@ export default function ConfirmationModal({ open, onOpenChange, onBack, onBackTo
           : mapPatientTypeToApiFormat(appointmentData.patient.patientType), // Si es TRAMITE siempre es PAGANTE
         tipoCita: appointmentData.patient.tipoCita || "", // Tipo de cita: CITADO, INTERCONSULTA o TRAMITE
         especialidadInterconsulta: appointmentData.patient.especialidadInterconsulta || "", // Especialidad de interconsulta
-        observacionPaciente: observacionPaciente.trim() || "" // Observaciones del paciente
+        observacionPaciente: observacionPaciente.trim() || "", // Observaciones del paciente
+        lugar: (appointmentData.lugar ?? null) as string | null
       }
       
       logEvent('BOOKING_ATTEMPT', {
