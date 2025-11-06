@@ -32,6 +32,7 @@ interface TimeSlot {
   fullDate: Date
   idCita?: string
   consultorio?: string
+  lugar?: string
   available: boolean
 }
 
@@ -46,6 +47,7 @@ interface ApiTimeSlot {
   hora?: string | null
   turnoConsulta?: string | null
   consultorio?: string | null
+  lugar?: string | null
   conSolicitud?: boolean | null
   estado?: string | null // Estado de la cita: "1" = disponible, otros = no disponible
 }
@@ -253,6 +255,7 @@ export default function DateTimeSelectionModal({
           fullDate: selectedDay,
           idCita: citaIdValue !== undefined ? String(citaIdValue) : undefined,
           consultorio: apiSlot?.consultorio ? apiSlot.consultorio.trim() : undefined,
+          lugar: apiSlot?.lugar ?? undefined,
           available: true
         })
       }
@@ -299,9 +302,10 @@ export default function DateTimeSelectionModal({
       displayDate: displayDate, // Display format
       time,
       fullDate: day,
-      // Incluir idCita y consultorio si están disponibles
+      // Incluir idCita, consultorio y lugar si están disponibles
       idCita: citaIdValue,
       consultorio: selectedApiSlot?.consultorio ? selectedApiSlot.consultorio.trim() : undefined,
+      lugar: selectedApiSlot?.lugar ?? undefined,
       available: !selectedApiSlot.conSolicitud && selectedApiSlot.estado === "1" // La cita está disponible si conSolicitud es false y estado es "1"
     });
     
@@ -619,6 +623,7 @@ export default function DateTimeSelectionModal({
           dateTime: selectedTimeSlot,
           idCita: selectedTimeSlot?.idCita || "", // ID de la cita
           consultorio: selectedTimeSlot?.consultorio || "", // Número de consultorio
+          lugar: selectedTimeSlot?.lugar ?? undefined, // Ubicación de la cita
         }}
       />
     </>
