@@ -106,7 +106,7 @@ export default function HomePage() {
             className="text-gray-700 hover:text-gray-900 border-gray-300 hover:border-gray-400 px-6 py-2"
           >
             <CalendarDays className="w-4 h-4 mr-2" />
-            Ver programación de citas para noviembre
+            Ver programación de citas para diciembre
           </Button>
         </div>
 
