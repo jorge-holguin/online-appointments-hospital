@@ -94,8 +94,8 @@ export function useAppConfig() {
         // Si falla la carga del config, usar valores dinámicos por defecto
         setConfig({
           dateRange: {
-            startDate: getTodayDate(),
-            endDate: getEndOfCurrentMonth()
+            startDate: "2025-08-01",
+            endDate: "2025-08-30"
           }
         })
         setError(err as Error)

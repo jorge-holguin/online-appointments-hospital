@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Sun, Moon, Clock, CheckCircle, AlertCircle } from "lucide-react"
-import { format, addMonths, startOfMonth, parseISO, isToday } from "date-fns"
+import { format, addMonths, startOfMonth, endOfMonth, parseISO, isToday, isBefore, startOfDay } from "date-fns"
 import { es } from "date-fns/locale"
 import { AvailabilityCalendar } from "@/components/ui/availability-calendar"
 import AppointmentSelectionModal from "./appointment-selection-modal"
@@ -114,7 +114,18 @@ export default function DateTimeRangeSelectionModal({
       setError(null)
       
       try {
-        const url = `${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/v1/app-citas/fechas-consultorios?fechaInicio=${startDate}&fechaFin=${endDate}&turnoConsulta=${selectedShift}&idEspecialidad=${selectedSpecialtyId}`
+        // Calcular el primer y último día del mes actual del calendario
+        const monthStart = startOfMonth(currentMonth)
+        const monthEnd = endOfMonth(currentMonth)
+        
+        // Asegurar que no se muestren citas antes de hoy
+        const today = startOfDay(new Date())
+        const effectiveStart = isBefore(monthStart, today) ? today : monthStart
+        
+        const fetchStartDate = format(effectiveStart, 'yyyy-MM-dd')
+        const fetchEndDate = format(monthEnd, 'yyyy-MM-dd')
+        
+        const url = `${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/v1/app-citas/fechas-consultorios?fechaInicio=${fetchStartDate}&fechaFin=${fetchEndDate}&turnoConsulta=${selectedShift}&idEspecialidad=${selectedSpecialtyId}`
         
         const response = await fetch(url)
         if (!response.ok) throw new Error(`Error al obtener fechas: ${response.status}`)
@@ -171,7 +182,7 @@ export default function DateTimeRangeSelectionModal({
     }
     
     fetchAvailableDates()
-  }, [open, selectedShift, selectedSpecialtyId, config, startDate, endDate])
+  }, [open, selectedShift, selectedSpecialtyId, config, currentMonth])
 
 
   const handleDateSelect = (date: Date | undefined) => {

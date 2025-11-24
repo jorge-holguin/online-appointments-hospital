@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
+import { format, addMonths, parseISO, startOfDay, isBefore } from "date-fns"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -78,7 +79,19 @@ export default function SpecialtySelectionModal({
       setError(null)
       
       try {
-        const url = `${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/v1/app-citas/especialidades?fechaInicio=${startDate}&fechaFin=${endDate}`
+        // Asegurar que no se muestren citas antes de hoy
+        const today = startOfDay(new Date())
+        const configStartDate = parseISO(startDate)
+        const effectiveStart = isBefore(configStartDate, today) ? today : configStartDate
+        
+        // Extender el endDate por 1 mes adicional (2 meses en total)
+        const configEndDate = parseISO(endDate)
+        const extendedEndDate = addMonths(configEndDate, 1)
+        
+        const fetchStartDate = format(effectiveStart, 'yyyy-MM-dd') 
+        const fetchEndDate = format(extendedEndDate, 'yyyy-MM-dd')
+        
+        const url = `${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/v1/app-citas/especialidades?fechaInicio=${fetchStartDate}&fechaFin=${fetchEndDate}`
         
         const response = await fetch(url)
         
