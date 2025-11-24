@@ -489,8 +489,6 @@ export default function DateTimeSelectionModal({
                         availableDates={availableDates}
                         onSelectDate={handleDateSelect}
                         selectedDate={selectedDay || undefined}
-                        fromDate={minDate}
-                        toDate={maxDate}
                         month={currentMonth}
                         onMonthChange={setCurrentMonth}
                         className="max-w-[320px] mx-auto"

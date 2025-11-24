@@ -24,7 +24,7 @@ export function AvailabilityCalendar({
   onSelectDate,
   selectedDate,
   className,
-  fromDate = new Date(),
+  fromDate,
   toDate,
   month,
   onMonthChange,
@@ -41,6 +41,13 @@ export function AvailabilityCalendar({
   const disabledDays = (date: Date) => {
     // Normalizar la fecha a medianoche para comparación
     const dateNormalized = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+    const today = new Date()
+    const todayNormalized = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+    
+    // Siempre deshabilitar fechas pasadas (antes de hoy)
+    if (dateNormalized < todayNormalized) {
+      return true
+    }
     
     // Si se proporciona fromDate y la fecha es anterior, deshabilitar
     if (fromDate) {
@@ -112,8 +119,8 @@ export function AvailabilityCalendar({
         locale={es}
         showOutsideDays={false}
         className="rounded-md border-0"
-        fromDate={fromDate}
-        toDate={toDate}
+        {...(fromDate && { fromDate })}
+        {...(toDate && { toDate })}
         month={month}
         onMonthChange={onMonthChange}
         captionLayout="label"
