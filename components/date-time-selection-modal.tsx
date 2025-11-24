@@ -456,12 +456,6 @@ export default function DateTimeSelectionModal({
               </div>
             ) : error ? (
               <div className="text-center text-red-500 py-4">{error}</div>
-            ) : availableDates.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <CalendarIcon className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                <p>No hay horarios disponibles para el turno {selectedShift === 'M' ? 'de mañana' : 'de tarde'}</p>
-                <p className="text-sm mt-2">Intenta cambiar el turno o seleccionar otro mes</p>
-              </div>
             ) : (
               <div className="flex flex-col md:flex-row gap-4 md:gap-6">
                 {/* Calendario de disponibilidad */}
@@ -523,12 +517,20 @@ export default function DateTimeSelectionModal({
                         <>
                           Horarios para {format(selectedDay, 'EEEE dd/MM/yyyy', { locale: es })}
                         </>
+                      ) : availableDates.length === 0 ? (
+                        <>No hay horarios disponibles</>
                       ) : (
                         <>Selecciona una fecha para ver horarios</>  
                       )}
                     </h3>
                     
-                    {selectedDay ? (
+                    {availableDates.length === 0 && !selectedDay ? (
+                      <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+                        <CalendarIcon className="h-12 w-12 mb-4 text-gray-300" />
+                        <p className="text-center">No hay horarios disponibles para el turno {selectedShift === 'M' ? 'de mañana' : 'de tarde'}</p>
+                        <p className="text-sm mt-2 text-center">Intenta cambiar el turno o navegar a otro mes</p>
+                      </div>
+                    ) : selectedDay ? (
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         {getAvailableTimesForSelectedDay().length > 0 ? (
                           getAvailableTimesForSelectedDay().map((time) => {

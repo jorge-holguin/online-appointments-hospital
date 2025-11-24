@@ -369,11 +369,6 @@ export default function DateTimeRangeSelectionModal({
               </div>
             ) : error ? (
               <div className="text-center text-red-500 py-4">{error}</div>
-            ) : (availableDates.length === 0 && unavailableDates.length === 0) ? (
-              <div className="text-center py-8 text-gray-500">
-                <CalendarIcon className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                <p>No hay fechas programadas para el turno {selectedShift === 'M' ? 'de mañana' : 'de tarde'}</p>
-              </div>
             ) : (
               <div className="flex flex-col md:flex-row gap-4 md:gap-6">
                 {/* Calendario */}
@@ -438,12 +433,20 @@ export default function DateTimeRangeSelectionModal({
                     <h3 className="font-semibold text-lg mb-4 text-center" style={{ color: "#0a2463" }}>
                       {selectedDay ? (
                         <>Selecciona un rango de horario</>
+                      ) : availableDates.length === 0 && unavailableDates.length === 0 ? (
+                        <>No hay fechas programadas</>
                       ) : (
                         <>Selecciona una fecha primero</>
                       )}
                     </h3>
 
-                    {selectedDay ? (
+                    {availableDates.length === 0 && unavailableDates.length === 0 && !selectedDay ? (
+                      <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+                        <CalendarIcon className="h-12 w-12 mb-4 text-gray-300" />
+                        <p className="text-center">No hay fechas programadas para el turno {selectedShift === 'M' ? 'de mañana' : 'de tarde'}</p>
+                        <p className="text-sm mt-2 text-center">Intenta cambiar el turno o navegar a otro mes</p>
+                      </div>
+                    ) : selectedDay ? (
                       <div className="space-y-4">
                         <p className="text-sm text-gray-600 text-center font-medium capitalize">
                           {format(selectedDay, 'EEEE dd/MM/yyyy', { locale: es })}

@@ -152,7 +152,7 @@ export default function HomePage() {
           <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-auto relative">
             <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between z-10">
               <h2 className="text-2xl font-bold" style={{ color: "#0a2463" }}>
-                Programación de Citas - Noviembre
+                Programación de Citas - Diciembre
               </h2>
               <Button
                 onClick={() => setShowSchedule(false)}
