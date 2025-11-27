@@ -4,12 +4,12 @@ import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Sun, Moon, Clock, CheckCircle, AlertCircle } from "lucide-react"
-import { format, addMonths, startOfMonth, endOfMonth, parseISO, isToday, isBefore, startOfDay } from "date-fns"
+import { format, addMonths, startOfMonth, endOfMonth, parseISO, isToday } from "date-fns"
 import { es } from "date-fns/locale"
 import { AvailabilityCalendar } from "@/components/ui/availability-calendar"
 import AppointmentSelectionModal from "./appointment-selection-modal"
 import SessionTimer from "./session-timer"
-import { useAppConfig } from "@/hooks/use-app-config"
+import { useAppConfig, getEffectiveDateRange } from "@/hooks/use-app-config"
 
 interface DateTimeRangeSelectionModalProps {
   open: boolean
@@ -80,21 +80,21 @@ export default function DateTimeRangeSelectionModal({
 }: DateTimeRangeSelectionModalProps) {
   // Usar configuración centralizada
   const { config } = useAppConfig()
-  const startDate = config?.dateRange.startDate || "2025-08-01"
-  const endDate = config?.dateRange.endDate || "2025-08-31"
+  const startDate = config?.dateRange.startDate
+  const endDate = config?.dateRange.endDate
   
   const [selectedDay, setSelectedDay] = useState<Date | null>(null)
   const [selectedShift, setSelectedShift] = useState<ShiftType>('M')
   const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange | null>(null)
-  const [currentMonth, setCurrentMonth] = useState(() => parseISO(startDate))
+  const [currentMonth, setCurrentMonth] = useState(() => startDate ? parseISO(startDate) : new Date())
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [availableDates, setAvailableDates] = useState<string[]>([])
   const [unavailableDates, setUnavailableDates] = useState<string[]>([]) // Fechas con totalDisponibles = 0
   const [showAppointmentSelection, setShowAppointmentSelection] = useState(false)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
-  const minDate = parseISO(startDate)
-  const maxDate = parseISO(endDate)
+  const minDate = startDate ? parseISO(startDate) : new Date()
+  const maxDate = endDate ? parseISO(endDate) : new Date()
   const minNavigationDate = addMonths(startOfMonth(minDate), -6)
   const maxNavigationDate = addMonths(startOfMonth(maxDate), 6)
   
@@ -114,16 +114,18 @@ export default function DateTimeRangeSelectionModal({
       setError(null)
       
       try {
-        // Calcular el primer y último día del mes actual del calendario
+        // Calcular rango efectivo de fechas
         const monthStart = startOfMonth(currentMonth)
         const monthEnd = endOfMonth(currentMonth)
+        const dateRange = getEffectiveDateRange(monthStart, monthEnd, startDate, endDate)
         
-        // Asegurar que no se muestren citas antes de hoy
-        const today = startOfDay(new Date())
-        const effectiveStart = isBefore(monthStart, today) ? today : monthStart
+        if (!dateRange) {
+          setError('No se pudo cargar la configuración de fechas')
+          setLoading(false)
+          return
+        }
         
-        const fetchStartDate = format(effectiveStart, 'yyyy-MM-dd')
-        const fetchEndDate = format(monthEnd, 'yyyy-MM-dd')
+        const { startDate: fetchStartDate, endDate: fetchEndDate } = dateRange
         
         const url = `${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/v1/app-citas/fechas-consultorios?fechaInicio=${fetchStartDate}&fechaFin=${fetchEndDate}&turnoConsulta=${selectedShift}&idEspecialidad=${selectedSpecialtyId}`
         

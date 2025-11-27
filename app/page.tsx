@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Calendar, Search, Phone, CalendarDays, X } from "lucide-react"
 import PatientRegistrationModal from "@/components/patient-registration-modal"
 import AppointmentLookupModal from "@/components/appointment-lookup-modal"
+import ChatLauncher from "@/components/chatbot/chat-launcher"
 
 export default function HomePage() {
   const [showRegistration, setShowRegistration] = useState(false)
@@ -145,6 +146,14 @@ export default function HomePage() {
       {/* Modals */}
       <PatientRegistrationModal open={showRegistration} onOpenChange={setShowRegistration} />
       <AppointmentLookupModal open={showLookup} onOpenChange={setShowLookup} />
+
+      {/* Chatbot Launcher */}
+      <ChatLauncher 
+        avatarUrl="/logo.png"
+        className="bg-white"
+        text="Pregúntale al Asistente Virtual"
+        position="right"
+      />
 
       {/* Schedule Viewer */}
       {showSchedule && (

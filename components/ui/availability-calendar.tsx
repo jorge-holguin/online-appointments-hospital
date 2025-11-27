@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import { Calendar } from '@/components/ui/calendar'
-import { format, isToday, isWithinInterval, parseISO } from 'date-fns'
+import { parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
 
@@ -41,13 +41,6 @@ export function AvailabilityCalendar({
   const disabledDays = (date: Date) => {
     // Normalizar la fecha a medianoche para comparación
     const dateNormalized = new Date(date.getFullYear(), date.getMonth(), date.getDate())
-    const today = new Date()
-    const todayNormalized = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-    
-    // Siempre deshabilitar fechas pasadas (antes de hoy)
-    if (dateNormalized < todayNormalized) {
-      return true
-    }
     
     // Si se proporciona fromDate y la fecha es anterior, deshabilitar
     if (fromDate) {
@@ -80,6 +73,7 @@ export function AvailabilityCalendar({
     )
     
     // Solo deshabilitar si NO está en ninguna de las dos listas (fechas grises)
+    // Las fechas disponibles y no disponibles SÍ se pueden seleccionar
     return !isAvailable && !isUnavailable
   }
 

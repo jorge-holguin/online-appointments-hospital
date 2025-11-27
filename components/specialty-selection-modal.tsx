@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { format, addMonths, parseISO, startOfDay, isBefore } from "date-fns"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -47,8 +46,8 @@ export default function SpecialtySelectionModal({
   
   // Usar configuración centralizada
   const { config, loading: configLoading } = useAppConfig()
-  const startDate = config?.dateRange.startDate || "2025-08-01"
-  const endDate = config?.dateRange.endDate || "2025-08-31"
+  const startDate = config?.dateRange.startDate
+  const endDate = config?.dateRange.endDate
   
   // Ref para el botón de continuar
   const continueButtonRef = useRef<HTMLButtonElement>(null)
@@ -73,23 +72,16 @@ export default function SpecialtySelectionModal({
   // Cargar especialidades desde la API
   useEffect(() => {
     const fetchSpecialties = async () => {
-      if (!config) return
+      if (!config || !startDate || !endDate) return
       
       setLoading(true)
       setError(null)
       
       try {
-        // Asegurar que no se muestren citas antes de hoy
-        const today = startOfDay(new Date())
-        const configStartDate = parseISO(startDate)
-        const effectiveStart = isBefore(configStartDate, today) ? today : configStartDate
-        
-        // Extender el endDate por 1 mes adicional (2 meses en total)
-        const configEndDate = parseISO(endDate)
-        const extendedEndDate = addMonths(configEndDate, 1)
-        
-        const fetchStartDate = format(effectiveStart, 'yyyy-MM-dd') 
-        const fetchEndDate = format(extendedEndDate, 'yyyy-MM-dd')
+        // Ahora usamos directamente el rango centralizado de useAppConfig
+        // Esto evita casos donde fechaFin < fechaInicio cuando las fechas son de prueba antiguas
+        const fetchStartDate = startDate
+        const fetchEndDate = endDate
         
         const url = `${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/v1/app-citas/especialidades?fechaInicio=${fetchStartDate}&fechaFin=${fetchEndDate}`
         

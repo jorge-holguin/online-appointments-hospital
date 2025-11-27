@@ -6,11 +6,11 @@ import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Sun, Moon, Clock } from "lucide-react"
 import ConfirmationModal from "./confirmation-modal"
 import SessionTimer from "./session-timer"
-import { format, addMonths, startOfMonth, endOfMonth, parseISO, isToday, isBefore, startOfDay } from "date-fns"
+import { format, addMonths, startOfMonth, endOfMonth, parseISO, isToday } from "date-fns"
 import { es } from "date-fns/locale"
 import { AvailabilityCalendar } from "@/components/ui/availability-calendar"
 import { cn } from "@/lib/utils"
-import { useAppConfig } from "@/hooks/use-app-config"
+import { useAppConfig, getEffectiveDateRange } from "@/hooks/use-app-config"
 
 interface DateTimeSelectionModalProps {
   open: boolean
@@ -108,11 +108,11 @@ export default function DateTimeSelectionModal({
 
   // Usar configuración centralizada
   const { config } = useAppConfig()
-  const startDate = config?.dateRange.startDate || "2025-08-01"
-  const endDate = config?.dateRange.endDate || "2025-08-31"
+  const startDate = config?.dateRange.startDate
+  const endDate = config?.dateRange.endDate
   
   // Inicializar el mes del calendario con la fecha de inicio
-  const [currentMonth, setCurrentMonth] = useState(parseISO(startDate))
+  const [currentMonth, setCurrentMonth] = useState(() => startDate ? parseISO(startDate) : new Date())
   
   // Actualizar el mes del calendario cuando cambie la configuración
   useEffect(() => {
@@ -130,16 +130,18 @@ export default function DateTimeSelectionModal({
       setError(null)
       
       try {
-        // Calcular el primer y último día del mes actual del calendario
+        // Calcular rango efectivo de fechas
         const monthStart = startOfMonth(currentMonth)
         const monthEnd = endOfMonth(currentMonth)
+        const dateRange = getEffectiveDateRange(monthStart, monthEnd, startDate, endDate)
         
-        // Asegurar que no se muestren citas antes de hoy
-        const today = startOfDay(new Date())
-        const effectiveStart = isBefore(monthStart, today) ? today : monthStart
+        if (!dateRange) {
+          setError('No se pudo cargar la configuración de fechas')
+          setLoading(false)
+          return
+        }
         
-        const fetchStartDate = format(effectiveStart, 'yyyy-MM-dd')
-        const fetchEndDate = format(monthEnd, 'yyyy-MM-dd')
+        const { startDate: fetchStartDate, endDate: fetchEndDate } = dateRange
         
         // Construir la URL de la API con los parámetros necesarios, incluyendo idEspecialidad
         const url = `${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/v1/app-citas/citas?fechaInicio=${fetchStartDate}&fechaFin=${fetchEndDate}&medicoId=${selectedDoctor.nombre}&turnoConsulta=${selectedShift}&idEspecialidad=${selectedDoctor.especialidadId}`
@@ -340,8 +342,8 @@ export default function DateTimeSelectionModal({
   // Ya no necesitamos funciones de navegación para slides
   
   // Calcular el rango de fechas permitido
-  const minDate = parseISO(startDate)
-  const maxDate = parseISO(endDate)
+  const minDate = startDate ? parseISO(startDate) : new Date()
+  const maxDate = endDate ? parseISO(endDate) : new Date()
   
   // Permitir navegar 6 meses antes y después del rango de fechas
   const minNavigationDate = addMonths(startOfMonth(minDate), -6)

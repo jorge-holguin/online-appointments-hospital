@@ -67,8 +67,8 @@ export default function DoctorSelectionModal({
   
   // Usar configuración centralizada
   const { config } = useAppConfig()
-  const startDate = config?.dateRange.startDate || "2025-08-01"
-  const endDate = config?.dateRange.endDate || "2025-08-31"
+  const startDate = config?.dateRange.startDate
+  const endDate = config?.dateRange.endDate
 
   // Cargar doctores desde la API
   useEffect(() => {
