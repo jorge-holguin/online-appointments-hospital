@@ -12,7 +12,7 @@ interface ChatLauncherProps {
 }
 
 export default function ChatLauncher({
-  avatarUrl = "/logo.png",
+  avatarUrl = "/lobo.jpg",
   text = "Pregúntale al Asistente Virtual",
   position = "left",
   className = ""

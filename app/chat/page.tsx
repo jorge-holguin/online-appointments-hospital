@@ -141,7 +141,7 @@ export default function ChatPage() {
             <div className="relative">
               <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/30">
                 <img 
-                  src="/logo.png" 
+                  src="/lobo.jpg" 
                   alt="Asistente Virtual" 
                   className="w-full h-full object-cover"
                   onError={(e) => {

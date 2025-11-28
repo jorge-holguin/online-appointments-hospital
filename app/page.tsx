@@ -149,7 +149,7 @@ export default function HomePage() {
 
       {/* Chatbot Launcher */}
       <ChatLauncher 
-        avatarUrl="/logo.png"
+        avatarUrl="/lobo.jpg"
         className="bg-white"
         text="Pregúntale al Asistente Virtual"
         position="right"
