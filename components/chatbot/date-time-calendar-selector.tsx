@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronRight, Clock } from "lucide-react"
 import { format, addMonths, startOfMonth, endOfMonth, parseISO } from "date-fns"
 import { es } from "date-fns/locale"
 import { AvailabilityCalendar } from "@/components/ui/availability-calendar"
-import { useAppConfig, getEffectiveDateRange } from "@/hooks/use-app-config"
+import { useAppConfig, getEffectiveDateRangeForDoctors, getEffectiveDateRangeForDates } from "@/hooks/use-app-config"
 
 interface DateTimeCalendarSelectorProps {
   searchMethod: "doctor" | "datetime"
@@ -74,18 +74,6 @@ export default function DateTimeCalendarSelector({
   const startDate = config?.dateRange.startDate
   const endDate = config?.dateRange.endDate
   
-  // Log para depuración
-  useEffect(() => {
-    console.log('📅 DateTimeCalendarSelector montado:', {
-      searchMethod,
-      specialty,
-      doctor: doctor?.nombre,
-      shift,
-      configLoading,
-      startDate,
-      endDate
-    })
-  }, [searchMethod, specialty, doctor, shift, configLoading, startDate, endDate])
   
   const [selectedDay, setSelectedDay] = useState<Date | null>(null)
   const [selectedTime, setSelectedTime] = useState<string | null>(null)
@@ -114,34 +102,21 @@ export default function DateTimeCalendarSelector({
       try {
         const monthStart = startOfMonth(currentMonth)
         const monthEnd = endOfMonth(currentMonth)
-        const dateRange = getEffectiveDateRange(monthStart, monthEnd, startDate, endDate)
-        
-        if (!dateRange) {
-          setLoading(false)
-          return
-        }
-        
-        const { startDate: fetchStartDate, endDate: fetchEndDate } = dateRange
-        
-        console.log('📅 DateTimeCalendarSelector - Rango efectivo:', {
-          fetchStartDate,
-          fetchEndDate,
-          currentMonth: format(currentMonth, 'yyyy-MM-dd'),
-          searchMethod
-        })
         
         let url: string
+        let dateRange: { startDate: string; endDate: string } | null
         
         if (searchMethod === "doctor" && doctor) {
-          // Buscar por médico: cargar citas específicas
+          // Buscar por médico: mes actual + mes siguiente
+          dateRange = getEffectiveDateRangeForDoctors(monthStart, monthEnd, startDate, endDate)
+          
+          if (!dateRange) {
+            setLoading(false)
+            return
+          }
+          
+          const { startDate: fetchStartDate, endDate: fetchEndDate } = dateRange
           url = `${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/v1/app-citas/citas?fechaInicio=${fetchStartDate}&fechaFin=${fetchEndDate}&medicoId=${doctor.nombre}&turnoConsulta=${shiftType}&idEspecialidad=${specialty}`
-          console.log('🔗 DateTimeCalendarSelector - URL por médico:', url)
-          console.log('📊 Parámetros:', { 
-            searchMethod, 
-            doctor: doctor.nombre, 
-            shiftType, 
-            specialty 
-          })
           
           const response = await fetch(url)
           if (!response.ok) throw new Error(`Error: ${response.status}`)
@@ -178,15 +153,16 @@ export default function DateTimeCalendarSelector({
           setUnavailableDates([])
           
         } else {
-          // Buscar por fecha: cargar fechas disponibles
-          console.log('⚠️ Entrando a búsqueda por fecha:', { 
-            searchMethod, 
-            doctor: doctor?.nombre || 'sin médico', 
-            shiftType, 
-            specialty 
-          })
+          // Buscar por fecha: solo mes actual
+          dateRange = getEffectiveDateRangeForDates(monthStart, monthEnd, startDate, endDate)
+          
+          if (!dateRange) {
+            setLoading(false)
+            return
+          }
+          
+          const { startDate: fetchStartDate, endDate: fetchEndDate } = dateRange
           url = `${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/v1/app-citas/fechas-consultorios?fechaInicio=${fetchStartDate}&fechaFin=${fetchEndDate}&turnoConsulta=${shiftType}&idEspecialidad=${specialty}`
-          console.log('🔗 DateTimeCalendarSelector - URL por fecha:', url)
           
           const response = await fetch(url)
           if (!response.ok) throw new Error(`Error: ${response.status}`)

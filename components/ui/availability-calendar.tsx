@@ -5,6 +5,7 @@ import { Calendar } from '@/components/ui/calendar'
 import { parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
+import { isDateBlocked } from '@/hooks/use-app-config'
 
 interface AvailabilityCalendarProps {
   availableDates: string[] // Lista de fechas disponibles en formato YYYY-MM-DD (con totalDisponibles > 0)
@@ -41,6 +42,11 @@ export function AvailabilityCalendar({
   const disabledDays = (date: Date) => {
     // Normalizar la fecha a medianoche para comparación
     const dateNormalized = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+    
+    // BLOQUEO DE FECHAS PASADAS (configurable desde use-app-config.ts)
+    if (isDateBlocked(dateNormalized)) {
+      return true
+    }
     
     // Si se proporciona fromDate y la fecha es anterior, deshabilitar
     if (fromDate) {

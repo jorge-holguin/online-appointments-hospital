@@ -3,10 +3,10 @@
 import { useEffect, useState, useRef } from "react"
 import { FlowStep, PatientData, AppointmentData, PATIENT_TYPE_FAQ, APPOINTMENT_TYPE_FAQ } from "@/types/chatbot"
 import { validatePatientData } from "@/lib/validation"
-import { format, addMonths, parseISO, startOfDay, isBefore } from "date-fns"
+import { format, addMonths, parseISO, startOfDay, isBefore, startOfMonth, endOfMonth } from "date-fns"
 import { es } from "date-fns/locale"
 import { getHospitalAddress } from "@/lib/hospital-utils"
-import { useAppConfig } from "@/hooks/use-app-config"
+import { useAppConfig, getEffectiveDateRangeForDoctors, getEffectiveDateRangeForDates } from "@/hooks/use-app-config"
 
 interface Message {
   id: string
@@ -448,7 +448,7 @@ export default function ChatbotController({
     
     try {
       // Usar fechas centralizadas de useAppConfig
-      const url = `${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/v1/app-citas/especialidades?fechaInicio=${startDate}&fechaFin=${endDate}`
+      const url = `${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/v1/app-citas/especialidades`
       const response = await fetch(url)
       const data = await response.json()
       
@@ -571,11 +571,21 @@ export default function ChatbotController({
       return
     }
     
-    console.log('🔍 Cargando médicos con fechas:', { startDate, endDate })
+    // Calcular rango dinámico: mes actual + mes siguiente
+    const today = new Date()
+    const monthStart = startOfMonth(today)
+    const monthEnd = endOfMonth(today)
+    const dateRange = getEffectiveDateRangeForDoctors(monthStart, monthEnd, startDate, endDate)
+    
+    if (!dateRange) {
+      sendBotMessage("Error: No se pudo calcular el rango de fechas.")
+      return
+    }
+    
+    const { startDate: fetchStartDate, endDate: fetchEndDate } = dateRange
     
     try {
-      const url = `${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/v1/app-citas/medicos?fechaInicio=${startDate}&fechaFin=${endDate}&idEspecialidad=${appointmentData.specialty}`
-      console.log('🔗 URL para médicos:', url)
+      const url = `${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/v1/app-citas/medicos?fechaInicio=${fetchStartDate}&fechaFin=${fetchEndDate}&idEspecialidad=${appointmentData.specialty}`
       const response = await fetch(url)
       
       if (!response.ok) {
@@ -742,24 +752,32 @@ export default function ChatbotController({
     // Usar el shift del parámetro si está disponible, sino usar el del estado
     const currentShift = shiftParam || appointmentData.shift
     
-    console.log('🔍 Cargando slots con fechas:', { startDate, endDate })
-    console.log('🔍 Turno a usar:', { shiftParam, 'appointmentData.shift': appointmentData.shift, currentShift })
-    
     try {
       let url: string
+      const today = new Date()
+      const monthStart = startOfMonth(today)
+      const monthEnd = endOfMonth(today)
       
-      // Si ya seleccionó médico, cargar citas específicas
+      // Si ya seleccionó médico, cargar citas específicas (con mes siguiente)
       if (appointmentData.doctor && currentShift) {
+        const dateRange = getEffectiveDateRangeForDoctors(monthStart, monthEnd, startDate, endDate)
+        if (!dateRange) {
+          sendBotMessage("Error: No se pudo calcular el rango de fechas.")
+          return
+        }
+        const { startDate: fetchStartDate, endDate: fetchEndDate } = dateRange
         const turno = currentShift === "M" ? "M" : "T"
-        console.log('🔍 Turno calculado para médico:', { shift: currentShift, turno })
-        url = `${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/v1/app-citas/citas?fechaInicio=${startDate}&fechaFin=${endDate}&medicoId=${appointmentData.doctor.nombre}&turnoConsulta=${turno}&idEspecialidad=${appointmentData.specialty}`
-        console.log('🔗 URL por médico:', url)
+        url = `${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/v1/app-citas/citas?fechaInicio=${fetchStartDate}&fechaFin=${fetchEndDate}&medicoId=${appointmentData.doctor.nombre}&turnoConsulta=${turno}&idEspecialidad=${appointmentData.specialty}`
       } else {
-        // Si busca por fecha, cargar fechas disponibles
+        // Si busca por fecha, cargar fechas disponibles (solo mes actual)
+        const dateRange = getEffectiveDateRangeForDates(monthStart, monthEnd, startDate, endDate)
+        if (!dateRange) {
+          sendBotMessage("Error: No se pudo calcular el rango de fechas.")
+          return
+        }
+        const { startDate: fetchStartDate, endDate: fetchEndDate } = dateRange
         const turno = currentShift === "M" ? "M" : "T"
-        console.log('🔍 Turno calculado para fecha:', { shift: currentShift, turno })
-        url = `${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/v1/app-citas/fechas-consultorios?fechaInicio=${startDate}&fechaFin=${endDate}&turnoConsulta=${turno}&idEspecialidad=${appointmentData.specialty}`
-        console.log('🔗 URL por fecha:', url)
+        url = `${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/v1/app-citas/fechas-consultorios?fechaInicio=${fetchStartDate}&fechaFin=${fetchEndDate}&turnoConsulta=${turno}&idEspecialidad=${appointmentData.specialty}`
       }
       
       const response = await fetch(url)
@@ -797,13 +815,12 @@ export default function ChatbotController({
       
       setAvailableSlots(slots)
       
-      if (slots.length === 0) {
-        sendBotMessage("No hay horarios disponibles para esta selección.")
-        return
-      }
-      
+      // SIEMPRE mostrar el calendario, incluso si no hay slots
+      // El calendario permite navegar entre meses para buscar disponibilidad
       sendBotMessage(
-        "Selecciona la fecha y hora para tu cita:",
+        slots.length === 0 
+          ? "No hay horarios disponibles en este mes. Puedes cambiar de mes en el calendario:"
+          : "Selecciona la fecha y hora para tu cita:",
         "datetime-selector",
         {
           searchMethod: appointmentData.searchMethod,

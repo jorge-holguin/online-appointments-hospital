@@ -9,7 +9,7 @@ import { es } from "date-fns/locale"
 import { AvailabilityCalendar } from "@/components/ui/availability-calendar"
 import AppointmentSelectionModal from "./appointment-selection-modal"
 import SessionTimer from "./session-timer"
-import { useAppConfig, getEffectiveDateRange } from "@/hooks/use-app-config"
+import { useAppConfig, getEffectiveDateRangeForDates } from "@/hooks/use-app-config"
 
 interface DateTimeRangeSelectionModalProps {
   open: boolean
@@ -117,7 +117,8 @@ export default function DateTimeRangeSelectionModal({
         // Calcular rango efectivo de fechas
         const monthStart = startOfMonth(currentMonth)
         const monthEnd = endOfMonth(currentMonth)
-        const dateRange = getEffectiveDateRange(monthStart, monthEnd, startDate, endDate)
+        
+        const dateRange = getEffectiveDateRangeForDates(monthStart, monthEnd, startDate, endDate)
         
         if (!dateRange) {
           setError('No se pudo cargar la configuración de fechas')
@@ -126,7 +127,6 @@ export default function DateTimeRangeSelectionModal({
         }
         
         const { startDate: fetchStartDate, endDate: fetchEndDate } = dateRange
-        
         const url = `${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/v1/app-citas/fechas-consultorios?fechaInicio=${fetchStartDate}&fechaFin=${fetchEndDate}&turnoConsulta=${selectedShift}&idEspecialidad=${selectedSpecialtyId}`
         
         const response = await fetch(url)

@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label"
 import { ChevronLeft, Search, ChevronRight, Loader2 } from "lucide-react"
 import DateTimeSelectionModal from "./date-time-selection-modal"
 import SessionTimer from "./session-timer"
-import { useAppConfig } from "@/hooks/use-app-config"
+import { useAppConfig, getEffectiveDateRangeForDoctors } from "@/hooks/use-app-config"
+import { startOfMonth, endOfMonth } from "date-fns"
 
 interface DoctorSelectionModalProps {
   open: boolean
@@ -79,8 +80,20 @@ export default function DoctorSelectionModal({
       setError(null)
       
       try {
+        // Calcular rango dinámico: mes actual + mes siguiente
+        const today = new Date()
+        const monthStart = startOfMonth(today)
+        const monthEnd = endOfMonth(today)
+        const dateRange = getEffectiveDateRangeForDoctors(monthStart, monthEnd, startDate, endDate)
+        
+        if (!dateRange) {
+          throw new Error('No se pudo calcular el rango de fechas')
+        }
+        
+        const { startDate: fetchStartDate, endDate: fetchEndDate } = dateRange
+        
         // Llamada a la API real usando el ID de especialidad
-        const url = `${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/v1/app-citas/medicos?fechaInicio=${startDate}&fechaFin=${endDate}&idEspecialidad=${selectedSpecialtyId}`
+        const url = `${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/v1/app-citas/medicos?fechaInicio=${fetchStartDate}&fechaFin=${fetchEndDate}&idEspecialidad=${selectedSpecialtyId}`
         
         const response = await fetch(url)
         if (!response.ok) throw new Error(`Error al obtener doctores: ${response.status}`)

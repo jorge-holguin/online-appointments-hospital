@@ -10,7 +10,7 @@ import { format, addMonths, startOfMonth, endOfMonth, parseISO, isToday } from "
 import { es } from "date-fns/locale"
 import { AvailabilityCalendar } from "@/components/ui/availability-calendar"
 import { cn } from "@/lib/utils"
-import { useAppConfig, getEffectiveDateRange } from "@/hooks/use-app-config"
+import { useAppConfig, getEffectiveDateRangeForDoctors } from "@/hooks/use-app-config"
 
 interface DateTimeSelectionModalProps {
   open: boolean
@@ -133,7 +133,8 @@ export default function DateTimeSelectionModal({
         // Calcular rango efectivo de fechas
         const monthStart = startOfMonth(currentMonth)
         const monthEnd = endOfMonth(currentMonth)
-        const dateRange = getEffectiveDateRange(monthStart, monthEnd, startDate, endDate)
+        
+        const dateRange = getEffectiveDateRangeForDoctors(monthStart, monthEnd, startDate, endDate)
         
         if (!dateRange) {
           setError('No se pudo cargar la configuración de fechas')

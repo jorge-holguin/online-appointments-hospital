@@ -20,20 +20,32 @@ interface ProcessedConfig {
 // ------------------------------------------------------
 
 // Cambia esta bandera a false cuando quieras volver a fechas 100% dinámicas
-const USE_TEST_DATES = true
+const USE_TEST_DATES = false 
 
 // Fechas de prueba centralizadas
 const TEST_START_DATE = '2025-10-01'
 const TEST_END_DATE = '2025-10-31'
+
+// Bloqueo visual de fechas pasadas en el frontend
+// true = bloquea visualmente fechas anteriores a hoy
+// false = permite seleccionar cualquier fecha del rango
+export const BLOCK_PAST_DATES = true
 
 // Función para obtener la fecha de hoy en formato YYYY-MM-DD
 const getTodayDate = (): string => {
   return format(new Date(), 'yyyy-MM-dd')
 }
 
+// Función para obtener el primer día del mes actual
+export const getFirstDayOfCurrentMonth = (referenceDate?: Date): string => {
+  const date = referenceDate || new Date()
+  return format(startOfDay(date), 'yyyy-MM-01')
+}
+
 // Función para obtener el último día del mes SIGUIENTE en formato YYYY-MM-DD
-const getEndOfNextMonth = (): string => {
-  const nextMonth = addMonths(new Date(), 1)
+const getEndOfNextMonth = (referenceDate?: Date): string => {
+  const date = referenceDate || new Date()
+  const nextMonth = addMonths(date, 1)
   return format(endOfMonth(nextMonth), 'yyyy-MM-dd')
 }
 
@@ -134,10 +146,16 @@ export function useAppConfig() {
 // HELPER PARA CALCULAR RANGO EFECTIVO DE FECHAS
 // ------------------------------------------------------
 /**
- * Calcula el rango efectivo de fechas para consultas API,
- * asegurando que estén dentro del rango del config y no antes de hoy
+ * Calcula el rango efectivo de fechas para consultas de FECHAS/CONSULTORIOS.
+ * LÓGICA: Retorna desde el primer día del mes consultado hasta el ÚLTIMO DÍA DEL MES ACTUAL.
+ * Esto evita cargas masivas de datos.
+ * 
+ * @param monthStart - Primer día del mes que se está consultando
+ * @param monthEnd - Último día del mes que se está consultando
+ * @param configStartDate - Fecha de inicio de configuración (opcional)
+ * @param configEndDate - Fecha de fin de configuración (opcional)
  */
-export function getEffectiveDateRange(
+export function getEffectiveDateRangeForDates(
   monthStart: Date,
   monthEnd: Date,
   configStartDate: string | undefined,
@@ -145,38 +163,86 @@ export function getEffectiveDateRange(
 ): { startDate: string; endDate: string } | null {
   if (!configStartDate || !configEndDate) return null
 
-  const configStart = parseISO(configStartDate)
-  const configEnd = parseISO(configEndDate)
-
-  // Si el rango de configuración es inválido, no devolvemos nada
-  if (isBefore(configEnd, configStart)) {
-    return null
+  if (USE_TEST_DATES) {
+    // MODO TEST: usar fechas de configuración
+    const configStart = parseISO(configStartDate)
+    const configEnd = parseISO(configEndDate)
+    
+    return {
+      startDate: format(configStart, 'yyyy-MM-dd'),
+      endDate: format(configEnd, 'yyyy-MM-dd')
+    }
   }
+  
+  // MODO PROD: Solo el mes consultado (NO incluye mes siguiente)
+  const firstDayOfConsultedMonth = startOfDay(new Date(monthStart.getFullYear(), monthStart.getMonth(), 1))
+  const lastDayOfConsultedMonth = endOfMonth(monthStart)
+  
+  return {
+    startDate: format(firstDayOfConsultedMonth, 'yyyy-MM-dd'),
+    endDate: format(lastDayOfConsultedMonth, 'yyyy-MM-dd')
+  }
+}
 
-  let effectiveStart: Date
+/**
+ * Calcula el rango efectivo de fechas para consultas de MÉDICOS.
+ * LÓGICA: Retorna desde el primer día del mes consultado hasta el ÚLTIMO DÍA DEL MES SIGUIENTE.
+ * Esto permite listar todos los médicos disponibles en un rango más amplio.
+ * 
+ * @param monthStart - Primer día del mes que se está consultando
+ * @param monthEnd - Último día del mes que se está consultando
+ * @param configStartDate - Fecha de inicio de configuración (opcional)
+ * @param configEndDate - Fecha de fin de configuración (opcional)
+ */
+export function getEffectiveDateRangeForDoctors(
+  monthStart: Date,
+  monthEnd: Date,
+  configStartDate: string | undefined,
+  configEndDate: string | undefined
+): { startDate: string; endDate: string } | null {
+  if (!configStartDate || !configEndDate) return null
 
   if (USE_TEST_DATES) {
-    // MODO TEST: respetar el rango del config y del mes consultado
-    // No recortamos a "hoy" para poder probar rangos en el pasado.
-    effectiveStart = monthStart
-  } else {
-    // MODO PROD: no mostrar citas antes de hoy
-    const today = startOfDay(new Date())
-    const baseStart = isBefore(monthStart, today) ? today : monthStart
-    effectiveStart = baseStart
+    // MODO TEST: usar fechas de configuración
+    const configStart = parseISO(configStartDate)
+    const configEnd = parseISO(configEndDate)
+    
+    return {
+      startDate: format(configStart, 'yyyy-MM-dd'),
+      endDate: format(configEnd, 'yyyy-MM-dd')
+    }
   }
-
-  // Limitar siempre al rango del config
-  const finalStart = isBefore(effectiveStart, configStart) ? configStart : effectiveStart
-  const finalEnd = isBefore(configEnd, monthEnd) ? configEnd : monthEnd
-
-  // Si por alguna razón el resultado queda invertido, no devolvemos rango
-  if (isBefore(finalEnd, finalStart)) {
-    return null
-  }
-
+  
+  // MODO PROD: Mes consultado + mes siguiente
+  const firstDayOfConsultedMonth = startOfDay(new Date(monthStart.getFullYear(), monthStart.getMonth(), 1))
+  const lastDayOfNextMonth = endOfMonth(addMonths(monthStart, 1))
+  
   return {
-    startDate: format(finalStart, 'yyyy-MM-dd'),
-    endDate: format(finalEnd, 'yyyy-MM-dd')
+    startDate: format(firstDayOfConsultedMonth, 'yyyy-MM-dd'),
+    endDate: format(lastDayOfNextMonth, 'yyyy-MM-dd')
   }
+}
+
+/**
+ * @deprecated Usa getEffectiveDateRangeForDates o getEffectiveDateRangeForDoctors según el caso
+ */
+export function getEffectiveDateRange(
+  monthStart: Date,
+  monthEnd: Date,
+  configStartDate: string | undefined,
+  configEndDate: string | undefined
+): { startDate: string; endDate: string } | null {
+  // Por defecto, usar el rango para médicos (comportamiento anterior)
+  return getEffectiveDateRangeForDoctors(monthStart, monthEnd, configStartDate, configEndDate)
+}
+
+/**
+ * Verifica si una fecha debe estar visualmente bloqueada en el calendario
+ */
+export function isDateBlocked(date: Date): boolean {
+  if (!BLOCK_PAST_DATES) return false
+  if (USE_TEST_DATES) return false // En modo test no bloquear fechas
+  
+  const today = startOfDay(new Date())
+  return isBefore(startOfDay(date), today)
 }

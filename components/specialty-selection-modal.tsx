@@ -83,7 +83,7 @@ export default function SpecialtySelectionModal({
         const fetchStartDate = startDate
         const fetchEndDate = endDate
         
-        const url = `${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/v1/app-citas/especialidades?fechaInicio=${fetchStartDate}&fechaFin=${fetchEndDate}`
+        const url = `${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/v1/app-citas/especialidades`
         
         const response = await fetch(url)
         
