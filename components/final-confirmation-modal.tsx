@@ -235,9 +235,7 @@ export default function FinalConfirmationModal({
                   Usted ha realizado el registro de su <strong>solicitud de cita</strong>. 
                   Esto significa que su cita aún <strong>NO ha sido confirmada</strong>. 
                   Su solicitud será evaluada por el personal del <strong>Call Center</strong>, 
-                  quienes se comunicarán con usted por <strong>correo electrónico</strong> o 
-                  <strong> WhatsApp</strong> para informarle si la cita fue <strong>aceptada</strong> o 
-                  <strong> rechazada</strong>.
+                  Para consultar el estado de su solicitud debe consultar en la web con su codigo de solicitud.
                 </p>
                 <p className="mt-2 text-sm text-gray-700">
                   Le recordamos que debe <strong>esperar la confirmación</strong> antes de acudir al establecimiento. 

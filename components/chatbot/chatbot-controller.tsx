@@ -1094,7 +1094,7 @@ export default function ChatbotController({
       const displayDate = appointmentData?.dateTime?.displayDate || appointmentData?.dateTime?.date
       
       const confirmationMessage = `
-🎉 **¡Cita Confirmada!**
+🎉 **¡Su reserva de cita ha sido admitida!**
 
 📋 **Código de Solicitud:** ${responseData.codigo}
 
@@ -1111,7 +1111,7 @@ ${displayDate} - ${appointmentData?.dateTime?.time}
 🆔 **${userData?.tipoDocumento === 'D  ' ? 'DNI' : 'Documento'}:** ${userData?.documento}
 💳 **Tipo:** ${userData?.patientType === 'SIS' ? 'Paciente SIS' : 'Pagante'}
 
-✅ Puedes consultar tu cita en: [${baseOrigin}/${responseData.codigo}](${baseOrigin}/${responseData.codigo})
+✅ Puedes consultar el estado de tu solicitud en: [${baseOrigin}/${responseData.codigo}](${baseOrigin}/${responseData.codigo})
 
 📧 Recibirás un correo con todos los detalles.
 
@@ -1124,7 +1124,7 @@ ${displayDate} - ${appointmentData?.dateTime?.time}
       setTimeout(() => {
         const link = baseOrigin ? `${baseOrigin}/${responseData.codigo}` : `${responseData.codigo}`
         sendBotMessage(
-          `🔗 Consulta tu cita aquí: [${link}](${link})`,
+          `🔗 Consulta el estado de tu solicitud aquí: [${link}](${link})`,
           "text"
         )
       }, 1500)
