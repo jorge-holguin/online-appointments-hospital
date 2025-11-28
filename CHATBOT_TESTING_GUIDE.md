@@ -45,7 +45,7 @@ El bot automáticamente:
 2. Después de ~2 segundos, muestra:
    ```
    Antes de continuar, necesito conocer tus datos personales 
-   para poder ayudarte a reservar tu cita.
+   para poder ayudarte.
    ```
 3. Muestra el **formulario interactivo**
 

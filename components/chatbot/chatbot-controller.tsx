@@ -83,7 +83,7 @@ export default function ChatbotController({
       hasInitialized.current = true
       setTimeout(() => {
         sendBotMessage(
-          "Antes de continuar, necesito conocer tus datos personales para poder ayudarte a reservar tu cita.",
+          "Antes de continuar, necesito conocer tus datos personales para poder ayudarte.",
           "text"
         )
         setTimeout(() => {
@@ -476,8 +476,8 @@ export default function ChatbotController({
   }
   
   const handleInterconsultaSpecialtySelection = (specialty: any) => {
-    // Guardar la especialidad de interconsulta
-    setUserData(prev => ({ ...prev!, especialidadInterconsulta: specialty.id }))
+    // Guardar el nombre de la especialidad de interconsulta
+    setUserData(prev => ({ ...prev!, especialidadInterconsulta: specialty.nombre }))
     
     sendBotMessage(
       `Especialidad de interconsulta: ${specialty.nombre}. Ahora, ¿qué especialidad necesitas para tu cita?`,
