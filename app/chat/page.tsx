@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { ArrowLeft, Send, Paperclip, MoreVertical, Phone, Video, Smile } from "lucide-react"
+import { ArrowLeft, Send, Paperclip, MoreVertical, Phone, Video } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Input } from "@/components/ui/input"
 import ChatbotController from "@/components/chatbot/chatbot-controller"
@@ -163,22 +163,25 @@ export default function ChatPage() {
         {/* Acciones del header */}
         <div className="flex items-center gap-2">
           <button 
-            className="hover:bg-white/10 p-2 rounded-full transition-colors"
+            className="p-2 rounded-full cursor-not-allowed opacity-40"
             aria-label="Llamar"
+            disabled
           >
-            <Phone className="w-5 h-5" />
+            <Phone className="w-5 h-5 text-gray-400" />
           </button>
           <button 
-            className="hover:bg-white/10 p-2 rounded-full transition-colors"
+            className="p-2 rounded-full cursor-not-allowed opacity-40"
             aria-label="Videollamada"
+            disabled
           >
-            <Video className="w-5 h-5" />
+            <Video className="w-5 h-5 text-gray-400" />
           </button>
           <button 
-            className="hover:bg-white/10 p-2 rounded-full transition-colors"
+            className="p-2 rounded-full cursor-not-allowed opacity-40"
             aria-label="Más opciones"
+            disabled
           >
-            <MoreVertical className="w-5 h-5" />
+            <MoreVertical className="w-5 h-5 text-gray-400" />
           </button>
         </div>
       </header>
@@ -282,12 +285,13 @@ export default function ChatPage() {
       {/* Input de mensaje */}
       <div className="bg-[#f0f0f0] px-4 py-3 border-t border-gray-200 sticky bottom-0">
         <div className="flex items-end gap-2 max-w-4xl mx-auto">
-          {/* Botón de adjuntar */}
+          {/* Botón de adjuntar - desactivado */}
           <button
-            className="p-2 hover:bg-gray-200 rounded-full transition-colors flex-shrink-0"
+            className="p-2 rounded-full flex-shrink-0 cursor-not-allowed opacity-40"
             aria-label="Adjuntar archivo"
+            disabled
           >
-            <Paperclip className="w-6 h-6 text-gray-600" />
+            <Paperclip className="w-6 h-6 text-gray-400" />
           </button>
 
           {/* Input de texto */}
@@ -301,12 +305,6 @@ export default function ChatPage() {
               placeholder="Escribe un mensaje..."
               className="flex-1 border-none focus-visible:ring-0 focus-visible:ring-offset-0 px-0 text-sm md:text-base"
             />
-            <button
-              className="p-1 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
-              aria-label="Emojis"
-            >
-              <Smile className="w-5 h-5 text-gray-500" />
-            </button>
           </div>
 
           {/* Botón de enviar */}

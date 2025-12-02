@@ -12,7 +12,7 @@ interface ChatLauncherProps {
 }
 
 export default function ChatLauncher({
-  avatarUrl = "/lobo.jpg",
+  avatarUrl = "/lobo.png",
   text = "Pregúntale al Asistente Virtual",
   position = "left",
   className = ""
@@ -62,21 +62,31 @@ export default function ChatLauncher({
         ${className}`}
       aria-label="Abrir chat de asistencia"
     >
-      {/* Avatar */}
+      {/* Avatar con animación entre lobo serio y sonriendo */}
       <div className="relative">
-        <div className="w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-white shadow-md">
-          <img 
-            src={avatarUrl} 
-            alt="Avatar del asistente" 
-            className="w-full h-full object-cover"
+        <div className="w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-white shadow-md relative">
+          {/* Lobo serio (por defecto) */}
+          <img
+            src="/lobo.png"
+            alt="Asistente virtual serio"
+            className="w-full h-full object-cover absolute inset-0 transition-opacity duration-300 ease-in-out opacity-100 group-hover:opacity-0"
             onError={(e) => {
-              // Fallback si la imagen no carga
+              const target = e.target as HTMLImageElement
+              target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23fff'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/%3E%3C/svg%3E"
+            }}
+          />
+          {/* Lobo sonriendo (en hover) */}
+          <img
+            src="/lobo2.png"
+            alt="Asistente virtual sonriendo"
+            className="w-full h-full object-cover absolute inset-0 transition-opacity duration-300 ease-in-out opacity-0 group-hover:opacity-100"
+            onError={(e) => {
               const target = e.target as HTMLImageElement
               target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23fff'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/%3E%3C/svg%3E"
             }}
           />
         </div>
-        
+
         {/* Indicador verde de "en línea" */}
         <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-400 rounded-full border-2 border-white shadow-sm"></div>
       </div>

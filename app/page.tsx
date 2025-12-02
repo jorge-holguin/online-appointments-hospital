@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Calendar, Search, Phone, CalendarDays, X } from "lucide-react"
 import PatientRegistrationModal from "@/components/patient-registration-modal"
@@ -11,6 +11,15 @@ export default function HomePage() {
   const [showRegistration, setShowRegistration] = useState(false)
   const [showLookup, setShowLookup] = useState(false)
   const [showSchedule, setShowSchedule] = useState(false)
+  const [isWolfHappy, setIsWolfHappy] = useState(false)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsWolfHappy(prev => !prev)
+    }, 1600)
+
+    return () => clearInterval(interval)
+  }, [])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-50 relative">
@@ -147,9 +156,30 @@ export default function HomePage() {
       <PatientRegistrationModal open={showRegistration} onOpenChange={setShowRegistration} />
       <AppointmentLookupModal open={showLookup} onOpenChange={setShowLookup} />
 
+      {/* Banner animado del lobo para llamar la atención hacia el chat */}
+      <div className="fixed bottom-28 right-6 md:right-8 z-40 pointer-events-none">
+        <div className="relative w-40 h-40 md:w-52 md:h-52 pr-100">
+
+
+          {/* Lobo completo 1 (por defecto) */}
+          <img
+            src="/lobo-completo1.png"
+            alt="Asistente virtual"
+            className={`absolute inset-0 w-full h-full object-contain drop-shadow-xl transition-opacity duration-700 ease-in-out ${isWolfHappy ? "opacity-0" : "opacity-100"}`}
+          />
+
+          {/* Lobo completo 2 (alterno) */}
+          <img
+            src="/lobo-completo2.png"
+            alt="Asistente virtual sonriente"
+            className={`absolute inset-0 w-full h-full object-contain drop-shadow-xl transition-opacity duration-700 ease-in-out ${isWolfHappy ? "opacity-100" : "opacity-0"}`}
+          />
+        </div>
+      </div>
+
       {/* Chatbot Launcher */}
       <ChatLauncher 
-        avatarUrl="/lobo.jpg"
+        avatarUrl="/lobo.png"
         className="bg-white"
         text="Pregúntale al Asistente Virtual"
         position="right"

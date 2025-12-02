@@ -55,6 +55,7 @@ export default function ChatbotController({
   const [availableSlots, setAvailableSlots] = useState<any[]>([])
   const [observacion, setObservacion] = useState<string>("")
   const [waitingForObservation, setWaitingForObservation] = useState(false)
+  const [waitingForAppointmentConfirmation, setWaitingForAppointmentConfirmation] = useState(false)
   const [sessionToken, setSessionToken] = useState<string | null>(null)
   const hasInitialized = useRef(false)
   const lastMessageId = useRef<string | null>(null)
@@ -124,7 +125,7 @@ export default function ChatbotController({
   }
   
   const handleUserMessage = async (message: Message) => {
-    const content = message.content.trim()
+    const content = message.content.trim().toLowerCase()
     
     // Si el mensaje viene con data (selección de botón), procesarlo directamente
     if (message.data?.action) {
@@ -139,9 +140,9 @@ export default function ChatbotController({
         return
       }
       
-      setObservacion(content)
+      setObservacion(message.content.trim())
       setWaitingForObservation(false)
-      sendBotMessage(`Observación guardada: "${content}"`)
+      sendBotMessage(`Observación guardada: "${message.content.trim()}"`)
       
       setTimeout(() => {
         setCurrentStep("final-confirmation")
@@ -150,7 +151,54 @@ export default function ChatbotController({
       return
     }
     
-    // Procesar mensaje de texto libre con NLP básico
+    // Si estamos esperando confirmación para mostrar el formulario
+    if (waitingForAppointmentConfirmation) {
+      const affirmativeWords = ['si', 'sí', 'yes', 'ok', 'vale', 'claro', 'por favor', 'quiero', 'necesito']
+      const negativeWords = ['no', 'nop', 'nope', 'nunca', 'después', 'luego', 'ahora no']
+      
+      const isAffirmative = affirmativeWords.some(word => content.includes(word))
+      const isNegative = negativeWords.some(word => content.includes(word))
+      
+      setWaitingForAppointmentConfirmation(false)
+      
+      if (isAffirmative) {
+        // Mostrar el formulario
+        setCurrentStep("requesting-data")
+        sendBotMessage("Perfecto, te mostraré el formulario para solicitar tu cita.")
+        setTimeout(() => {
+          showRegistrationForm()
+        }, 800)
+      } else if (isNegative) {
+        sendBotMessage("No hay problema, estaré atento cuando necesites solicitar una cita. 😊")
+      } else {
+        // Si no entendemos, preguntar de nuevo
+        sendBotMessage("No entendí tu respuesta. ¿Deseas solicitar una cita? Por favor responde 'sí' o 'no'.")
+        setWaitingForAppointmentConfirmation(true)
+      }
+      return
+    }
+    
+    // Si el usuario escribe texto libre que no es parte del flujo esperado
+    // Mostrar mensaje de que no puede entender y ofrecer solicitar cita
+    if (currentStep !== "requesting-data" && currentStep !== "appointment-confirmed") {
+      sendBotMessage("Lo siento, no puedo entenderte. 😔")
+      setTimeout(() => {
+        sendBotMessage(
+          "¿Deseas solicitar tu cita?",
+          "options",
+          {
+            options: [
+              { id: "yes", label: "Sí, quiero solicitar una cita", value: "yes" },
+              { id: "no", label: "No, gracias", value: "no" }
+            ],
+            action: "unmapped-text-response"
+          }
+        )
+      }, 800)
+      return
+    }
+    
+    // Procesar mensaje de texto libre con NLP básico (fallback)
     try {
       const response = await fetch('/api/chatbot/process', {
         method: 'POST',
@@ -209,6 +257,17 @@ export default function ChatbotController({
         } else {
           sendBotMessage("Entendido. Puedes volver a seleccionar especialidad, médico u horario desde el menú principal.")
           setCurrentStep("greeting")
+        }
+        break
+      case 'unmapped-text-response':
+        if (value === 'yes') {
+          setCurrentStep("requesting-data")
+          sendBotMessage("Perfecto, te mostraré el formulario para solicitar tu cita.")
+          setTimeout(() => {
+            showRegistrationForm()
+          }, 800)
+        } else {
+          sendBotMessage("No hay problema, estaré atento cuando necesites solicitar una cita. 😊")
         }
         break
     }
