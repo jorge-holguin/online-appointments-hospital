@@ -1,50 +1,27 @@
-import pino from 'pino'
+// Logger simplificado sin dependencias de workers
+// Evita problemas con pino-pretty en Next.js SSR
 
-// Configuración de Pino para el cliente (browser)
-const isClient = typeof window !== 'undefined'
+const isClient = typeof globalThis.window !== 'undefined'
 
-// Logger para el navegador (simplificado)
-const browserLogger = {
-  info: (obj: any, msg?: string) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[INFO]', msg || '', obj)
-    }
+// Logger silencioso (no-op) para cliente y servidor
+const silentLogger = {
+  info: (_obj: any, _msg?: string) => {
+    // No-op para evitar uso de console.*
   },
-  error: (obj: any, msg?: string) => {
-    console.error('[ERROR]', msg || '', obj)
+  error: (_obj: any, _msg?: string) => {
+    // No-op para evitar uso de console.*
   },
-  warn: (obj: any, msg?: string) => {
-    console.warn('[WARN]', msg || '', obj)
+  warn: (_obj: any, _msg?: string) => {
+    // No-op para evitar uso de console.*
   },
-  debug: (obj: any, msg?: string) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.debug('[DEBUG]', msg || '', obj)
-    }
+  debug: (_obj: any, _msg?: string) => {
+    // No-op para evitar uso de console.*
   },
-  child: () => browserLogger,
+  child: () => silentLogger,
 }
 
-// Logger para el servidor (Node.js)
-const serverLogger = pino({
-  level: process.env.LOG_LEVEL || 'info',
-  transport: process.env.NODE_ENV === 'development' ? {
-    target: 'pino-pretty',
-    options: {
-      colorize: true,
-      translateTime: 'SYS:standard',
-      ignore: 'pid,hostname',
-    }
-  } : undefined,
-  formatters: {
-    level: (label) => {
-      return { level: label }
-    },
-  },
-  timestamp: pino.stdTimeFunctions.isoTime,
-})
-
-// Exportar el logger apropiado según el entorno
-export const logger = isClient ? browserLogger : serverLogger
+// Exportar el logger silencioso
+export const logger = silentLogger
 
 // Helper para logging de reservas exitosas
 export const logSuccessfulBooking = (data: {

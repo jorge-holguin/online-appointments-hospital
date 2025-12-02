@@ -199,7 +199,6 @@ export default function PatientRegistrationModal({ open, onOpenChange }: Patient
       const validation = validatePatientData(formData)
       
       if (!validation.success) {
-        console.log('Errores de validación:', validation.errors)
         setValidationErrors(validation.errors || {})
         return
       }

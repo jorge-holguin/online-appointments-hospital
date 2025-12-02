@@ -34,17 +34,6 @@ export default function ChatbotController({
   const startDate = config?.dateRange.startDate
   const endDate = config?.dateRange.endDate
   
-  // Log para depuración de fechas
-  useEffect(() => {
-    if (config && !configLoading) {
-      console.log('📅 Config de fechas cargado:', {
-        startDate: config.dateRange.startDate,
-        endDate: config.dateRange.endDate,
-        source: 'use-app-config'
-      })
-    }
-  }, [config, configLoading])
-  
   // Estado del flujo del chatbot
   const [currentStep, setCurrentStep] = useState<FlowStep>("greeting")
   const [userData, setUserData] = useState<PatientData | null>(null)
@@ -72,7 +61,7 @@ export default function ChatbotController({
           .filter((type: any) => type.nombre !== "*Ninguno")
         setDocumentTypes(filtered)
       } catch (error) {
-        console.error('Error inicializando chatbot:', error)
+        // Error silencioso al inicializar el chatbot
       }
     }
     initializeChatbot()
@@ -212,7 +201,7 @@ export default function ChatbotController({
         handleIntent(result.intent, result.entities)
       }
     } catch (error) {
-      console.error('Error procesando mensaje:', error)
+      // Error silencioso en procesamiento de mensaje del chatbot
     }
   }
   
@@ -330,7 +319,6 @@ export default function ChatbotController({
     
     // Obtener token de sesión después de completar el formulario
     try {
-      console.log('🔐 Obteniendo token de sesión después del formulario...')
       const sessionResponse = await fetch(`${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/v1/solicitudes/sesion`, {
         method: 'POST',
         headers: {
@@ -341,13 +329,12 @@ export default function ChatbotController({
       
       if (sessionResponse.ok) {
         const sessionData = await sessionResponse.json()
-        console.log('✅ Token de sesión obtenido:', sessionData.token)
         setSessionToken(sessionData.token)
       } else {
-        console.error('❌ Error al obtener token de sesión')
+        // Error al obtener token de sesión
       }
     } catch (error) {
-      console.error('❌ Error en llamada de sesión:', error)
+      // Error silencioso en llamada de sesión
     }
     
     setCurrentStep("selecting-patient-type")
@@ -480,7 +467,6 @@ export default function ChatbotController({
         )
         return
       } catch (error) {
-        console.error('Error cargando especialidades de interconsulta:', error)
         sendBotMessage("Error al cargar especialidades. Continuando...")
       }
     }
@@ -529,7 +515,6 @@ export default function ChatbotController({
         }
       )
     } catch (error) {
-      console.error('Error cargando especialidades:', error)
       sendBotMessage("Lo siento, hubo un error al cargar las especialidades. Por favor, intenta nuevamente.")
     }
   }
@@ -619,13 +604,11 @@ export default function ChatbotController({
   const loadDoctors = async () => {
     // Validar que el config esté cargado
     if (configLoading) {
-      console.log('⏳ Esperando config en loadDoctors...')
       setTimeout(() => loadDoctors(), 500)
       return
     }
     
     if (!startDate || !endDate || !appointmentData?.specialty) {
-      console.error('❌ Faltan datos en loadDoctors:', { startDate, endDate, specialty: appointmentData?.specialty })
       sendBotMessage("Error: Faltan datos para cargar médicos.")
       return
     }
@@ -678,7 +661,6 @@ export default function ChatbotController({
         }
       )
     } catch (error) {
-      console.error('Error cargando médicos:', error)
       sendBotMessage("Lo siento, hubo un error al cargar los médicos. Por favor, intenta nuevamente.")
     }
   }
@@ -712,7 +694,7 @@ export default function ChatbotController({
     setAppointmentData(prev => ({
       ...prev!,
       doctor: { 
-        nombre: doctor.nombre, // Código corto del médico
+        nombre: doctor.nombre, // Código del médico
         medicoId: doctor.medicoId // Nombre completo del médico
       }
     }))
@@ -727,8 +709,6 @@ export default function ChatbotController({
       
       const turno = appointmentData.shift
       const url = `${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/v1/app-citas/por-fecha?fecha=${appointmentData.dateTime.date}&turnoConsulta=${turno}&idEspecialidad=${appointmentData.specialty}&horaInicio=${encodeURIComponent(appointmentData.timeRange.start)}&horaFin=${encodeURIComponent(appointmentData.timeRange.end)}`
-      
-      console.log('🔗 Cargando horas específicas del médico:', url)
       
       const response = await fetch(url)
       if (!response.ok) throw new Error(`Error: ${response.status}`)
@@ -751,8 +731,6 @@ export default function ChatbotController({
           lugar: item.lugar
         }))
       
-      console.log('⏰ Horas disponibles del médico:', doctorSlots)
-      
       if (doctorSlots.length === 0) {
         sendBotMessage("No hay horarios disponibles para este médico. Por favor, selecciona otro médico.")
         setCurrentStep("selecting-doctor-after-datetime")
@@ -770,16 +748,13 @@ export default function ChatbotController({
         }
       )
     } catch (error) {
-      console.error('Error cargando horarios del médico:', error)
       sendBotMessage("Error al cargar horarios. Intenta nuevamente.")
     }
   }
   
   const handleShiftSelection = (shift: string) => {
-    console.log('🕐 Turno seleccionado (valor recibido):', shift, typeof shift)
     setAppointmentData(prev => {
       const updated = { ...prev!, shift: shift as any }
-      console.log('🕐 appointmentData actualizado con shift:', updated.shift)
       return updated
     })
     setCurrentStep("selecting-datetime")
@@ -787,7 +762,6 @@ export default function ChatbotController({
     
     // Pasar el shift directamente para evitar problemas con estado asíncrono
     if (configLoading) {
-      console.log('⏳ Config aún cargando, esperando...')
       setTimeout(() => loadAvailableSlots(shift as any), 500)
     } else {
       loadAvailableSlots(shift as any)
@@ -797,13 +771,11 @@ export default function ChatbotController({
   const loadAvailableSlots = async (shiftParam?: "M" | "T") => {
     // Validar que el config esté cargado
     if (configLoading) {
-      console.log('⏳ Esperando a que se cargue el config...')
       sendBotMessage("Cargando configuración...")
       return
     }
     
     if (!startDate || !endDate || !appointmentData?.specialty) {
-      console.error('❌ Faltan datos:', { startDate, endDate, specialty: appointmentData?.specialty })
       sendBotMessage("Error: Faltan datos para cargar horarios.")
       return
     }
@@ -890,7 +862,6 @@ export default function ChatbotController({
         }
       )
     } catch (error) {
-      console.error('Error cargando horarios:', error)
       sendBotMessage("Lo siento, hubo un error al cargar los horarios. Por favor, intenta nuevamente.")
     }
   }
@@ -935,18 +906,15 @@ export default function ChatbotController({
         if (slot.timeRange) {
           // Endpoint correcto para búsqueda por rango de hora
           url = `${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/v1/app-citas/por-fecha?fecha=${slot.date}&turnoConsulta=${turno}&idEspecialidad=${appointmentData.specialty}&horaInicio=${encodeURIComponent(slot.timeRange.start)}&horaFin=${encodeURIComponent(slot.timeRange.end)}`
-          console.log('🔗 URL por fecha con rango:', url)
         } else {
           // Fallback al endpoint anterior si no hay rango
           url = `${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/v1/app-citas/citas?fechaInicio=${slot.date}&fechaFin=${slot.date}&turnoConsulta=${turno}&idEspecialidad=${appointmentData.specialty}`
-          console.log('🔗 URL por fecha sin rango:', url)
         }
         
         const response = await fetch(url)
         if (!response.ok) throw new Error(`Error: ${response.status}`)
         
         const data = await response.json()
-        console.log('📋 Datos recibidos de la API:', data)
         
         // Filtrar citas disponibles
         // Estado "4" = disponible, conSolicitud = false significa que no tiene solicitud pendiente
@@ -955,12 +923,6 @@ export default function ChatbotController({
             const isValid = item.medico && item.nombreMedico && 
                            (item.estado === "1" || item.estado === "4") && 
                            !item.conSolicitud
-            console.log('🔍 Validando cita:', { 
-              medico: item.medico, 
-              estado: item.estado, 
-              conSolicitud: item.conSolicitud,
-              isValid 
-            })
             return isValid
           })
           .map((item: any) => ({
@@ -993,7 +955,6 @@ export default function ChatbotController({
           }
         )
       } catch (error) {
-        console.error('Error cargando médicos:', error)
         sendBotMessage("Error al cargar médicos. Intenta nuevamente.")
       }
     }
@@ -1002,13 +963,6 @@ export default function ChatbotController({
   const showAppointmentSummary = (dataOverride?: AppointmentData) => {
     // Usar los datos pasados como parámetro o los del estado
     const data = dataOverride || appointmentData!
-    
-    console.log('📋 Mostrando resumen con datos:', {
-      dateTime: data.dateTime,
-      consultorio: data.consultorio,
-      doctor: data.doctor,
-      lugar: data.lugar
-    })
     
     const summaryText = `📅 **${data.dateTime?.day}**\n${data.dateTime?.displayDate} ${data.dateTime?.time}hs\n\n🏥 **Especialidad**\n${data.specialtyName}\n\n🚪 **Consultorio:** ${data.consultorio}\n\n👨‍⚕️ **Médico**\nDr(a). ${data.doctor?.medicoId}\n\n📍 **Ubicación**\n${getHospitalAddress(data.lugar)}\n\n👤 **Paciente**\n${userData!.fullName}\nDNI: ${userData!.documento}\n💳 ${userData!.patientType === 'SIS' ? 'Paciente SIS' : 'Paciente Pagante'}`
     
@@ -1075,8 +1029,6 @@ export default function ChatbotController({
       if (!sessionToken) {
         throw new Error('No se ha obtenido el token de sesión')
       }
-      
-      console.log('🔐 Usando token de sesión:', sessionToken)
 
       // Construir URL base para consultar la cita
       const baseOrigin = typeof window !== 'undefined' ? window.location.origin : ''

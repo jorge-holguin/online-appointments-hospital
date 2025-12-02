@@ -68,15 +68,7 @@ export default function ConsoleBlocker() {
     // Comprobar periódicamente
     const interval = setInterval(checkDevTools, 1000)
     
-    // Mensaje en caso de que alguien intente acceder a la consola
-    setTimeout(() => {
-      try {
-        // @ts-ignore - Ignorar error de tipo
-        originalConsole.log('%c¡Detente!', 'color:red;font-size:50px;font-weight:bold')
-        // @ts-ignore - Ignorar error de tipo
-        originalConsole.log('%cEsta es una función del navegador destinada a desarrolladores. Si alguien te indicó que copiaras y pegaras algo aquí para habilitar una función o "hackear" la cuenta de alguien, se trata de un fraude.', 'font-size:18px;')
-      } catch (e) {}
-    }, 2000)
+    // Mensaje educativo deshabilitado para evitar cualquier uso de console.log
     
     // Limpiar event listeners al desmontar
     return () => {
