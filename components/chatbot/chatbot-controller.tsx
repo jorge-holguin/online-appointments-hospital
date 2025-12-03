@@ -45,9 +45,13 @@ export default function ChatbotController({
   const [observacion, setObservacion] = useState<string>("")
   const [waitingForObservation, setWaitingForObservation] = useState(false)
   const [waitingForAppointmentConfirmation, setWaitingForAppointmentConfirmation] = useState(false)
+  const [waitingForLookupCode, setWaitingForLookupCode] = useState(false)
   const [sessionToken, setSessionToken] = useState<string | null>(null)
   const hasInitialized = useRef(false)
   const lastMessageId = useRef<string | null>(null)
+  const lastBotMessageRef = useRef<{ content: string; type: string; data?: any } | null>(null)
+  const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const hasShownInactivityMessage = useRef(false)
   
   // Cargar tipos de documento al inicio
   useEffect(() => {
@@ -67,22 +71,51 @@ export default function ChatbotController({
     initializeChatbot()
   }, [])
   
-  // Inicializar conversación
+  // Inicializar conversación con menú principal
   useEffect(() => {
     if (!hasInitialized.current && messages.length === 1 && currentStep === "greeting" && documentTypes.length > 0) {
       hasInitialized.current = true
       setTimeout(() => {
-        sendBotMessage(
-          "Antes de continuar, necesito conocer tus datos personales para poder ayudarte.",
-          "text"
-        )
-        setTimeout(() => {
-          setCurrentStep("requesting-data")
-          showRegistrationForm()
-        }, 1000)
+        setCurrentStep("main-menu")
+        showMainMenu()
       }, 1500)
     }
   }, [messages, currentStep, documentTypes])
+  
+  // Timer de inactividad - 15 segundos
+  const resetInactivityTimer = () => {
+    if (inactivityTimerRef.current) {
+      clearTimeout(inactivityTimerRef.current)
+    }
+    hasShownInactivityMessage.current = false
+    
+    inactivityTimerRef.current = setTimeout(() => {
+      if (!hasShownInactivityMessage.current && lastBotMessageRef.current) {
+        hasShownInactivityMessage.current = true
+        sendBotMessage("¿Estás ahí? 👋")
+        
+        // Repetir la última pregunta después de un breve delay
+        setTimeout(() => {
+          if (lastBotMessageRef.current) {
+            sendBotMessage(
+              lastBotMessageRef.current.content,
+              lastBotMessageRef.current.type as any,
+              lastBotMessageRef.current.data
+            )
+          }
+        }, 1000)
+      }
+    }, 150000) // 150 segundos
+  }
+  
+  // Limpiar timer al desmontar
+  useEffect(() => {
+    return () => {
+      if (inactivityTimerRef.current) {
+        clearTimeout(inactivityTimerRef.current)
+      }
+    }
+  }, [])
   
   // Procesar mensajes del usuario
   useEffect(() => {
@@ -95,7 +128,7 @@ export default function ChatbotController({
     handleUserMessage(lastMessage)
   }, [messages])
 
-  const sendBotMessage = (content: string, type: Message["type"] = "text", data?: any) => {
+  const sendBotMessage = (content: string, type: Message["type"] = "text", data?: any, trackForInactivity = true) => {
     setIsTyping(true)
     
     setTimeout(() => {
@@ -110,6 +143,12 @@ export default function ChatbotController({
       
       setMessages(prev => [...prev, botMessage])
       setIsTyping(false)
+      
+      // Guardar último mensaje con opciones para repetir si hay inactividad
+      if (trackForInactivity && (type === "options" || type === "form")) {
+        lastBotMessageRef.current = { content, type, data }
+        resetInactivityTimer()
+      }
     }, 800)
   }
   
@@ -140,6 +179,21 @@ export default function ChatbotController({
       return
     }
     
+    // Si estamos esperando el código de reserva para consultar cita
+    if (waitingForLookupCode) {
+      const code = message.content.trim().toUpperCase()
+      setWaitingForLookupCode(false)
+      
+      if (code.length < 4) {
+        sendBotMessage("⚠️ El código ingresado parece muy corto. Por favor, ingresa un código válido:")
+        setWaitingForLookupCode(true)
+        return
+      }
+      
+      await lookupAppointment(code)
+      return
+    }
+    
     // Si estamos esperando confirmación para mostrar el formulario
     if (waitingForAppointmentConfirmation) {
       const affirmativeWords = ['si', 'sí', 'yes', 'ok', 'vale', 'claro', 'por favor', 'quiero', 'necesito']
@@ -158,7 +212,9 @@ export default function ChatbotController({
           showRegistrationForm()
         }, 800)
       } else if (isNegative) {
-        sendBotMessage("No hay problema, estaré atento cuando necesites solicitar una cita. 😊")
+        sendBotMessage("¡Gracias por usar nuestro asistente virtual! Si necesitas algo más, estaré aquí para ayudarte. 😊")
+        setCurrentStep("greeting")
+        hasInitialized.current = false
       } else {
         // Si no entendemos, preguntar de nuevo
         sendBotMessage("No entendí tu respuesta. ¿Deseas solicitar una cita? Por favor responde 'sí' o 'no'.")
@@ -206,7 +262,13 @@ export default function ChatbotController({
   }
   
   const handleButtonAction = (action: string, value: any) => {
+    // Resetear timer de inactividad cuando el usuario interactúa
+    resetInactivityTimer()
+    
     switch (action) {
+      case 'main-menu-selection':
+        handleMainMenuSelection(value)
+        break
       case 'form-submit':
         handleFormSubmit(value)
         break
@@ -256,7 +318,22 @@ export default function ChatbotController({
             showRegistrationForm()
           }, 800)
         } else {
-          sendBotMessage("No hay problema, estaré atento cuando necesites solicitar una cita. 😊")
+          sendBotMessage("¡Gracias por usar nuestro asistente virtual! Si necesitas algo más, estaré aquí para ayudarte. 😊")
+          setCurrentStep("greeting")
+          hasInitialized.current = false
+        }
+        break
+      case 'retry-specialty':
+        if (value === 'yes') {
+          // Limpiar datos de cita anterior pero mantener datos del paciente
+          setAppointmentData(null)
+          setObservacion("")
+          setCurrentStep("selecting-specialty")
+          loadSpecialties()
+        } else {
+          // Volver al menú principal
+          setCurrentStep("main-menu")
+          showMainMenu()
         }
         break
     }
@@ -277,24 +354,137 @@ export default function ChatbotController({
     }
   }
   
+  // Mostrar menú principal con opciones de reservar o consultar cita
+  const showMainMenu = () => {
+    sendBotMessage(
+      "¿En qué puedo ayudarte hoy?",
+      "options",
+      {
+        options: [
+          { id: "reserve", label: "Deseo reservar una cita", value: "reserve" },
+          { id: "lookup", label: "Deseo consultar el estado de mi cita", value: "lookup" }
+        ],
+        action: "main-menu-selection"
+      }
+    )
+  }
+  
+  // Manejar selección del menú principal
+  const handleMainMenuSelection = (value: string) => {
+    if (value === "reserve") {
+      sendBotMessage("Antes de continuar, necesito conocer tus datos personales para poder ayudarte.")
+      setTimeout(() => {
+        setCurrentStep("requesting-data")
+        showRegistrationForm()
+      }, 1000)
+    } else if (value === "lookup") {
+      setCurrentStep("lookup-appointment")
+      sendBotMessage("Por favor, ingresa tu código de reserva:")
+      setWaitingForLookupCode(true)
+    } else if (value === "done") {
+      sendBotMessage("¡Gracias por usar nuestro asistente virtual! Si necesitas algo más, estaré aquí para ayudarte. 😊")
+      setCurrentStep("greeting")
+      hasInitialized.current = false
+    }
+  }
+  
+  // Consultar estado de cita por código
+  const lookupAppointment = async (code: string) => {
+    sendBotMessage("Buscando tu cita... 🔍", "text", undefined, false)
+    
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/v1/solicitudes/codigo/${code}`
+      )
+      
+      if (!response.ok) {
+        if (response.status === 400 || response.status === 404) {
+          sendBotMessage("❌ No se encontró ninguna cita con ese código. Por favor, verifica e intenta nuevamente.")
+        } else {
+          sendBotMessage("❌ Hubo un error al consultar tu cita. Por favor, intenta más tarde.")
+        }
+        
+        setTimeout(() => {
+          setCurrentStep("main-menu")
+          showMainMenu()
+        }, 2000)
+        return
+      }
+      
+      const data = await response.json()
+      
+      // Mostrar información de la cita encontrada
+      const getStatusText = (estado: string) => {
+        switch (estado) {
+          case 'PENDIENTE': return '⏳ Pendiente'
+          case 'CONFIRMADA': return '✅ Confirmada'
+          case 'CANCELADA': return '❌ Cancelada'
+          default: return estado
+        }
+      }
+      const statusText = getStatusText(data.estado)
+      const horaText = data.hora ? data.hora + 'hs' : 'No disponible'
+      const ubicacionText = data.lugar === '1' ? 'Sede Central Hospital Chosica' : 'Jr. Cuzco 339 - Consultorios Externos'
+      const observacionText = data.observacion ? '📝 **Observación:** ' + data.observacion + '\n\n' : ''
+      const consultorioText = data.consultorio ? '\n🚪 **Consultorio:** ' + data.consultorio : ''
+      
+      const summaryText = '📋 **Estado de tu cita**\n\n' +
+        '🔖 **Código:** ' + (data.codigo || code) + '\n\n' +
+        '📊 **Estado:** ' + statusText + '\n\n' +
+        '📅 **Fecha:** ' + (data.fecha || 'No disponible') + '\n' +
+        '🕐 **Hora:** ' + horaText + '\n\n' +
+        '🏥 **Especialidad:** ' + (data.especialidadNombre || 'No disponible') + '\n' +
+        '👨‍⚕️ **Médico:** Dr(a). ' + (data.medicoNombre || 'No disponible') + '\n\n' +
+        '👤 **Paciente:** ' + (data.nombres || 'No disponible') + '\n' +
+        '📄 **Documento:** ' + (data.numeroDocumento || 'No disponible') + '\n\n' +
+        observacionText +
+        '📍 **Ubicación:** ' + ubicacionText + consultorioText
+      
+      sendBotMessage(summaryText, "summary", { summary: summaryText })
+      
+      setTimeout(() => {
+        sendBotMessage(
+          "¿Hay algo más en lo que pueda ayudarte?",
+          "options",
+          {
+            options: [
+              { id: "reserve", label: "Deseo reservar una cita", value: "reserve" },
+              { id: "lookup", label: "Consultar otra cita", value: "lookup" },
+              { id: "done", label: "No, gracias", value: "done" }
+            ],
+            action: "main-menu-selection"
+          }
+        )
+      }, 1500)
+      
+    } catch (error) {
+      sendBotMessage("❌ Hubo un error de conexión. Por favor, intenta más tarde.")
+      
+      setTimeout(() => {
+        setCurrentStep("main-menu")
+        showMainMenu()
+      }, 2000)
+    }
+  }
+  
   const showRegistrationForm = () => {
     sendBotMessage(
-      "Por favor, completa el siguiente formulario con tus datos:",
+      "Completa tus datos:",
       "form",
       {
         fields: [
-          { id: "fullName", label: "Apellidos y Nombres", type: "text", required: true, placeholder: "Ej: PEREZ GARCIA JUAN CARLOS" },
-          { id: "phone", label: "Teléfono", type: "tel", required: true, placeholder: "Ej: 987654321" },
+          { id: "fullName", label: "Apellidos y Nombres", type: "text", required: true, placeholder: "PEREZ GARCIA JUAN" },
+          { id: "phone", label: "Teléfono", type: "tel", required: true, placeholder: "987654321" },
           {
             id: "tipoDocumento",
-            label: "Tipo de Documento",
+            label: "Tipo Doc.",
             type: "select",
             required: true,
             options: documentTypes.map(dt => ({ value: dt.tipoDocumento, label: dt.nombre }))
           },
-          { id: "documento", label: "Número de Documento", type: "text", required: true, placeholder: "Ej: 12345678" },
-          { id: "digitoVerificador", label: "Dígito Verificador (solo DNI)", type: "text", placeholder: "Opcional" },
-          { id: "email", label: "Correo Electrónico", type: "email", required: true, placeholder: "Ej: juan@email.com" }
+          { id: "documento", label: "Nro. Documento", type: "text", required: true, placeholder: "12345678" },
+          { id: "digitoVerificador", label: "Dígito Verif. (DNI)", type: "text", placeholder: "Opcional" },
+          { id: "email", label: "Correo", type: "email", required: true, placeholder: "correo@email.com" }
         ]
       }
     )
@@ -578,7 +768,18 @@ export default function ChatbotController({
   }
   
   const handleSearchMethodSelection = (method: string) => {
-    setAppointmentData(prev => ({ ...prev!, searchMethod: method as any }))
+    // IMPORTANTE: Limpiar datos anteriores al cambiar método de búsqueda
+    // Esto evita el bug de cruce entre búsqueda por médico y por fecha
+    setAppointmentData(prev => ({ 
+      ...prev!, 
+      searchMethod: method as any,
+      doctor: undefined,  // Limpiar médico anterior
+      dateTime: undefined, // Limpiar fecha/hora anterior
+      timeRange: undefined, // Limpiar rango de tiempo anterior
+      consultorio: undefined,
+      idCita: undefined,
+      lugar: undefined
+    }))
     
     if (method === "doctor") {
       setCurrentStep("selecting-doctor")
@@ -885,16 +1086,26 @@ export default function ChatbotController({
     // Actualizar datos de cita con fecha/hora seleccionada
     setAppointmentData(updatedData)
     
-    // Si ya tenemos médico seleccionado, ir directo al resumen
-    if (appointmentData?.doctor) {
+    // IMPORTANTE: Usar searchMethod para determinar el flujo, no la presencia de doctor
+    // Esto evita el bug de cruce cuando el usuario cambia de método de búsqueda
+    
+    // Si el método de búsqueda es "doctor" (primero médico, luego fecha), ir al resumen
+    if (appointmentData?.searchMethod === "doctor" && appointmentData?.doctor) {
       setCurrentStep("showing-summary")
       // Pasar los datos actualizados directamente
       showAppointmentSummary(updatedData)
       return
     }
     
-    // Si buscamos por fecha/hora y aún no tenemos médico, cargar médicos disponibles
-    if (appointmentData?.searchMethod === "datetime") {
+    // Si ya tenemos médico seleccionado (flujo datetime -> médico -> hora específica), ir al resumen
+    if (appointmentData?.doctor && slot.time && !slot.timeRange) {
+      setCurrentStep("showing-summary")
+      showAppointmentSummary(updatedData)
+      return
+    }
+    
+    // Si buscamos por fecha/hora y aún no hay médico, cargar médicos disponibles
+    if (appointmentData?.searchMethod === "datetime" && !appointmentData?.doctor) {
       setCurrentStep("selecting-doctor-after-datetime")
       sendBotMessage("Cargando médicos disponibles para esta fecha y hora...")
       
@@ -1142,13 +1353,28 @@ ${displayDate} - ${appointmentData?.dateTime?.time}
       
     } catch (error) {
       setIsTyping(false)
-      setCurrentStep("error")
       
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
       
       sendBotMessage(
         `❌ Lo siento, hubo un error al procesar tu solicitud:\n\n${errorMessage}\n\nPor favor, intenta nuevamente o llama al (01) 418-3232.`
       )
+      
+      // Ofrecer opción de seleccionar otra especialidad
+      setTimeout(() => {
+        setCurrentStep("selecting-specialty")
+        sendBotMessage(
+          "¿Deseas seleccionar otra especialidad?",
+          "options",
+          {
+            options: [
+              { id: "yes", label: "Sí, seleccionar otra especialidad", value: "yes" },
+              { id: "no", label: "No, volver al inicio", value: "no" }
+            ],
+            action: "retry-specialty"
+          }
+        )
+      }, 1500)
     }
   }
 

@@ -89,10 +89,13 @@ export function FormRenderer({ message, onUserAction }: MessageRendererProps) {
   }
   
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-lg p-4 shadow-sm space-y-3">
+    <form
+      onSubmit={handleSubmit}
+      className="bg-white rounded-lg p-3 shadow-sm space-y-2 w-full max-w-full"
+    >
       {fields?.map((field: any) => (
-        <div key={field.id} className="space-y-1">
-          <Label htmlFor={field.id} className="text-sm font-medium">
+        <div key={field.id} className="space-y-0.5">
+          <Label htmlFor={field.id} className="text-xs font-medium text-gray-700">
             {field.label} {field.required && <span className="text-red-500">*</span>}
           </Label>
           
@@ -104,7 +107,7 @@ export function FormRenderer({ message, onUserAction }: MessageRendererProps) {
                 setErrors(prev => ({ ...prev, [field.id]: '' }))
               }}
             >
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-full h-8 text-sm">
                 <SelectValue placeholder="Seleccionar..." />
               </SelectTrigger>
               <SelectContent>
@@ -125,7 +128,7 @@ export function FormRenderer({ message, onUserAction }: MessageRendererProps) {
                 setErrors(prev => ({ ...prev, [field.id]: '' }))
               }}
               placeholder={field.placeholder}
-              className="w-full"
+              className="w-full h-8 text-sm"
             />
           )}
           
@@ -135,7 +138,7 @@ export function FormRenderer({ message, onUserAction }: MessageRendererProps) {
         </div>
       ))}
       
-      <Button type="submit" className="w-full bg-[#3e92cc] hover:bg-[#0a2463] text-white">
+      <Button type="submit" className="w-full h-9 bg-[#3e92cc] hover:bg-[#0a2463] text-white text-sm mt-2">
         Continuar
       </Button>
     </form>

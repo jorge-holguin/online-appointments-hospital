@@ -41,9 +41,9 @@ export default function ChatPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // Auto-scroll al último mensaje
+  // Auto-scroll al último mensaje (comportamiento tipo WhatsApp)
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" })
   }
 
   useEffect(() => {
@@ -115,7 +115,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-[#efeae2]">
+    <div className="flex flex-col h-screen bg-[#efeae2] overflow-hidden">
       {/* Header tipo WhatsApp */}
       <header className="bg-[#0a2463] text-white px-4 py-3 shadow-md flex items-center justify-between sticky top-0 z-10">
         <div className="flex items-center gap-3 flex-1">
@@ -202,7 +202,7 @@ export default function ChatPage() {
 
       {/* Área de mensajes */}
       <div 
-        className="flex-1 overflow-y-auto px-4 py-6 space-y-4"
+        className="flex-1 min-h-0 overflow-y-auto px-4 py-6 space-y-4"
         style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fillRule='evenodd'%3E%3Cg fill='%23${encodeURIComponent("d9d9d9")}' fillOpacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
         }}
@@ -213,7 +213,7 @@ export default function ChatPage() {
             className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}
           >
             {message.sender === "bot" ? (
-              <div className="max-w-[85%] md:max-w-[70%] space-y-2">
+              <div className="max-w-[85%] md:max-w-[70%] space-y-2 overflow-hidden">
                 {/* Mensaje de texto */}
                 {message.content && (
                   <div className="bg-white rounded-lg px-4 py-2 shadow-sm">

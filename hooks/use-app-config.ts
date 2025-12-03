@@ -20,7 +20,7 @@ interface ProcessedConfig {
 // ------------------------------------------------------
 
 // Cambia esta bandera a false cuando quieras volver a fechas 100% dinámicas
-const USE_TEST_DATES = false 
+const USE_TEST_DATES = true 
 
 // Fechas de prueba centralizadas
 const TEST_START_DATE = '2025-10-01'
@@ -29,7 +29,7 @@ const TEST_END_DATE = '2025-10-31'
 // Bloqueo visual de fechas pasadas en el frontend
 // true = bloquea visualmente fechas anteriores a hoy
 // false = permite seleccionar cualquier fecha del rango
-export const BLOCK_PAST_DATES = true
+export const BLOCK_PAST_DATES = false
 
 // Función para obtener la fecha de hoy en formato YYYY-MM-DD
 const getTodayDate = (): string => {

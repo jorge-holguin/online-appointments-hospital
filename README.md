@@ -100,36 +100,48 @@ La aplicación estará disponible en `http://localhost:3000`
 
 ## ⚙️ Configuración
 
-### Configuración de Fechas (`/public/app-config.json`)
+### Configuración de Fechas
 
-El sistema usa un archivo JSON centralizado para gestionar las fechas de disponibilidad:
+El sistema utiliza un **Centro Único de Configuración de Fechas** ubicado en `hooks/use-app-config.ts`.
 
-```json
-{
-  "dateRange": {
-    "startDate": "2025-08-01",
-    "endDate": "2025-08-31"
-  }
-}
+Este hook centraliza toda la lógica para:
+1. Definir si se usa modo de pruebas o producción
+2. Calcular rangos de fechas dinámicos (ej: hoy hasta fin del próximo mes)
+3. Bloquear visualmente fechas pasadas
+
+**Para modificar las fechas:**
+
+Editar `hooks/use-app-config.ts`:
+
+```typescript
+// ------------------------------------------------------
+// CENTRO ÚNICO DE CONFIGURACIÓN DE FECHAS
+// ------------------------------------------------------
+
+// true = usar fechas fijas de prueba
+// false = usar fechas dinámicas (hoy hasta mes siguiente)
+const USE_TEST_DATES = false 
+
+// Fechas de prueba (solo si USE_TEST_DATES = true)
+const TEST_START_DATE = '2025-10-01'
+const TEST_END_DATE = '2025-10-31'
+
+// Bloqueo visual de fechas pasadas
+export const BLOCK_PAST_DATES = true
 ```
 
 **Características:**
-- ✅ Modificable sin reconstruir la aplicación
-- ✅ Una sola llamada HTTP con caché automático
-- ✅ Puede ser servido dinámicamente por el backend
-- ✅ Valores por defecto si falla la carga
+- ✅ Lógica centralizada en un solo archivo
+- ✅ Modo de pruebas (`USE_TEST_DATES = true`) para desarrollo
+- ✅ Cálculo automático de fechas en producción
+- ✅ Control de bloqueo visual de días pasados
 
-**Para cambiar las fechas:**
-1. Edita `/hooks/app-config.json`
-2. Recarga la aplicación
-3. Los cambios se aplican inmediatamente
 
 ### Variables de Entorno
 
 | Variable | Descripción | Requerido |
 |----------|-------------|-----------|
 | `NEXT_PUBLIC_API_APP_CITAS_URL` | URL base de la API de citas | ✅ Sí |
-| `LOG_LEVEL` | Nivel de logging (info, debug, warn, error) | ❌ No (default: info) |
 
 ## 📁 Estructura del Proyecto
 
@@ -980,20 +992,19 @@ Las especialidades se cargan dinámicamente desde la API. No requiere cambios en
 
 ### Cómo Modificar las Fechas Disponibles
 
-**Opción 1: Archivo de configuración** (sin rebuild)
-```json
-// public/app-config.json
-{
-  "dateRange": {
-    "endDate": "2025-12-31"
-  }
-}
-```
+Todo el control de fechas está en `hooks/use-app-config.ts`.
 
-**Opción 2: Código** (requiere rebuild)
+**Para activar modo de pruebas (fechas fijas):**
+1. Cambiar `USE_TEST_DATES = true`
+2. Configurar `TEST_START_DATE` y `TEST_END_DATE`
+
+**Para modo producción (fechas dinámicas):**
+1. Asegurar `USE_TEST_DATES = false`
+2. El sistema calculará automáticamente desde hoy hasta fin del próximo mes.
+
 ```typescript
 // hooks/use-app-config.ts
-const USE_TEST_DATES = true  // Activar modo pruebas
+const USE_TEST_DATES = true  // true = fechas fijas, false = dinámicas
 const TEST_START_DATE = '2025-01-01'
 const TEST_END_DATE = '2025-01-31'
 ```

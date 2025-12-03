@@ -111,42 +111,64 @@ export default function DateTimeSelectionModal({
   const startDate = config?.dateRange.startDate
   const endDate = config?.dateRange.endDate
   
+  // Ref para evitar múltiples inicializaciones del mes
+  const monthInitializedRef = useRef(false)
+  // Ref para evitar llamadas duplicadas a la API
+  const fetchInProgressRef = useRef(false)
+  // Ref para trackear la última URL llamada y evitar duplicados
+  const lastFetchUrlRef = useRef<string | null>(null)
+  
   // Inicializar el mes del calendario con la fecha de inicio
   const [currentMonth, setCurrentMonth] = useState(() => startDate ? parseISO(startDate) : new Date())
   
-  // Actualizar el mes del calendario cuando cambie la configuración
+  // Actualizar el mes del calendario SOLO una vez cuando se carga la configuración
   useEffect(() => {
-    if (config?.dateRange.startDate) {
-      setCurrentMonth(parseISO(config.dateRange.startDate))
+    if (startDate && !monthInitializedRef.current) {
+      monthInitializedRef.current = true
+      setCurrentMonth(parseISO(startDate))
     }
-  }, [config?.dateRange.startDate])
+  }, [startDate])
+  
+  // Resetear refs cuando el modal se cierra
+  useEffect(() => {
+    if (!open) {
+      monthInitializedRef.current = false
+      fetchInProgressRef.current = false
+      lastFetchUrlRef.current = null
+    }
+  }, [open])
+  
+  // Extraer valores primitivos para evitar re-renders innecesarios
+  const doctorNombre = selectedDoctor?.nombre
+  const doctorEspecialidadId = selectedDoctor?.especialidadId
   
   // Cargar horarios disponibles desde la API
   useEffect(() => {
     const fetchAvailableSlots = async () => {
-      if (!selectedDoctor?.nombre || !open || !config) return
+      if (!doctorNombre || !open || !startDate || !endDate) return
+      
+      // Evitar llamadas duplicadas mientras hay una en progreso
+      if (fetchInProgressRef.current) return
+      
+      // Calcular la URL antes de hacer la llamada para verificar si ya se hizo
+      const monthStart = startOfMonth(currentMonth)
+      const monthEnd = endOfMonth(currentMonth)
+      const dateRange = getEffectiveDateRangeForDoctors(monthStart, monthEnd, startDate, endDate)
+      if (!dateRange) return
+      
+      const { startDate: fetchStartDate, endDate: fetchEndDate } = dateRange
+      const url = `${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/v1/app-citas/citas?fechaInicio=${fetchStartDate}&fechaFin=${fetchEndDate}&medicoId=${doctorNombre}&turnoConsulta=${selectedShift}&idEspecialidad=${doctorEspecialidadId}`
+      
+      // Si ya llamamos esta URL exacta, no volver a llamar
+      if (lastFetchUrlRef.current === url) return
+      
+      fetchInProgressRef.current = true
+      lastFetchUrlRef.current = url
       
       setLoading(true)
       setError(null)
       
       try {
-        // Calcular rango efectivo de fechas
-        const monthStart = startOfMonth(currentMonth)
-        const monthEnd = endOfMonth(currentMonth)
-        
-        const dateRange = getEffectiveDateRangeForDoctors(monthStart, monthEnd, startDate, endDate)
-        
-        if (!dateRange) {
-          setError('No se pudo cargar la configuración de fechas')
-          setLoading(false)
-          return
-        }
-        
-        const { startDate: fetchStartDate, endDate: fetchEndDate } = dateRange
-        
-        // Construir la URL de la API con los parámetros necesarios, incluyendo idEspecialidad
-        const url = `${process.env.NEXT_PUBLIC_API_APP_CITAS_URL}/v1/app-citas/citas?fechaInicio=${fetchStartDate}&fechaFin=${fetchEndDate}&medicoId=${selectedDoctor.nombre}&turnoConsulta=${selectedShift}&idEspecialidad=${selectedDoctor.especialidadId}`
-        
         const response = await fetch(url)
         if (!response.ok) throw new Error(`Error al obtener horarios: ${response.status}`)
         
@@ -181,8 +203,7 @@ export default function DateTimeSelectionModal({
               const currentTimeInMinutes = currentHour * 60 + currentMinute
               
               return slotTimeInMinutes > currentTimeInMinutes
-            } catch (e) {
-              console.error('Error parsing slot date/time:', e, slot)
+            } catch {
               return false // Excluir slots con datos inválidos
             }
           })
@@ -209,17 +230,17 @@ export default function DateTimeSelectionModal({
         
         setDayTimeSlots(slotsMap)
         
-      } catch (err) {
-        console.error('Error fetching available slots:', err)
+      } catch {
         setError('No se pudieron cargar los horarios disponibles. Por favor, inténtelo de nuevo.')
         setDayTimeSlots(new Map())
       } finally {
         setLoading(false)
+        fetchInProgressRef.current = false
       }
     }
     
     fetchAvailableSlots()
-  }, [selectedDoctor, selectedShift, open, config, refreshTrigger, currentMonth])
+  }, [doctorNombre, doctorEspecialidadId, selectedShift, open, startDate, endDate, refreshTrigger, currentMonth])
   
   // No necesitamos slides para la nueva interfaz
   

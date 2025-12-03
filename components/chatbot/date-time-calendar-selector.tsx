@@ -208,8 +208,8 @@ export default function DateTimeCalendarSelector({
           setDayTimeSlots(new Map())
         }
         
-      } catch (err) {
-        console.error('Error fetching data:', err)
+      } catch {
+        // Error silencioso al cargar datos
       } finally {
         setLoading(false)
       }

@@ -32,6 +32,8 @@ export interface ChatbotState {
 
 export type FlowStep =
   | "greeting"
+  | "main-menu"
+  | "lookup-appointment"
   | "requesting-data"
   | "collecting-personal-info"
   | "selecting-patient-type"
