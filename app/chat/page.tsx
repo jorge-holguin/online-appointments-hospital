@@ -214,8 +214,8 @@ export default function ChatPage() {
           >
             {message.sender === "bot" ? (
               <div className="max-w-[85%] md:max-w-[70%] space-y-2 overflow-hidden">
-                {/* Mensaje de texto */}
-                {message.content && (
+                {/* Mensaje de texto (no duplicar para summaries) */}
+                {message.content && message.type !== "summary" && (
                   <div className="bg-white rounded-lg px-4 py-2 shadow-sm">
                     {(() => {
                       // Reemplazar enlaces en formato Markdown [texto](url) por enlaces HTML
