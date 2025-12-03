@@ -105,6 +105,8 @@ export default function DateTimeSelectionModal({
   // Datos de disponibilidad desde la API
   const [availableSlots, setAvailableSlots] = useState<ApiTimeSlot[]>([])
   const [dayTimeSlots, setDayTimeSlots] = useState<Map<string, string[]>>(new Map())
+  // Fechas sin disponibilidad (tuvieron programación pero ya no quedan citas)
+  const [unavailableDates, setUnavailableDates] = useState<string[]>([])
 
   // Usar configuración centralizada
   const { config } = useAppConfig()
@@ -230,6 +232,24 @@ export default function DateTimeSelectionModal({
         
         setDayTimeSlots(slotsMap)
         
+        // Calcular fechas sin disponibilidad (días que tuvieron programación pero ya no tienen citas disponibles)
+        const datesWithNoAvailability: string[] = []
+        slotsMap.forEach((times, dateKey) => {
+          // Verificar si alguna cita de este día está disponible
+          const hasAvailableSlot = times.some(time => {
+            const apiSlot = filteredData.find(slot => 
+              slot.fecha === dateKey && slot.hora && slot.hora.trim() === time
+            )
+            return apiSlot && !apiSlot.conSolicitud && apiSlot.estado === "1"
+          })
+          
+          // Si el día tiene horarios pero ninguno está disponible, es "sin disponibilidad"
+          if (!hasAvailableSlot && times.length > 0) {
+            datesWithNoAvailability.push(dateKey)
+          }
+        })
+        setUnavailableDates(datesWithNoAvailability)
+        
       } catch {
         setError('No se pudieron cargar los horarios disponibles. Por favor, inténtelo de nuevo.')
         setDayTimeSlots(new Map())
@@ -244,8 +264,8 @@ export default function DateTimeSelectionModal({
   
   // No necesitamos slides para la nueva interfaz
   
-  // Obtener las fechas disponibles para el calendario
-  const availableDates = Array.from(dayTimeSlots.keys())
+  // Obtener las fechas disponibles para el calendario (excluyendo las sin disponibilidad)
+  const availableDates = Array.from(dayTimeSlots.keys()).filter(date => !unavailableDates.includes(date))
   
   // Manejar la selección de fecha en el calendario
   const handleDateSelect = (date: Date | undefined) => {
@@ -511,6 +531,7 @@ export default function DateTimeSelectionModal({
                     <div className="flex justify-center">
                       <AvailabilityCalendar
                         availableDates={availableDates}
+                        unavailableDates={unavailableDates}
                         onSelectDate={handleDateSelect}
                         selectedDate={selectedDay || undefined}
                         month={currentMonth}
@@ -518,14 +539,18 @@ export default function DateTimeSelectionModal({
                         className="max-w-[320px] mx-auto"
                       />
                     </div>
-                    <div className="mt-3 flex items-center justify-center gap-4">
+                    <div className="mt-3 flex flex-wrap items-center justify-center gap-3">
                       <div className="flex items-center">
                         <div className="w-3 h-3 rounded-full bg-gray-300 mr-1"></div>
                         <span className="text-xs text-gray-500">Sin horarios</span>
                       </div>
                       <div className="flex items-center">
                         <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "#3e92cc" }}></div>
-                        <span className="text-xs text-gray-500">Con horarios</span>
+                        <span className="text-xs text-gray-500">Con disponibilidad</span>
+                      </div>
+                      <div className="flex items-center">
+                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "#d8315b" }}></div>
+                        <span className="text-xs text-gray-500">Sin disponibilidad</span>
                       </div>
                     </div>
                   </div>
@@ -553,6 +578,15 @@ export default function DateTimeSelectionModal({
                         <p className="text-sm mt-2 text-center">Intenta cambiar el turno o navegar a otro mes</p>
                       </div>
                     ) : selectedDay ? (
+                      // Verificar si el día seleccionado está en la lista de sin disponibilidad
+                      unavailableDates.includes(formatDateForAPI(selectedDay)) ? (
+                        <div className="flex flex-col items-center justify-center py-8 text-gray-500">
+                          <CalendarIcon className="h-12 w-12 mb-4" style={{ color: "#d8315b" }} />
+                          <p className="text-center font-semibold" style={{ color: "#d8315b" }}>Sin Citas Disponibles</p>
+                          <p className="text-sm mt-2 text-center">Este día tuvo programación pero ya no quedan citas disponibles.</p>
+                          <p className="text-sm mt-2 text-center font-medium">Por favor, selecciona otra fecha.</p>
+                        </div>
+                      ) : (
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         {getAvailableTimesForSelectedDay().length > 0 ? (
                           getAvailableTimesForSelectedDay().map((time) => {
@@ -597,6 +631,7 @@ export default function DateTimeSelectionModal({
                           </div>
                         )}
                       </div>
+                      )
                     ) : (
                       <div className="flex flex-col items-center justify-center py-12 text-gray-500">
                         <CalendarIcon className="h-12 w-12 mb-4 text-gray-300" />

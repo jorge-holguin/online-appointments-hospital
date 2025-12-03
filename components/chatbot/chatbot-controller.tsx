@@ -48,6 +48,7 @@ export default function ChatbotController({
   const [waitingForLookupCode, setWaitingForLookupCode] = useState(false)
   const [sessionToken, setSessionToken] = useState<string | null>(null)
   const hasInitialized = useRef(false)
+  const lookupInProgressRef = useRef(false)
   const lastMessageId = useRef<string | null>(null)
   const lastBotMessageRef = useRef<{ content: string; type: string; data?: any } | null>(null)
   const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null)
@@ -390,6 +391,10 @@ export default function ChatbotController({
   
   // Consultar estado de cita por código
   const lookupAppointment = async (code: string) => {
+    // Evitar llamadas duplicadas
+    if (lookupInProgressRef.current) return
+    lookupInProgressRef.current = true
+    
     sendBotMessage("Buscando tu cita... 🔍", "text", undefined, false)
     
     try {
@@ -464,6 +469,8 @@ export default function ChatbotController({
         setCurrentStep("main-menu")
         showMainMenu()
       }, 2000)
+    } finally {
+      lookupInProgressRef.current = false
     }
   }
   
