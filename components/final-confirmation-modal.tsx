@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { CheckCircle, Calendar, User, MapPin, Mail, AlertCircle, Copy, Check, Stethoscope, Hospital } from "lucide-react"
+import { Clock, Calendar, User, MapPin, Mail, AlertCircle, Copy, Check, Stethoscope, Hospital } from "lucide-react"
 import { goToHomePage } from "@/lib/navigation"
 import { getHospitalAddress, getHospitalLocationName, getConsultorioLabel } from "@/lib/hospital-utils"
 
@@ -151,23 +151,23 @@ export default function FinalConfirmationModal({
 
       {/* Contenido con scroll */}
       <div className="flex-1 overflow-y-auto space-y-6 p-4 text-center">
-        {/* Icono de éxito */}
+        {/* Icono de estado pendiente */}
         <div className="flex justify-center">
           <div
             className="w-20 h-20 rounded-full flex items-center justify-center"
-            style={{ backgroundColor: "#3e92cc20" }}
+            style={{ backgroundColor: "#fbbf2420" }}
           >
-            <CheckCircle className="w-12 h-12" style={{ color: "#3e92cc" }} />
+            <Clock className="w-12 h-12" style={{ color: "#f59e0b" }} />
           </div>
         </div>
 
-        {/* Mensaje de éxito */}
+        {/* Mensaje de registro y revisión pendiente */}
         <div className="space-y-2">
           <h2 className="text-2xl font-bold text-gray-900">
-            Tu solicitud de cita ha sido admitida
+            Tu solicitud de cita ha sido generada
           </h2>
           <p className="text-gray-600">
-            Se ha enviado un correo con los detalles de tu solicitud de cita.
+            Tu solicitud de cita se encuentra en estado "Pendiente". El equipo de Call Center del Hospital José Agurto Tello de Chosica evaluará tu solicitud.
           </p>
         </div>
 
@@ -234,7 +234,7 @@ export default function FinalConfirmationModal({
                 <p className="text-sm text-gray-700">
                   Usted ha realizado el registro de su <strong>solicitud de cita</strong>. 
                   Esto significa que su cita aún <strong>NO ha sido confirmada</strong>. 
-                  Su solicitud será evaluada por el personal del <strong>Call Center</strong>, 
+                  Su solicitud será evaluada por el personal del <strong>Call Center</strong>.  
                   Para consultar el estado de su solicitud debe consultar en la web con su codigo de solicitud.
                 </p>
                 <p className="mt-2 text-sm text-gray-700">

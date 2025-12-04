@@ -20,7 +20,15 @@ interface ProcessedConfig {
 // ------------------------------------------------------
 
 // Cambia esta bandera a false cuando quieras volver a fechas 100% dinámicas
-const USE_TEST_DATES = false 
+const USE_TEST_DATES = false
+
+// ------------------------------------------------------
+// MODO NAVIDEÑO
+// ------------------------------------------------------
+// Cambia esta bandera a true para activar el tema navideño
+// (fondo verde, nieve, lobo navideño)
+// Cambia a false para volver al tema normal
+export const CHRISTMAS_MODE = true 
 
 // Fechas de prueba centralizadas
 const TEST_START_DATE = '2025-10-01'
