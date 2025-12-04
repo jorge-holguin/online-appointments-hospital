@@ -144,7 +144,7 @@ export default function HomePage() {
                 style={{ backgroundColor: CHRISTMAS_MODE ? "#15803d" : "#0a2463" }}
                 size="lg"
               >
-                Consultar solicitud
+                Consultar solicitud 
               </Button>
             </div>
           </div>
@@ -198,9 +198,9 @@ export default function HomePage() {
       <PatientRegistrationModal open={showRegistration} onOpenChange={setShowRegistration} />
       <AppointmentLookupModal open={showLookup} onOpenChange={setShowLookup} />
 
-      {/* Banner animado del lobo para llamar la atención hacia el chat */}
-      <div className="fixed bottom-28 right-6 md:right-8 z-40 pointer-events-none transform -translate-x-1/2">
-        <div className="relative w-40 h-40 md:w-52 md:h-52 flex items-center justify-center">
+      {/* Banner animado del lobo para llamar la atención hacia el chat - SOLO en desktop */}
+      <div className="hidden md:block fixed bottom-28 right-8 z-40 pointer-events-none transform -translate-x-1/2">
+        <div className="relative w-52 h-52 flex items-center justify-center">
           {CHRISTMAS_MODE ? (
             /* Lobo navideño GIF en círculo blanco */
             <div className="bg-white rounded-full p-3 shadow-xl flex items-center justify-center overflow-hidden">

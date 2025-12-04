@@ -122,6 +122,14 @@
   html, body {
     @apply bg-background text-foreground;
     height: 100%;
-    overflow: hidden;
   }
+}
+
+/* Asegurar que las partículas de nieve no bloqueen eventos táctiles */
+#snow-particles,
+#snow-particles canvas,
+#tsparticles,
+#tsparticles canvas {
+  pointer-events: none !important;
+  touch-action: none !important;
 }

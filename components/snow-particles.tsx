@@ -99,7 +99,7 @@ function SnowParticlesComponent() {
       id="snow-particles"
       particlesLoaded={particlesLoaded}
       options={particleOptions}
-      className="pointer-events-none"
+      style={{ pointerEvents: "none" }}
     />
   )
 }
