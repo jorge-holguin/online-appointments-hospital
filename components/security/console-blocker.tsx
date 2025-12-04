@@ -67,9 +67,7 @@ export default function ConsoleBlocker() {
     
     // Comprobar periódicamente
     const interval = setInterval(checkDevTools, 1000)
-    
-    // Mensaje educativo deshabilitado para evitar cualquier uso de console.log
-    
+        
     // Limpiar event listeners al desmontar
     return () => {
       document.removeEventListener('keydown', handleKeyDown)
