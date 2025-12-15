@@ -1,7 +1,7 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package.json package-lock.json* ./
-RUN npm ci
+RUN npm install
 
 # Definimos los args
 ARG NEXT_PUBLIC_API_APP_CITAS_URL
