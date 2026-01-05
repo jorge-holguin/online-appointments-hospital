@@ -28,7 +28,7 @@ const USE_TEST_DATES = false
 // Cambia esta bandera a true para activar el tema navideño
 // (fondo verde, nieve, lobo navideño)
 // Cambia a false para volver al tema normal
-export const CHRISTMAS_MODE = true 
+export const CHRISTMAS_MODE = false 
 
 // Fechas de prueba centralizadas
 const TEST_START_DATE = '2025-10-01'
