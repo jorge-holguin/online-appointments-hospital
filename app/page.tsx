@@ -15,6 +15,19 @@ export default function HomePage() {
   const [showSchedule, setShowSchedule] = useState(false)
   const [isWolfHappy, setIsWolfHappy] = useState(false)
 
+  // Calculate next month dynamically
+  const getNextMonth = () => {
+    const months = [
+      "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+      "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+    ]
+    const currentMonth = new Date().getMonth()
+    const nextMonthIndex = (currentMonth + 1) % 12
+    return months[nextMonthIndex]
+  }
+  
+  const nextMonth = getNextMonth()
+
   useEffect(() => {
     // Animación continua del lobo normal (cuando se muestra el modo no navideño)
     const interval = setInterval(() => {
@@ -158,7 +171,7 @@ export default function HomePage() {
             className="text-gray-700 hover:text-gray-900 border-gray-300 hover:border-gray-400 px-6 py-2"
           >
             <CalendarDays className="w-4 h-4 mr-2" />
-            Ver programación de citas para diciembre
+            Ver programación de citas para {nextMonth}
           </Button>
         </div>
 
@@ -242,7 +255,7 @@ export default function HomePage() {
           <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-auto relative">
             <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between z-10">
               <h2 className="text-2xl font-bold" style={{ color: "#0a2463" }}>
-                Programación de Citas - Diciembre
+                Programación de Citas - {nextMonth}
               </h2>
               <Button
                 onClick={() => setShowSchedule(false)}
