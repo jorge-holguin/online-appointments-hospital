@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Calendar, Search, Phone, CalendarDays, X } from "lucide-react"
+import { Calendar, Search, Phone, CalendarDays, X, Play } from "lucide-react"
 import PatientRegistrationModal from "@/components/patient-registration-modal"
 import AppointmentLookupModal from "@/components/appointment-lookup-modal"
+import VideoTutorialModal from "@/components/video-tutorial-modal"
 import ChatLauncher from "@/components/chatbot/chat-launcher"
 import SnowParticles from "@/components/snow-particles"
 import { CHRISTMAS_MODE } from "@/hooks/use-app-config"
@@ -13,6 +14,7 @@ export default function HomePage() {
   const [showRegistration, setShowRegistration] = useState(false)
   const [showLookup, setShowLookup] = useState(false)
   const [showSchedule, setShowSchedule] = useState(false)
+  const [showTutorial, setShowTutorial] = useState(false)
   const [isWolfHappy, setIsWolfHappy] = useState(false)
 
   // Calculate next month dynamically
@@ -175,6 +177,18 @@ export default function HomePage() {
           </Button>
         </div>
 
+        {/* Tutorial Section */}
+        <div className="text-center mt-8 max-w-2xl mx-auto">
+          <Button
+            onClick={() => setShowTutorial(true)}
+            variant="outline"
+            className="text-gray-700 hover:text-gray-900 border-gray-300 hover:border-gray-400 px-6 py-2"
+          >
+            <Play className="w-4 h-4 mr-2" />
+            Ver tutorial del sistema
+          </Button>
+        </div>
+
         {/* Contact Info */}
         <div className={`text-center mt-12 p-6 ${colors.contactBg} rounded-lg`}>
           <div className={`flex items-center justify-center gap-2 ${colors.contactText}`}>
@@ -210,6 +224,7 @@ export default function HomePage() {
       {/* Modals */}
       <PatientRegistrationModal open={showRegistration} onOpenChange={setShowRegistration} />
       <AppointmentLookupModal open={showLookup} onOpenChange={setShowLookup} />
+      <VideoTutorialModal open={showTutorial} onOpenChange={setShowTutorial} />
 
       {/* Banner animado del lobo para llamar la atención hacia el chat - SOLO en desktop */}
       <div className="hidden md:block fixed bottom-28 right-8 z-40 pointer-events-none transform -translate-x-1/2">

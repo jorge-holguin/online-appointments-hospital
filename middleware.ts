@@ -31,7 +31,20 @@ export function middleware(request: NextRequest) {
   
   // 4. Headers de seguridad adicionales (por si acaso no se aplican en next.config.mjs)
   if (!response.headers.has('X-Frame-Options')) {
-    response.headers.set('X-Frame-Options', 'DENY')
+    response.headers.set('X-Frame-Options', 'SAMEORIGIN')
+  }
+  
+  if (!response.headers.has('Content-Security-Policy')) {
+    response.headers.set('Content-Security-Policy', 
+      "frame-src 'self' https://www.youtube.com https://youtube.com; " +
+      "media-src 'self' https://www.youtube.com https://youtube.com; " +
+      "default-src 'self'; " +
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.youtube.com; " +
+      "style-src 'self' 'unsafe-inline'; " +
+      "img-src 'self' data: https:; " +
+      "font-src 'self'; " +
+      "connect-src 'self'"
+    )
   }
   
   if (!response.headers.has('X-Content-Type-Options')) {
