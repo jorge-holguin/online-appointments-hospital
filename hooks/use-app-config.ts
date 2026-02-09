@@ -20,7 +20,7 @@ interface ProcessedConfig {
 // ------------------------------------------------------
 
 // Cambia esta bandera a false cuando quieras volver a fechas 100% dinámicas
-const USE_TEST_DATES = false
+const USE_TEST_DATES = true
 
 // ------------------------------------------------------
 // MODO NAVIDEÑO
