@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Calendar, Search, Phone, CalendarDays, X, Play } from "lucide-react"
+import { Calendar, Search, Phone, CalendarDays, X, Play, FileText } from "lucide-react"
 import PatientRegistrationModal from "@/components/patient-registration-modal"
 import AppointmentLookupModal from "@/components/appointment-lookup-modal"
 import VideoTutorialModal from "@/components/video-tutorial-modal"
+import ReferenceConsultationModal from "@/components/reference-consultation-modal"
 import ChatLauncher from "@/components/chatbot/chat-launcher"
 import SnowParticles from "@/components/snow-particles"
 import { CHRISTMAS_MODE } from "@/hooks/use-app-config"
@@ -15,6 +16,7 @@ export default function HomePage() {
   const [showLookup, setShowLookup] = useState(false)
   const [showSchedule, setShowSchedule] = useState(false)
   const [showTutorial, setShowTutorial] = useState(false)
+  const [showReferenceConsultation, setShowReferenceConsultation] = useState(false)
   const [isWolfHappy, setIsWolfHappy] = useState(false)
 
   // Calculate next month dynamically
@@ -119,7 +121,30 @@ export default function HomePage() {
         </div>
 
         {/* Action Cards */}
-        <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+
+           {/* Reference Consultation Card */}
+          <div className={`bg-white rounded-xl shadow-lg border ${colors.cardBorder} p-8 hover:shadow-xl transition-shadow h-full flex flex-col`}>
+            <div className="text-center flex-1 flex flex-col justify-center">
+              <div
+                className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+                style={{ backgroundColor: CHRISTMAS_MODE ? "#92400e20" : "#7c3aed20" }}
+              >
+                <FileText className="w-8 h-8" style={{ color: CHRISTMAS_MODE ? "#92400e" : "#7c3aed" }} />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Consultar referencia</h3>
+              <p className="text-gray-600 mb-6 flex-1">Consulta el estado de tu referencia médica</p>
+              <Button
+                onClick={() => setShowReferenceConsultation(true)}
+                className="w-full text-white py-3 text-lg font-medium hover:opacity-90 mt-auto"
+                style={{ backgroundColor: CHRISTMAS_MODE ? "#92400e" : "#7c3aed" }}
+                size="lg"
+              >
+                Consultar referencia
+              </Button>
+            </div>
+          </div>
+
           {/* Schedule Appointment Card */}
           <div className={`bg-white rounded-xl shadow-lg border ${colors.cardBorder} p-8 hover:shadow-xl transition-shadow h-full flex flex-col`}>
             <div className="text-center flex-1 flex flex-col justify-center">
@@ -166,7 +191,7 @@ export default function HomePage() {
         </div>
 
         {/* Schedule Button */}
-        <div className="text-center mt-8 max-w-2xl mx-auto">
+        <div className="text-center mt-8 max-w-4xl mx-auto">
           <Button
             onClick={() => setShowSchedule(true)}
             variant="outline"
@@ -178,7 +203,7 @@ export default function HomePage() {
         </div>
 
         {/* Tutorial Section */}
-        <div className="text-center mt-8 max-w-2xl mx-auto">
+        <div className="text-center mt-4 max-w-4xl mx-auto">
           <Button
             onClick={() => setShowTutorial(true)}
             variant="outline"
@@ -190,7 +215,7 @@ export default function HomePage() {
         </div>
 
         {/* Contact Info */}
-        <div className={`text-center mt-12 p-6 ${colors.contactBg} rounded-lg`}>
+        <div className={`text-center mt-12 p-6 ${colors.contactBg} rounded-lg max-w-4xl mx-auto`}>
           <div className={`flex items-center justify-center gap-2 ${colors.contactText}`}>
             <Phone className="w-4 h-4" />
             <span>¿Necesitas ayuda? Llámanos al (01) 418-3232</span>
@@ -225,6 +250,7 @@ export default function HomePage() {
       <PatientRegistrationModal open={showRegistration} onOpenChange={setShowRegistration} />
       <AppointmentLookupModal open={showLookup} onOpenChange={setShowLookup} />
       <VideoTutorialModal open={showTutorial} onOpenChange={setShowTutorial} />
+      <ReferenceConsultationModal open={showReferenceConsultation} onOpenChange={setShowReferenceConsultation} />
 
       {/* Banner animado del lobo para llamar la atención hacia el chat - SOLO en desktop */}
       <div className="hidden md:block fixed bottom-28 right-8 z-40 pointer-events-none transform -translate-x-1/2">

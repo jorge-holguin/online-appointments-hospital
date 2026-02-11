@@ -19,7 +19,7 @@ export default function VideoTutorialModal({ open, onOpenChange }: VideoTutorial
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={`${isFullscreen ? 'max-w-[95vw] w-[95vw] h-[90vh]' : 'max-w-6xl w-full max-h-[85vh]'} bg-white`}>
+      <DialogContent className={`${isFullscreen ? 'max-w-[95vw] w-[95vw] h-[90vh]' : 'max-w-4xl w-full max-h-[90vh]'} bg-white`}>
         <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <DialogTitle className="text-xl sm:text-2xl font-bold text-gray-900">
             Tutorial del Sistema
@@ -41,7 +41,7 @@ export default function VideoTutorialModal({ open, onOpenChange }: VideoTutorial
           </div>
         </DialogHeader>
         
-        <div className={`${isFullscreen ? 'h-[75vh]' : 'h-[60vh] sm:h-[65vh] md:h-[70vh] lg:h-[75vh]'} bg-gray-900 rounded-lg overflow-hidden relative`}>
+        <div className={`${isFullscreen ? 'h-[75vh]' : 'w-full aspect-video'} bg-gray-900 rounded-lg overflow-hidden relative`}>
           <iframe
             src="https://www.youtube.com/embed/uEG8pCvSAI0?rel=0&modestbranding=1&autohide=1&showinfo=0&controls=1"
             width="100%"
