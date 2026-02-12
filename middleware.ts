@@ -34,18 +34,7 @@ export function middleware(request: NextRequest) {
     response.headers.set('X-Frame-Options', 'SAMEORIGIN')
   }
   
-  if (!response.headers.has('Content-Security-Policy')) {
-    response.headers.set('Content-Security-Policy', 
-      "frame-src 'self' https://www.youtube.com https://youtube.com; " +
-      "media-src 'self' https://www.youtube.com https://youtube.com; " +
-      "default-src 'self'; " +
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.youtube.com; " +
-      "style-src 'self' 'unsafe-inline'; " +
-      "img-src 'self' data: https:; " +
-      "font-src 'self'; " +
-      "connect-src 'self'"
-    )
-  }
+  // CSP se define en next.config.mjs - no establecer aquí para evitar conflictos
   
   if (!response.headers.has('X-Content-Type-Options')) {
     response.headers.set('X-Content-Type-Options', 'nosniff')

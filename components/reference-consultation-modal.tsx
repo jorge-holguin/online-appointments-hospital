@@ -36,6 +36,10 @@ interface ReferenciaData {
   codigoEstado: string
   estado: string
   fechaEnvio: string
+  descUpsDestino?: string
+  upsDestino?: string
+  descUpsOrigen?: string
+  upsOrigen?: string
   diagnostico?: string
   profesionalOrigen?: string
 }
@@ -168,18 +172,24 @@ export default function ReferenceConsultationModal({ open, onOpenChange }: Refer
         })
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
         const data: ApiDocumentType[] = await response.json()
+        const DOC_CODE_MAP: Record<string, string> = {
+          'D': '1', 'CE': '2', 'PP': '3', 'PN': '4', 'CS': '5', 'CP': '6', 'CIE': '7', 'CNV': '8'
+        }
         const normalizedTypes: DocumentType[] = data
           .filter(type => type != null && type.nombre && type.tipoDocumento)
           .filter(type => type.nombre !== "*Ninguno")
-          .filter(type => {
-            const ref = type.tipoRef
-            return ref === 1 || ref === 2 || ref === 3
+          .map(type => {
+            const trimmedCode = String(type.tipoDocumento).trim()
+            const refCode = type.tipoRef != null
+              ? String(type.tipoRef)
+              : DOC_CODE_MAP[trimmedCode] ?? trimmedCode
+            return { tipoDocumento: refCode, nombre: type.nombre! }
           })
-          .map(type => ({
-            tipoDocumento: String(type.tipoRef ?? type.tipoDocumento),
-            nombre: type.nombre!,
-          }))
-        setDocumentTypes(normalizedTypes)
+        setDocumentTypes(normalizedTypes.length > 0 ? normalizedTypes : [
+          { tipoDocumento: "1", nombre: "DNI" },
+          { tipoDocumento: "2", nombre: "Carnet de Extranjería" },
+          { tipoDocumento: "3", nombre: "Pasaporte" },
+        ])
         hasLoadedDocumentTypes.current = true
       } catch (err) {
         console.error('Error fetching document types:', err)
@@ -262,17 +272,18 @@ export default function ReferenceConsultationModal({ open, onOpenChange }: Refer
         }),
       })
 
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
-
       const data = await response.json()
 
-      const refList: ReferenciaResponse[] = Array.isArray(data)
-        ? data.map((item: any) => ({ data: item }))
-        : data?.data
-          ? Array.isArray(data.data)
-            ? data.data.map((item: any) => ({ data: item }))
-            : [{ data: data.data }]
-          : []
+      if (!response.ok || data?.codigo === '6000' || data?.datos?.total === 0) {
+        setReferencias([])
+        setHasSearched(true)
+        return
+      }
+
+      const rawList = data?.datos?.datos ?? data?.data ?? (Array.isArray(data) ? data : [])
+      const refList: ReferenciaResponse[] = (Array.isArray(rawList) ? rawList : [])
+        .filter((item: any) => item?.data)
+        .map((item: any) => ({ data: item.data as ReferenciaData }))
 
       setReferencias(refList)
       setHasSearched(true)
@@ -314,7 +325,7 @@ export default function ReferenceConsultationModal({ open, onOpenChange }: Refer
     <>
       <Dialog open={open && !showRegistration} onOpenChange={onOpenChange}>
         <DialogContent
-          className="sm:max-w-lg max-h-[90vh] md:max-h-[85vh] overflow-y-auto"
+          className="w-[95vw] sm:max-w-lg max-h-[90vh] md:max-h-[85vh] overflow-y-auto overflow-x-hidden"
           onInteractOutside={(e) => e.preventDefault()}
           onEscapeKeyDown={(e) => e.preventDefault()}
         >
@@ -476,25 +487,30 @@ export default function ReferenceConsultationModal({ open, onOpenChange }: Refer
                     >
                       {/* Reference card header */}
                       <div className="p-4 bg-white">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
                               <span
-                                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold shrink-0"
                                 style={{ backgroundColor: estadoInfo.bgColor, color: estadoInfo.labelColor }}
                               >
                                 {estadoInfo.label}
                               </span>
                               {refData.fechaEnvio && (
-                                <span className="text-xs text-gray-400">{refData.fechaEnvio}</span>
+                                <span className="text-xs text-gray-400 shrink-0">{refData.fechaEnvio}</span>
                               )}
                             </div>
-                            <p className="text-sm font-medium text-gray-900 truncate">
+                            <p className="text-sm font-medium text-gray-900 break-words">
                               {refData.especialidad || 'Sin especialidad'}
                             </p>
-                            <p className="text-xs text-gray-500 truncate">
+                            <p className="text-xs text-gray-500 break-words">
                               Origen: {refData.establecimientoOrigen || 'No especificado'}
                             </p>
+                            {refData.descUpsDestino && (
+                              <p className="text-xs text-gray-500 break-words">
+                                Destino: {refData.descUpsDestino}
+                              </p>
+                            )}
                             {refData.numeroReferencia && (
                               <p className="text-xs text-gray-400 mt-0.5">
                                 N° Ref: {refData.numeroReferencia}
@@ -505,7 +521,7 @@ export default function ReferenceConsultationModal({ open, onOpenChange }: Refer
                             variant="ghost"
                             size="sm"
                             onClick={() => toggleDetail(refData.idReferencia)}
-                            className="text-[#3e92cc] hover:text-[#3e92cc]/80 hover:bg-blue-50 flex-shrink-0"
+                            className="text-[#3e92cc] hover:text-[#3e92cc]/80 hover:bg-blue-50 flex-shrink-0 whitespace-nowrap"
                           >
                             {isExpanded ? (
                               <>
