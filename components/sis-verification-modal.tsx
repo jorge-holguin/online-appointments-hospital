@@ -62,7 +62,7 @@ export default function SISVerificationModal({
         <Dialog open={open && !showSpecialtySelection && !showAppointmentType} onOpenChange={onOpenChange}>
           <DialogContent
             className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto flex flex-col"
-            redirectToHome={true}
+            redirectToHome={false}
             onInteractOutside={(e) => e.preventDefault()}
             onEscapeKeyDown={(e) => e.preventDefault()}
           >

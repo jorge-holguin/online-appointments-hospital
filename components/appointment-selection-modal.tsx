@@ -194,7 +194,7 @@ export default function AppointmentSelectionModal({
       <Dialog open={open && !showConfirmation} onOpenChange={onOpenChange}>
         <DialogContent 
           className="w-[95vw] max-w-4xl max-h-[90vh] overflow-y-auto p-3 sm:p-6" 
-          redirectToHome={true}
+          redirectToHome={false}
           onInteractOutside={(e) => e.preventDefault()}
           onKeyDown={handleKeyDown}
         >

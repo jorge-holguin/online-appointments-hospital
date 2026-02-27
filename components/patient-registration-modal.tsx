@@ -13,6 +13,7 @@ import SISVerificationModal from "./sis-verification-modal"
 import { loadCaptchaEnginge, LoadCanvasTemplate, validateCaptcha } from 'react-simple-captcha'
 import { validatePatientData, getSecureErrorMessage, sanitizeInput, sanitizeName, normalizePhone, normalizeEmail } from "@/lib/validation"
 import { useSession } from "@/context/session-context"
+import { useAuth } from "@/context/auth-context"
 import { goToHomePage } from "@/lib/navigation"
 
 interface PatientRegistrationModalProps {
@@ -45,6 +46,7 @@ interface DocumentType {
 
 export default function PatientRegistrationModal({ open, onOpenChange }: PatientRegistrationModalProps) {
   const { refreshSession, setOnSessionExpired } = useSession()
+  const { user, isAuthenticated } = useAuth()
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",
@@ -63,6 +65,22 @@ export default function PatientRegistrationModal({ open, onOpenChange }: Patient
   const [generalError, setGeneralError] = useState<string>("")
   // No necesitamos ref para react-simple-captcha
   const hasLoadedDocumentTypes = useRef(false)
+
+  // Pre-fill form data from authenticated user
+  useEffect(() => {
+    if (isAuthenticated && user && open) {
+      setFormData({
+        fullName: `${user.apellidos || ''} ${user.nombres || ''}`.trim(),
+        phone: user.celular || "",
+        tipoDocumento: user.tipoDocumento || "",
+        documento: user.nroDocumento || "",
+        digitoVerificador: user.digitoVerificacion || "",
+        email: user.email || "",
+      })
+      // For authenticated users, skip captcha requirement
+      setCaptchaVerified(true)
+    }
+  }, [isAuthenticated, user, open])
 
   // Configurar redirección automática cuando la sesión expire
   useEffect(() => {
@@ -175,24 +193,27 @@ export default function PatientRegistrationModal({ open, onOpenChange }: Patient
     try {
       setIsSubmitting(true)
       
-      // Verificar CAPTCHA primero
-      try {
-        if (!validateCaptcha(captchaInput)) {
-          setGeneralError("Código de verificación incorrecto. Por favor, inténtalo de nuevo.")
-          setCaptchaInput("") // Limpiar el input
-          setTimeout(() => {
-            loadCaptchaEnginge(4) // Regenerar captcha
-          }, 100)
+      // Si el usuario está autenticado, saltar la validación del captcha
+      if (!isAuthenticated) {
+        // Verificar CAPTCHA primero
+        try {
+          if (!validateCaptcha(captchaInput)) {
+            setGeneralError("Código de verificación incorrecto. Por favor, inténtalo de nuevo.")
+            setCaptchaInput("") // Limpiar el input
+            setTimeout(() => {
+              loadCaptchaEnginge(4) // Regenerar captcha
+            }, 100)
+            setIsSubmitting(false)
+            return
+          }
+          
+          setCaptchaVerified(true)
+        } catch (error) {
+          console.error('Error al validar captcha:', error)
+          setGeneralError("Error en la verificación de seguridad. Por favor, recarga la página.")
           setIsSubmitting(false)
           return
         }
-        
-        setCaptchaVerified(true)
-      } catch (error) {
-        console.error('Error al validar captcha:', error)
-        setGeneralError("Error en la verificación de seguridad. Por favor, recarga la página.")
-        setIsSubmitting(false)
-        return
       }
       
       // Validar y sanitizar datos con Zod
@@ -427,50 +448,61 @@ export default function PatientRegistrationModal({ open, onOpenChange }: Patient
               </div>
             )}
             
-            {/* Captcha Visual */}
-            <div className="space-y-3">
-              <Label htmlFor="captcha-input" className="text-sm font-medium text-gray-700">
-                Verificación de seguridad
-              </Label>
-              <div className="flex flex-col items-center space-y-3">
-                <div className="border rounded-lg p-3 bg-gray-50 relative">
-                  {open && <LoadCanvasTemplate />}
-                  <button 
-                    type="button"
-                    onClick={() => {
-                      setCaptchaInput("") // Limpiar el input
-                      setTimeout(() => loadCaptchaEnginge(4), 100) // Regenerar captcha
-                    }}
-                    className="absolute top-1 right-1 p-1 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600"
-                    aria-label="Refrescar captcha"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
-                    </svg>
-                  </button>
-                </div>
-                <div className="w-full">
-                  <Input
-                    id="captcha-input"
-                    type="text"
-                    value={captchaInput}
-                    onChange={(e) => setCaptchaInput(e.target.value)}
-                    placeholder="Ingrese el código mostrado arriba"
-                    className="text-center"
-                    maxLength={6}
-                  />
-                  <p className="text-xs text-gray-500 mt-1 text-center">
-                    Ingrese los caracteres que ve en la imagen
-                  </p>
+            {/* Captcha Visual - Solo para usuarios no autenticados */}
+            {!isAuthenticated && (
+              <div className="space-y-3">
+                <Label htmlFor="captcha-input" className="text-sm font-medium text-gray-700">
+                  Verificación de seguridad
+                </Label>
+                <div className="flex flex-col items-center space-y-3">
+                  <div className="border rounded-lg p-3 bg-gray-50 relative">
+                    {open && <LoadCanvasTemplate />}
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        setCaptchaInput("") // Limpiar el input
+                        setTimeout(() => loadCaptchaEnginge(4), 100) // Regenerar captcha
+                      }}
+                      className="absolute top-1 right-1 p-1 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600"
+                      aria-label="Refrescar captcha"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="w-full">
+                    <Input
+                      id="captcha-input"
+                      type="text"
+                      value={captchaInput}
+                      onChange={(e) => setCaptchaInput(e.target.value)}
+                      placeholder="Ingrese el código mostrado arriba"
+                      className="text-center"
+                      maxLength={6}
+                    />
+                    <p className="text-xs text-gray-500 mt-1 text-center">
+                      Ingrese los caracteres que ve en la imagen
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
+
+            {/* Mensaje para usuarios autenticados */}
+            {isAuthenticated && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+                <p className="text-sm text-blue-700">
+                  Tus datos han sido precargados desde tu cuenta. Verifica que sean correctos antes de continuar.
+                </p>
+              </div>
+            )}
 
             <Button
               type="submit"
               className="w-full bg-[#3e92cc] hover:bg-[#3e92cc]/90 text-white py-3 mt-6 font-semibold disabled:opacity-50 transition-all"
               size="lg"
-              disabled={isSubmitting || !captchaInput.trim()}
+              disabled={isSubmitting || (!isAuthenticated && !captchaInput.trim())}
             >
               {isSubmitting ? "Procesando..." : "Continuar"}
             </Button>

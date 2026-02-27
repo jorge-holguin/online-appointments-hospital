@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Calendar, Search, Phone, CalendarDays, X, Play, FileText } from "lucide-react"
+import { Calendar, Search, Phone, CalendarDays, X, Play, FileText, LogIn, ClipboardList } from "lucide-react"
 import PatientRegistrationModal from "@/components/patient-registration-modal"
 import AppointmentLookupModal from "@/components/appointment-lookup-modal"
 import VideoTutorialModal from "@/components/video-tutorial-modal"
@@ -10,15 +10,26 @@ import ReferenceConsultationModal from "@/components/reference-consultation-moda
 import ChatLauncher from "@/components/chatbot/chat-launcher"
 import SnowParticles from "@/components/snow-particles"
 import { CHRISTMAS_MODE } from "@/hooks/use-app-config"
+import { useAuth } from "@/context/auth-context"
+import { AuthModal, UserMenu, MyReferencesModal, MyAppointmentsModal, ProfileSettingsModal } from "@/components/auth"
 
 export default function HomePage() {
+  const { isAuthenticated, isLoading: authLoading, user, accessToken } = useAuth()
   const [showRegistration, setShowRegistration] = useState(false)
   const [showLookup, setShowLookup] = useState(false)
   const [showSchedule, setShowSchedule] = useState(false)
   const [showTutorial, setShowTutorial] = useState(false)
   const [showReferenceConsultation, setShowReferenceConsultation] = useState(false)
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const [showMyReferences, setShowMyReferences] = useState(false)
+  const [showMyAppointments, setShowMyAppointments] = useState(false)
+  const [showProfileSettings, setShowProfileSettings] = useState(false)
   const [isWolfHappy, setIsWolfHappy] = useState(false)
 
+  // Prevent layout shift while loading auth state
+  const shouldShowAuthenticatedUI = isAuthenticated && !authLoading
+
+  
   // Calculate next month dynamically
   const getNextMonth = () => {
     const months = [
@@ -94,23 +105,43 @@ export default function HomePage() {
 
       {/* Header */}
       <header className={`${colors.headerBg} shadow-sm border-b relative z-10`}>
-        <div className="max-w-4xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-center gap-4">
-            <img src="/hospital-logo.png" alt="Hospital José Agurto Tello" className="h-12 w-auto" />
-            <div className="text-center">
-              <h1 className={`text-2xl font-bold ${colors.headerText}`}>
-                Hospital José Agurto Tello
-              </h1>
-              <p className={`text-sm ${colors.headerSubtext}`}>
-                Chosica
-              </p>
+        <div className="max-w-4xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <img src="/hospital-logo.png" alt="Hospital José Agurto Tello" className="h-10 w-auto" />
+              <div>
+                <h1 className={`text-xl md:text-2xl font-bold ${colors.headerText}`}>
+                  Hospital José Agurto Tello
+                </h1>
+                <p className={`text-sm ${colors.headerSubtext}`}>
+                  Chosica
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {authLoading ? (
+                <div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse"></div>
+              ) : shouldShowAuthenticatedUI ? (
+                <UserMenu
+                  onOpenProfileSettings={() => setShowProfileSettings(true)}
+                />
+              ) : (
+                <Button
+                  onClick={() => setShowAuthModal(true)}
+                  variant="outline"
+                  className="flex items-center gap-2 bg-white/90 hover:bg-white border-gray-200"
+                >
+                  <LogIn className="w-4 h-4" />
+                  <span className="hidden sm:inline">Iniciar Sesión</span>
+                </Button>
+              )}
             </div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 py-12 relative z-10">
+      <main className="max-w-6xl mx-auto px-4 py-12 relative z-10">
         <div className="text-center mb-12">
           <h2 className={`text-3xl font-bold ${colors.titleText} mb-4 text-balance`}>
             {CHRISTMAS_MODE ? "¡Felices Fiestas! " : ""}Solicita tu cita de manera rápida y sencilla
@@ -121,31 +152,9 @@ export default function HomePage() {
         </div>
 
         {/* Action Cards */}
-        <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+        <div className={`grid gap-8 max-w-6xl mx-auto ${shouldShowAuthenticatedUI ? 'md:grid-cols-2 lg:grid-cols-3' : 'md:grid-cols-2'}`}>
 
-           {/* Reference Consultation Card */}
-          <div className={`bg-white rounded-xl shadow-lg border ${colors.cardBorder} p-8 hover:shadow-xl transition-shadow h-full flex flex-col`}>
-            <div className="text-center flex-1 flex flex-col justify-center">
-              <div
-                className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-                style={{ backgroundColor: CHRISTMAS_MODE ? "#92400e20" : "#7c3aed20" }}
-              >
-                <FileText className="w-8 h-8" style={{ color: CHRISTMAS_MODE ? "#92400e" : "#7c3aed" }} />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Consultar referencia</h3>
-              <p className="text-gray-600 mb-6 flex-1">Consulta el estado de tu referencia médica</p>
-              <Button
-                onClick={() => setShowReferenceConsultation(true)}
-                className="w-full text-white py-3 text-lg font-medium hover:opacity-90 mt-auto"
-                style={{ backgroundColor: CHRISTMAS_MODE ? "#92400e" : "#7c3aed" }}
-                size="lg"
-              >
-                Consultar referencia
-              </Button>
-            </div>
-          </div>
-
-          {/* Schedule Appointment Card */}
+          {/* Schedule Appointment Card - Available for all */}
           <div className={`bg-white rounded-xl shadow-lg border ${colors.cardBorder} p-8 hover:shadow-xl transition-shadow h-full flex flex-col`}>
             <div className="text-center flex-1 flex flex-col justify-center">
               <div
@@ -167,7 +176,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Lookup Appointment Card */}
+          {/* Lookup Appointment Card - Available for all */}
           <div className={`bg-white rounded-xl shadow-lg border ${colors.cardBorder} p-8 hover:shadow-xl transition-shadow h-full flex flex-col`}>
             <div className="text-center flex-1 flex flex-col justify-center">
               <div
@@ -188,10 +197,58 @@ export default function HomePage() {
               </Button>
             </div>
           </div>
+
+          {/* My Appointments Card - Only for authenticated users */}
+          {shouldShowAuthenticatedUI && (
+            <div className={`bg-white rounded-xl shadow-lg border ${colors.cardBorder} p-8 hover:shadow-xl transition-shadow h-full flex flex-col`}>
+              <div className="text-center flex-1 flex flex-col justify-center">
+                <div
+                  className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+                  style={{ backgroundColor: CHRISTMAS_MODE ? "#7c3aed20" : "#f59e0b20" }}
+                >
+                  <ClipboardList className="w-8 h-8" style={{ color: CHRISTMAS_MODE ? "#7c3aed" : "#f59e0b" }} />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Mis Solicitudes de Cita</h3>
+                <p className="text-gray-600 mb-6 flex-1">Consulta todas tus solicitudes de cita realizadas</p>
+                <Button
+                  onClick={() => setShowMyAppointments(true)}
+                  className="w-full text-white py-3 text-lg font-medium hover:opacity-90 mt-auto"
+                  style={{ backgroundColor: CHRISTMAS_MODE ? "#7c3aed" : "#f59e0b" }}
+                  size="lg"
+                >
+                  Ver mis solicitudes
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* My References Card - Only for authenticated users (COMMENTED OUT FOR NOW) */}
+          {/* {shouldShowAuthenticatedUI && (
+            <div className={`bg-white rounded-xl shadow-lg border ${colors.cardBorder} p-8 hover:shadow-xl transition-shadow h-full flex flex-col`}>
+              <div className="text-center flex-1 flex flex-col justify-center">
+                <div
+                  className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+                  style={{ backgroundColor: CHRISTMAS_MODE ? "#92400e20" : "#7c3aed20" }}
+                >
+                  <FileText className="w-8 h-8" style={{ color: CHRISTMAS_MODE ? "#92400e" : "#7c3aed" }} />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Mis Referencias</h3>
+                <p className="text-gray-600 mb-6 flex-1">Consulta tus referencias médicas asociadas a tu cuenta</p>
+                <Button
+                  onClick={() => setShowMyReferences(true)}
+                  className="w-full text-white py-3 text-lg font-medium hover:opacity-90 mt-auto"
+                  style={{ backgroundColor: CHRISTMAS_MODE ? "#92400e" : "#7c3aed" }}
+                  size="lg"
+                >
+                  Ver mis referencias
+                </Button>
+              </div>
+            </div>
+          )} */}
         </div>
 
         {/* Schedule Button */}
-        <div className="text-center mt-8 max-w-4xl mx-auto">
+        <div className="text-center mt-8 max-w-6xl mx-auto">
           <Button
             onClick={() => setShowSchedule(true)}
             variant="outline"
@@ -203,7 +260,7 @@ export default function HomePage() {
         </div>
 
         {/* Tutorial Section */}
-        <div className="text-center mt-4 max-w-4xl mx-auto">
+        <div className="text-center mt-4 max-w-6xl mx-auto">
           <Button
             onClick={() => setShowTutorial(true)}
             variant="outline"
@@ -215,7 +272,7 @@ export default function HomePage() {
         </div>
 
         {/* Contact Info */}
-        <div className={`text-center mt-12 p-6 ${colors.contactBg} rounded-lg max-w-4xl mx-auto`}>
+        <div className={`text-center mt-12 p-6 ${colors.contactBg} rounded-lg max-w-6xl mx-auto`}>
           <div className={`flex items-center justify-center gap-2 ${colors.contactText}`}>
             <Phone className="w-4 h-4" />
             <span>¿Necesitas ayuda? Llámanos al (01) 418-3232</span>
@@ -224,7 +281,7 @@ export default function HomePage() {
       </main>
 
       <footer className={`${colors.footerBg} border-t mt-auto relative z-10`}>
-        <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="max-w-6xl mx-auto px-4 py-8">
           <div className="text-center space-y-4">
             <div className="text-sm">
               <h4 className={`font-semibold mb-2 ${colors.footerText}`}>
@@ -251,6 +308,12 @@ export default function HomePage() {
       <AppointmentLookupModal open={showLookup} onOpenChange={setShowLookup} />
       <VideoTutorialModal open={showTutorial} onOpenChange={setShowTutorial} />
       <ReferenceConsultationModal open={showReferenceConsultation} onOpenChange={setShowReferenceConsultation} />
+      
+      {/* Auth Modals */}
+      <AuthModal open={showAuthModal} onOpenChange={setShowAuthModal} />
+      <MyReferencesModal open={showMyReferences} onOpenChange={setShowMyReferences} />
+      <MyAppointmentsModal open={showMyAppointments} onOpenChange={setShowMyAppointments} />
+      <ProfileSettingsModal open={showProfileSettings} onOpenChange={setShowProfileSettings} />
 
       {/* Banner animado del lobo para llamar la atención hacia el chat - SOLO en desktop */}
       <div className="hidden md:block fixed bottom-28 right-8 z-40 pointer-events-none transform -translate-x-1/2">

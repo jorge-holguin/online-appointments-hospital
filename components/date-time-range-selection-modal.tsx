@@ -302,7 +302,7 @@ export default function DateTimeRangeSelectionModal({
       <Dialog open={open && !showAppointmentSelection} onOpenChange={onOpenChange}>
         <DialogContent 
           className="w-[98vw] max-w-7xl max-h-[95vh] overflow-y-auto p-3 sm:p-6 sm:max-h-[90vh]" 
-          redirectToHome={true}
+          redirectToHome={false}
           onInteractOutside={(e) => e.preventDefault()}
           onKeyDown={handleKeyDown}
         >

@@ -168,7 +168,7 @@ export default function AppointmentLookupModal({ open, onOpenChange }: Appointme
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent 
         className="sm:max-w-md max-h-[85dvh] overflow-y-auto overscroll-contain scroll-smooth" 
-        redirectToHome={true}
+        redirectToHome={false}
         onInteractOutside={(e) => e.preventDefault()}
       >
         <DialogHeader>

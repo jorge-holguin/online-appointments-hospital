@@ -420,7 +420,7 @@ export default function DateTimeSelectionModal({
       <Dialog open={open && !showConfirmation} onOpenChange={onOpenChange}>
         <DialogContent 
           className="w-[95vw] max-w-5xl max-h-[95vh] overflow-y-auto p-3 sm:p-6 sm:max-h-[90vh]" 
-          redirectToHome={true}
+          redirectToHome={false}
           onInteractOutside={(e) => e.preventDefault()}
           onKeyDown={handleKeyDown}
         >

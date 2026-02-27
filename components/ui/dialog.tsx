@@ -55,20 +55,12 @@ const DialogContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
     showCloseButton?: boolean
     redirectToHome?: boolean
+    overlayClassName?: string
   }
->(({ className, children, showCloseButton = true, redirectToHome = true, ...props }, ref) => {
-  // Función para manejar el cierre del diálogo
-  const handleClose = () => {
-    if (redirectToHome) {
-      // Redirigir a la página principal con un delay para asegurar que el modal se cierre primero
-      goToHomePage(100) // 100ms delay should be enough for the modal to close
-    }
-    // Si no se redirige, el comportamiento predeterminado de Close se encarga de cerrar el diálogo
-  }
-  
+>(({ className, children, showCloseButton = true, redirectToHome = false, overlayClassName, ...props }, ref) => {
   return (
     <DialogPortal>
-      <DialogOverlay />
+      <DialogOverlay className={overlayClassName} />
       <DialogPrimitive.Content
         ref={ref}
         className={cn(
@@ -81,7 +73,7 @@ const DialogContent = React.forwardRef<
         {showCloseButton && (
           <DialogPrimitive.Close 
             className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
-            onClick={redirectToHome ? handleClose : undefined}
+            onClick={redirectToHome ? () => goToHomePage(100) : undefined}
           >
             <XIcon />
             <span className="sr-only">Close</span>

@@ -326,7 +326,7 @@ export default function ConfirmationModal({ open, onOpenChange, onBack, onBackTo
       <Dialog open={open && !showFinalConfirmation && !showDuplicateErrorModal && !showUnavailableModal} onOpenChange={onOpenChange}>
         <DialogContent 
           className="sm:max-w-md max-w-[95vw] max-h-[90vh] overflow-y-auto" 
-          redirectToHome={true}
+          redirectToHome={false}
           onInteractOutside={(e) => e.preventDefault()}
         >
           <DialogHeader>
