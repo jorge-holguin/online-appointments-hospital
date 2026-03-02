@@ -181,10 +181,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const updateUserData = useCallback(async (data: UpdateUserRequest) => {
     if (!user?.id) throw new Error('Usuario no identificado')
-    const updatedUser = await authApi.updateUser(user.id, data)
-    setUser(updatedUser)
-    setStoredUser(updatedUser)
-  }, [user?.id])
+    
+    // Optimistic update - update local state immediately
+    const optimisticUser = { ...user, ...data }
+    setUser(optimisticUser)
+    setStoredUser(optimisticUser)
+    
+    try {
+      const updatedUser = await authApi.updateUser(user.id, data)
+      // Update with server response if available
+      if (updatedUser && updatedUser.id) {
+        setUser(updatedUser)
+        setStoredUser(updatedUser)
+      }
+    } catch (error) {
+      // Revert to original user on error
+      setUser(user)
+      setStoredUser(user)
+      throw error
+    }
+  }, [user])
 
   const changePassword = useCallback(async (data: ChangePasswordRequest) => {
     if (!user?.id) throw new Error('Usuario no identificado')

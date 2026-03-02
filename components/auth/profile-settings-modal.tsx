@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -75,6 +75,19 @@ export default function ProfileSettingsModal({ open, onOpenChange }: ProfileSett
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Sync profile data when user changes
+  useEffect(() => {
+    if (user) {
+      setProfileData({
+        nombres: user.nombres || "",
+        apellidos: user.apellidos || "",
+        email: user.email || "",
+        celular: user.celular || "",
+        fechaNacimiento: user.fechaNacimiento || "",
+      })
+    }
+  }, [user])
 
   // Update profile data when user changes
   const handleOpen = (isOpen: boolean) => {

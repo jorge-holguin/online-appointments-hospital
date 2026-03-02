@@ -65,22 +65,49 @@ export default function PatientRegistrationModal({ open, onOpenChange }: Patient
   const [generalError, setGeneralError] = useState<string>("")
   // No necesitamos ref para react-simple-captcha
   const hasLoadedDocumentTypes = useRef(false)
+  const hasAutoSkipped = useRef(false)
 
-  // Pre-fill form data from authenticated user
+  // Reset auto-skip flag when modal closes
   useEffect(() => {
-    if (isAuthenticated && user && open) {
-      setFormData({
-        fullName: `${user.apellidos || ''} ${user.nombres || ''}`.trim(),
-        phone: user.celular || "",
-        tipoDocumento: user.tipoDocumento || "",
-        documento: user.nroDocumento || "",
-        digitoVerificador: user.digitoVerificacion || "",
-        email: user.email || "",
-      })
-      // For authenticated users, skip captcha requirement
-      setCaptchaVerified(true)
+    if (!open) {
+      hasAutoSkipped.current = false
+      setShowSISVerification(false)
     }
-  }, [isAuthenticated, user, open])
+  }, [open])
+
+  // Pre-fill form data from authenticated user and auto-skip to SIS verification
+  useEffect(() => {
+    const autoSkipForAuthenticatedUser = async () => {
+      // Only auto-skip once per modal open
+      if (isAuthenticated && user && open && !hasAutoSkipped.current) {
+        hasAutoSkipped.current = true
+        
+        // Pre-fill form data
+        setFormData({
+          fullName: `${user.apellidos || ''} ${user.nombres || ''}`.trim(),
+          phone: user.celular || "",
+          tipoDocumento: user.tipoDocumento?.trim() || "",
+          documento: user.nroDocumento || "",
+          digitoVerificador: user.digitoVerificacion || "",
+          email: user.email || "",
+        })
+        // For authenticated users, skip captcha requirement
+        setCaptchaVerified(true)
+        
+        // Auto-start session and skip to SIS verification
+        try {
+          await refreshSession()
+          setShowSISVerification(true)
+        } catch (sessionError) {
+          console.error('Error al iniciar sesión automática:', sessionError)
+          // If session fails, show the form as fallback
+          hasAutoSkipped.current = false
+        }
+      }
+    }
+    
+    autoSkipForAuthenticatedUser()
+  }, [isAuthenticated, user, open, refreshSession])
 
   // Configurar redirección automática cuando la sesión expire
   useEffect(() => {

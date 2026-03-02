@@ -15,7 +15,7 @@ import type {
   ChangePasswordRequest,
 } from '@/types/auth'
 
-const AUTH_API_URL = process.env.NEXT_PUBLIC_API_AUTH_URL || 'http://192.168.0.252:9012'
+const AUTH_API_URL = process.env.NEXT_PUBLIC_API_APP_CITAS_URL
 
 const TOKEN_KEY = 'auth_access_token'
 const REFRESH_TOKEN_KEY = 'auth_refresh_token'
@@ -151,7 +151,7 @@ export const authFetch = async (
 // Auth API endpoints
 export const authApi = {
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
-    const response = await fetch(`${AUTH_API_URL}/api/auth/login`, {
+    const response = await fetch(`${AUTH_API_URL}/auth/login`, {
       method: 'POST',
       headers: {
         'Accept': '*/*',
@@ -171,7 +171,7 @@ export const authApi = {
   },
 
   register: async (userData: RegisterRequest): Promise<RegisterResponse> => {
-    const response = await fetch(`${AUTH_API_URL}/api/auth/register`, {
+    const response = await fetch(`${AUTH_API_URL}/auth/register`, {
       method: 'POST',
       headers: {
         'Accept': '*/*',
@@ -191,7 +191,7 @@ export const authApi = {
   },
 
   verifyEmail: async (verificationData: VerifyEmailRequest): Promise<void> => {
-    const response = await fetch(`${AUTH_API_URL}/api/auth/verify-email`, {
+    const response = await fetch(`${AUTH_API_URL}/auth/verify-email`, {
       method: 'POST',
       headers: {
         'Accept': '*/*',
@@ -208,7 +208,7 @@ export const authApi = {
 
   forgotPassword: async (email: string): Promise<void> => {
     const response = await fetch(
-      `${AUTH_API_URL}/api/auth/forgot-password?email=${encodeURIComponent(email)}`,
+      `${AUTH_API_URL}/auth/forgot-password?email=${encodeURIComponent(email)}`,
       {
         method: 'POST',
         headers: {
@@ -231,7 +231,7 @@ export const authApi = {
     })
 
     const response = await fetch(
-      `${AUTH_API_URL}/api/auth/reset-password?${params.toString()}`,
+      `${AUTH_API_URL}/auth/reset-password?${params.toString()}`,
       {
         method: 'POST',
         headers: {
@@ -252,7 +252,7 @@ export const authApi = {
 
   getUserByEmail: async (email: string): Promise<AuthUser> => {
     const response = await authFetch(
-      `${AUTH_API_URL}/api/users/email?email=${encodeURIComponent(email)}`
+      `${AUTH_API_URL}/users/email?email=${encodeURIComponent(email)}`
     )
 
     if (!response.ok) {
@@ -260,11 +260,20 @@ export const authApi = {
       throw new Error(errorData.message || 'Error al obtener datos del usuario')
     }
 
-    return response.json()
+    const text = await response.text()
+    if (!text || text.trim() === '') {
+      throw new Error('Respuesta vacía del servidor')
+    }
+    
+    try {
+      return JSON.parse(text)
+    } catch {
+      throw new Error('Error al procesar respuesta del servidor')
+    }
   },
 
   updateUser: async (userId: number, data: UpdateUserRequest): Promise<AuthUser> => {
-    const response = await authFetch(`${AUTH_API_URL}/api/users/${userId}`, {
+    const response = await authFetch(`${AUTH_API_URL}/users/${userId}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     })
@@ -274,7 +283,18 @@ export const authApi = {
       throw new Error(errorData.message || 'Error al actualizar datos del usuario')
     }
 
-    return response.json()
+    const text = await response.text()
+    if (!text || text.trim() === '') {
+      // Return the data we sent as the updated user (optimistic update)
+      return { ...data } as AuthUser
+    }
+    
+    try {
+      return JSON.parse(text)
+    } catch {
+      // Return the data we sent as the updated user (optimistic update)
+      return { ...data } as AuthUser
+    }
   },
 
   changePassword: async (userId: number, data: ChangePasswordRequest): Promise<void> => {
@@ -284,7 +304,7 @@ export const authApi = {
     })
 
     const response = await authFetch(
-      `${AUTH_API_URL}/api/users/${userId}/password?${params.toString()}`,
+      `${AUTH_API_URL}/users/${userId}/password?${params.toString()}`,
       { method: 'PUT' }
     )
 
@@ -298,12 +318,10 @@ export const authApi = {
     const formData = new FormData()
     formData.append('file', file)
 
-    const accessToken = getAccessToken()
-    const response = await fetch(`${AUTH_API_URL}/api/users/${userId}/image`, {
+    const response = await authFetch(`${AUTH_API_URL}/users/${userId}/image`, {
       method: 'POST',
       headers: {
         'Accept': '*/*',
-        ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}),
       },
       body: formData,
     })
@@ -319,6 +337,6 @@ export const authApi = {
 
   getProfileImageUrl: (imageName: string | undefined): string | null => {
     if (!imageName) return null
-    return `${AUTH_API_URL}/api/users/image/${imageName}`
+    return `${AUTH_API_URL}/users/image/${imageName}`
   },
 }
